@@ -1,10 +1,8 @@
 package com.erpapi.gzerp.models;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -15,17 +13,23 @@ public class Users {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long tenantId;
 
     @NotNull
+    private Long tenantId;
+
+    @NotBlank
+    @Size(min = 3, max = 20)
+    private String userName;
+
+    @NotBlank
     @Size(min = 3, max = 20)
     private String name;
 
     @Size(min = 5, max = 100)
-    @NotNull
+    @NotBlank
     private String email;
 
-    @NotNull
+    @NotBlank
     private String password;
 
     private boolean isAdmin;
@@ -46,12 +50,12 @@ public class Users {
         this.email = email;
     }
 
-    public String getName() {
-        return name;
+    public String getUserName() {
+        return userName;
     }
 
-    public void setName(String nome) {
-        this.name = nome;
+    public void setUserName(String nome) {
+        this.userName = nome;
     }
 
     public Long getId() {
@@ -66,12 +70,12 @@ public class Users {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Users users = (Users) o;
-        return Objects.equals(id, users.id) && Objects.equals(name, users.name) && Objects.equals(email, users.email);
+        return Objects.equals(id, users.id) && Objects.equals(userName, users.userName) && Objects.equals(email, users.email);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, name, email);
+        return Objects.hash(id, userName, email);
     }
 
     public Long getTenantid() {
@@ -86,6 +90,23 @@ public class Users {
     public boolean isAdmin() {
         return isAdmin;
     }
+
     public void setAdmin(boolean admin) {
     isAdmin = admin;}
+
+    public Long getTenantId() {
+        return tenantId;
+    }
+
+    public void setTenantId(Long tenantId) {
+        this.tenantId = tenantId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 }
