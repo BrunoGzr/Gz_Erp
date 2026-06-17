@@ -1,6 +1,6 @@
 CREATE TABLE users(
     id BIGINT UNSIGNED primary key auto_increment,
-    tenant_id int default 0,
+    tenant_id BIGINT UNSIGNED NOT NULL ,
     user_name VARCHAR(100) NOT NULL UNIQUE,
     name VARCHAR(200) NOT NULL,
     email VARCHAR(256) NOT NULL,
