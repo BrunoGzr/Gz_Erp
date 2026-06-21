@@ -6,8 +6,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-
 import java.sql.Timestamp;
+import java.util.ArrayList;
 
 @Entity
 public class Tenants {
@@ -26,12 +26,12 @@ public class Tenants {
     private String email;
 
     @NotNull
-    private String razao_social;
+    private String razaoSocial;
 
-    @NotNull
-    private String nome_fantasia;
+    private String nomeFantasia;
 
-    private String associates;
+    @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
+    private ArrayList<Partners> partners;
 
     @NotNull
     private Plans plan;
@@ -42,15 +42,17 @@ public class Tenants {
     private Timestamp register_at;
     private Timestamp update_at;
 
+
+    private Boolean isAdmin;
+
     public Tenants() {}
 
-    public Tenants(Long id, String cnpj, String email, String razao_social, String nome_fantasia, String associates, Plans plan, Status status, Boolean demo, Timestamp register_at, Timestamp update_at) {
+    public Tenants(Long id, String cnpj, String email, String razaoSocial, String nomeFantasia, Plans plan, Status status, Boolean demo, Timestamp register_at, Timestamp update_at) {
         this.id = id;
         this.cnpj = cnpj;
         this.email = email;
-        this.razao_social = razao_social;
-        this.nome_fantasia = nome_fantasia;
-        this.associates = associates;
+        this.razaoSocial = razaoSocial;
+        this.nomeFantasia = nomeFantasia;
         this.plan = plan;
         this.status = status;
         this.demo = demo;
@@ -82,28 +84,20 @@ public class Tenants {
         this.email = email;
     }
 
-    public String getRazao_social() {
-        return razao_social;
+    public String getRazaoSocial() {
+        return razaoSocial;
     }
 
-    public void setRazao_social(String razao_social) {
-        this.razao_social = razao_social;
+    public void setRazaoSocial(String razao_social) {
+        this.razaoSocial = razao_social;
     }
 
-    public String getNome_fantasia() {
-        return nome_fantasia;
+    public String getNomeFantasia() {
+        return nomeFantasia;
     }
 
-    public void setNome_fantasia(String nome_fantasia) {
-        this.nome_fantasia = nome_fantasia;
-    }
-
-    public String getAssociates() {
-        return associates;
-    }
-
-    public void setAssociates(String associates) {
-        this.associates = associates;
+    public void setNomeFantasia(String nome_fantasia) {
+        this.nomeFantasia = nome_fantasia;
     }
 
     public Plans getPlan() {

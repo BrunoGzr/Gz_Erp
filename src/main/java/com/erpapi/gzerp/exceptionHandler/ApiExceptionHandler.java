@@ -72,9 +72,9 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(UserAlreadyExistException.class)
     public ResponseEntity<Object> HandleUserAlreadyExistException(UserAlreadyExistException ex,
                                                                   HttpServletRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "User already register, please login");
-        problemDetail.setTitle("User already register");
-        problemDetail.setType(URI.create("/Errors/UserAlreadyExist"));
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Company already registered, please login in a partner account");
+        problemDetail.setTitle("Company already registered");
+        problemDetail.setType(URI.create("/Errors/CompanyAlreadyExist"));
         problemDetail.setProperty("errors", ex.getConflictedFields());
         problemDetail.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);

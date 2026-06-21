@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 import java.util.Objects;
 
 @Entity
-public class Users {
+public class Employees {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -72,7 +72,7 @@ public class Users {
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
-        Users users = (Users) o;
+        Employees users = (Employees) o;
         return Objects.equals(id, users.id) && Objects.equals(userName, users.userName) && Objects.equals(email, users.email);
     }
 
