@@ -5,9 +5,8 @@ CREATE TABLE tenants
     email VARCHAR(256) NOT NULL UNIQUE ,
     razao_social VARCHAR(150) NOT NULL ,
     nome_fantasia VARCHAR(150) NOT NULL ,
-    associates VARCHAR(255) DEFAULT null,
     phone VARCHAR(20),
-
+    is_admin BOOLEAN DEFAULT false,
 
     plan ENUM('ENTERPRISE','SCALING','INICIAL','FREE') DEFAULT 'FREE',
     status ENUM('ACTIVE','INACTIVE','DELETED','PENDENT','BLOCKED') DEFAULT 'ACTIVE',
@@ -15,6 +14,24 @@ CREATE TABLE tenants
 
     register_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+CREATE TABLE partners(
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT UNSIGNED NOT NULL,
+    cpf VARCHAR(11) NOT NULL,
+    full_name VARCHAR(256),
+    ownership DECIMAL(5,2) NULL ,
+    email VARCHAR(256),
+    phone VARCHAR(20),
+    salary FLOAT NULL,
+
+
+    CONSTRAINT fk_partners_tenant
+    FOREIGN KEY (tenant_id) REFERENCES tenants(id)
+    ON DELETE RESTRICT
+    ON UPDATE CASCADE
 );
 
 ALTER TABLE users ADD
