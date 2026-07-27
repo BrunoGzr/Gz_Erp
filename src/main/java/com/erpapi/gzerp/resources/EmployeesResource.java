@@ -1,8 +1,7 @@
 package com.erpapi.gzerp.resources;
 
-import com.erpapi.gzerp.dto.UserCreateDto;
-import com.erpapi.gzerp.dto.UserResponseDto;
-import com.erpapi.gzerp.event.ResourceCreatedEvent;
+import com.erpapi.gzerp.dto.EmployeeRegisterDto;
+import com.erpapi.gzerp.dto.EmployeeResponseDto;
 import com.erpapi.gzerp.models.Employees;
 import com.erpapi.gzerp.services.EmployeesService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,9 +31,9 @@ public class EmployeesResource {
 
     @PostMapping("/register")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<UserResponseDto> registerUser(@Valid @RequestBody UserCreateDto userDto, HttpServletResponse response) {
-        UserResponseDto savedUser = employeesService.RegisterUser(userDto);
-        eventPublisher.publishEvent(new ResourceCreatedEvent(this, response, savedUser.getId()));
+    public ResponseEntity<EmployeeResponseDto> registerUser(@Valid @RequestBody EmployeeRegisterDto userDto, HttpServletResponse response) {
+        EmployeeResponseDto savedUser = employeesService.RegisterUserWithTenantCreated(userDto);
+//        eventPublisher.publishEvent(new ResourceCreatedEvent(this, response, savedUser.getId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 

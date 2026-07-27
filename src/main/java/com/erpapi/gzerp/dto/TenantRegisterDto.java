@@ -15,7 +15,7 @@ import java.util.ArrayList;
 public class TenantRegisterDto {
 
     @NotNull
-    @Size(min = 14, max = 14)
+    @Size(min = 1, max = 100)
     private String cnpj;
 
     @NotNull
@@ -30,7 +30,62 @@ public class TenantRegisterDto {
     @Nullable()
     private String nomeFantasia;
 
-    @NotEmpty(message = "Please inform the company partners")
+    @NotEmpty(message = "Please inform at least one company partner")
     @Valid
     private ArrayList<PartnersRegisterDto> partners;
+
+    @NotNull
+    @Size(min = 11, max = 15)
+    private String phone;
+
+    public TenantRegisterDto() {}
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getCnpj() {
+        return cnpj;
+    }
+
+    public void setCnpj(String cnpj) {
+        this.cnpj = cnpj;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getRazaoSocial() {
+        return razaoSocial;
+    }
+
+    public void setRazaoSocial(String razaoSocial) {
+        this.razaoSocial = razaoSocial;
+    }
+
+    @Nullable
+    public String getNomeFantasia() {
+        return nomeFantasia;
+    }
+
+    public void setNomeFantasia(@Nullable String nomeFantasia) {
+        this.nomeFantasia = nomeFantasia;
+    }
+
+    public ArrayList<PartnersRegisterDto> getPartners() {
+        return partners;
+    }
+
+    public void setPartners(ArrayList<PartnersRegisterDto> partners) {
+        this.partners = partners;
+    }
 }

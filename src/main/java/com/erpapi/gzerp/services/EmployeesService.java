@@ -1,8 +1,8 @@
 package com.erpapi.gzerp.services;
 
 import com.erpapi.gzerp.Exceptions.UserAlreadyExistException;
-import com.erpapi.gzerp.dto.UserCreateDto;
-import com.erpapi.gzerp.dto.UserResponseDto;
+import com.erpapi.gzerp.dto.EmployeeRegisterDto;
+import com.erpapi.gzerp.dto.EmployeeResponseDto;
 import com.erpapi.gzerp.models.Employees;
 import com.erpapi.gzerp.repositories.EmployeesRepo;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +23,7 @@ public class EmployeesService {
 //
 //    }
 
-    public UserResponseDto RegisterUser(UserCreateDto userDto) throws UserAlreadyExistException {
+    public EmployeeResponseDto RegisterUserWithTenantCreated(EmployeeRegisterDto userDto) throws UserAlreadyExistException {
         List<String> conflictedFields = new ArrayList<String>();
         if (employeesRepo.existsByEmail(userDto.getEmail(), userDto.getTenantId())) {
             conflictedFields.add("User with this email already exists");}
@@ -41,7 +41,6 @@ public class EmployeesService {
         newUser.setAdmin(false);
 
         Employees savedUser = employeesRepo.save(newUser);
-        return new UserResponseDto(savedUser);
+        return new EmployeeResponseDto(savedUser);
     }
-
 }

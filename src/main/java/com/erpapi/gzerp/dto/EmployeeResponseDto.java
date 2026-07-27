@@ -2,7 +2,7 @@ package com.erpapi.gzerp.dto;
 
 import com.erpapi.gzerp.models.Employees;
 
-public class UserResponseDto {
+public class EmployeeResponseDto {
 
     private Long id;
 
@@ -15,7 +15,7 @@ public class UserResponseDto {
     private String email;
 
 
-    public UserResponseDto(Employees user) {
+    public EmployeeResponseDto(Employees user) {
         this.id = user.getId();
         this.name = user.getName();
         this.tenantId = user.getTenantId();

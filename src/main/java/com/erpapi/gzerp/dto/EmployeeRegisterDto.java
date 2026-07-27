@@ -5,7 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-public class UserCreateDto {
+public class EmployeeRegisterDto {
 
     @NotNull
     private Long tenantId;
@@ -24,10 +24,10 @@ public class UserCreateDto {
     @Size(min = 6, max = 254)
     private String email;
 
-    public UserCreateDto() {
+    public EmployeeRegisterDto() {
     }
 
-    public UserCreateDto(String userName, String password, String email, Long tenantId, String name) {
+    public EmployeeRegisterDto(String userName, String password, String email, Long tenantId, String name) {
         this.userName = userName;
         this.password = password;
         this.email = email;

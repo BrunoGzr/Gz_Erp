@@ -2,6 +2,7 @@ package com.erpapi.gzerp.models;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -19,7 +20,7 @@ public class Partners {
     private Tenants tenant;
 
     @NotNull
-    @Size(min = 11, max = 11)
+    @Size(min = 10, max = 20)
     private String cpf;
 
     @NotNull
@@ -39,7 +40,18 @@ public class Partners {
     @Nullable
     private BigDecimal ownership;
 
+    @Nullable
+    private Float salary;
+
     public Partners() {}
+
+    public float getSalary() {
+        return salary;
+    }
+
+    public void setSalary(float salary) {
+        this.salary = salary;
+    }
 
     public Long getId() {
         return id;

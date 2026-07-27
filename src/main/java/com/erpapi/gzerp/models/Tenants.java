@@ -4,10 +4,13 @@ import com.erpapi.gzerp.enums.Plans;
 import com.erpapi.gzerp.enums.Status;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 public class Tenants {
@@ -17,7 +20,7 @@ public class Tenants {
     private Long id;
 
     @NotNull
-    @Size(min = 14 , max = 14)
+    @Size(min = 10 , max = 20)
     private String cnpj;
 
     @NotNull
@@ -25,39 +28,52 @@ public class Tenants {
     @Size(min = 5, max = 256)
     private String email;
 
+    @NotEmpty
+    @Size(min = 11, max = 15)
+    @Column(name = "phone")
+    private String phone;
+
     @NotNull
     private String razaoSocial;
 
     private String nomeFantasia;
 
-    @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.EAGER, orphanRemoval = true)
-    private ArrayList<Partners> partners;
+    @OneToMany(mappedBy = "tenant", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+    private List<Partners> partners = new ArrayList<>();
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     private Plans plan;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     private Status status;
     private Boolean demo;
-    private Timestamp register_at;
-    private Timestamp update_at;
 
+    @Column(name = "register_at", insertable = false, updatable = false)
+    private LocalDateTime registerAt;
+    @Column(name = "updated_at", insertable = false, updatable = false)
+    private LocalDateTime updateAt;
 
+    @Column(name = "is_admin")
     private Boolean isAdmin;
 
     public Tenants() {}
 
-    public Tenants(Long id, String cnpj, String email, String razaoSocial, String nomeFantasia, Plans plan, Status status, Boolean demo, Timestamp register_at, Timestamp update_at) {
-        this.id = id;
-        this.cnpj = cnpj;
-        this.email = email;
-        this.razaoSocial = razaoSocial;
-        this.nomeFantasia = nomeFantasia;
-        this.plan = plan;
-        this.status = status;
-        this.demo = demo;
-        this.register_at = register_at;
-        this.update_at = update_at;
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public Boolean getAdmin() {
+        return isAdmin;
+    }
+
+    public void setisAdmin(Boolean admin) {
+        this.isAdmin = admin;
     }
 
     public Long getId() {
@@ -124,20 +140,26 @@ public class Tenants {
         this.demo = demo;
     }
 
-    public Timestamp getRegister_at() {
-        return register_at;
+    public LocalDateTime getRegisterAt() {
+        return registerAt;
     }
 
-    public void setRegister_at(Timestamp register_at) {
-        this.register_at = register_at;
+    public void setRegisterAt(LocalDateTime register_at) {
+        this.registerAt = register_at;
     }
 
-    public Timestamp getUpdate_at() {
-        return update_at;
+    public LocalDateTime getUpdateAt() {
+        return updateAt;
     }
 
-    public void setUpdate_at(Timestamp update_at) {
-        this.update_at = update_at;
+    public void setUpdateAt(LocalDateTime update_at) {
+        this.updateAt = update_at;
+    }
+
+    public void addPartner(Partners partner){
+        this.partners.add(partner);
+        partner.setTenant(this);
+
     }
 }
 
