@@ -5,5 +5,13 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TenantsRepo extends JpaRepository<Tenants, Long> {
 
+    boolean existsByEmailAndId(String email, Long tenantId);
+
+    boolean existsByEmail(String email);
+
+    boolean existsByCnpj(String cnpj);
+
+    boolean existsByRazaoSocial(String razaoSocial);
+
 
 }

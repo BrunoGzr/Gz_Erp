@@ -1,9 +1,9 @@
 CREATE TABLE tenants
 (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-    cnpj VARCHAR(14) NOT NULL UNIQUE ,
+    cnpj VARCHAR(20) NOT NULL UNIQUE ,
     email VARCHAR(256) NOT NULL UNIQUE ,
-    razao_social VARCHAR(150) NOT NULL ,
+    razao_social VARCHAR(150) NOT NULL UNIQUE,
     nome_fantasia VARCHAR(150) NOT NULL ,
     phone VARCHAR(20),
     is_admin BOOLEAN DEFAULT false,
@@ -20,7 +20,7 @@ CREATE TABLE tenants
 CREATE TABLE partners(
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     tenant_id BIGINT UNSIGNED NOT NULL,
-    cpf VARCHAR(11) NOT NULL,
+    cpf VARCHAR(20) NOT NULL,
     full_name VARCHAR(256),
     ownership DECIMAL(5,2) NULL ,
     email VARCHAR(256),
