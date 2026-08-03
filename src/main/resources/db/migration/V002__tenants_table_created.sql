@@ -4,7 +4,7 @@ CREATE TABLE tenants
     cnpj VARCHAR(20) NOT NULL UNIQUE ,
     email VARCHAR(256) NOT NULL UNIQUE ,
     razao_social VARCHAR(150) NOT NULL UNIQUE,
-    nome_fantasia VARCHAR(150) NOT NULL ,
+    nome_fantasia VARCHAR(150) ,
     phone VARCHAR(20),
     is_admin BOOLEAN DEFAULT false,
 
@@ -25,7 +25,7 @@ CREATE TABLE partners(
     ownership DECIMAL(5,2) NULL ,
     email VARCHAR(256),
     phone VARCHAR(20),
-    salary FLOAT NULL,
+    salary DECIMAL(10,2) NULL,
 
 
     CONSTRAINT fk_partners_tenant

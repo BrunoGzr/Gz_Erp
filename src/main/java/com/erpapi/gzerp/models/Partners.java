@@ -41,15 +41,15 @@ public class Partners {
     private BigDecimal ownership;
 
     @Nullable
-    private Float salary;
+    private BigDecimal salary;
 
     public Partners() {}
 
-    public float getSalary() {
+    public BigDecimal getSalary() {
         return salary;
     }
 
-    public void setSalary(float salary) {
+    public void setSalary(BigDecimal salary) {
         this.salary = salary;
     }
 

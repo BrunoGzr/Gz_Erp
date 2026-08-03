@@ -20,12 +20,10 @@ public class EmployeesResource {
 
     private final EmployeesRepo employeesRepo;
     private final EmployeesService employeesService;
-    private final ApplicationEventPublisher eventPublisher;
 
     public EmployeesResource(EmployeesRepo employeesRepo, EmployeesService employeesService, ApplicationEventPublisher eventPublisher) {
         this.employeesRepo = employeesRepo;
         this.employeesService = employeesService;
-        this.eventPublisher = eventPublisher;
     }
 
 
@@ -33,7 +31,6 @@ public class EmployeesResource {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<EmployeeResponseDto> registerUser(@Valid @RequestBody EmployeeRegisterDto userDto, HttpServletResponse response) {
         EmployeeResponseDto savedUser = employeesService.RegisterUserWithTenantCreated(userDto);
-//        eventPublisher.publishEvent(new ResourceCreatedEvent(this, response, savedUser.getId()));
         return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
     }
 
@@ -52,12 +49,6 @@ public class EmployeesResource {
         return ResponseEntity.notFound().build();
     }
 
-//    @PutMapping("/{id}")
-//    public ResponseEntity<?> UpdateUsers(@PathVariable Long id, @Valid @RequestBody Users user){
-//
-//
-//        return usersService.UpdateUsers(user,id);
-//    }
 
 
 

@@ -1,8 +1,6 @@
 package com.erpapi.gzerp.dto;
 
-import com.erpapi.gzerp.models.Tenants;
 import jakarta.annotation.Nullable;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
@@ -14,7 +12,7 @@ public class PartnersRegisterDto {
     private String cpf;
 
     @NotEmpty
-    private String fullName;
+    private String name;
 
     @NotEmpty
     @Email
@@ -27,7 +25,7 @@ public class PartnersRegisterDto {
     private BigDecimal ownership;
 
     @Nullable
-    private Float salary;
+    private BigDecimal salary;
 
 
     public PartnersRegisterDto() {};
@@ -40,12 +38,12 @@ public class PartnersRegisterDto {
         this.cpf = cpf;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getName() {
+        return name;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {
@@ -74,11 +72,11 @@ public class PartnersRegisterDto {
     }
 
     @Nullable
-    public Float getSalary() {
+    public BigDecimal getSalary() {
         return salary;
     }
 
-    public void setSalary(@Nullable Float salary) {
+    public void setSalary(@Nullable BigDecimal salary) {
         this.salary = salary;
     }
 }

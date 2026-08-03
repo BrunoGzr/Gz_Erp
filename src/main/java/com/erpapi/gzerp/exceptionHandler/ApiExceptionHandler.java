@@ -1,6 +1,7 @@
 package com.erpapi.gzerp.exceptionHandler;
 
-import com.erpapi.gzerp.Exceptions.UserAlreadyExistException;
+import com.erpapi.gzerp.exceptions.InvalidCredentialsException;
+import com.erpapi.gzerp.exceptions.UserAlreadyExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.MessageSource;
@@ -78,5 +79,15 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problemDetail.setProperty("errors", ex.getConflictedFields());
         problemDetail.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problemDetail);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<Object> HandleInvalidCredentialsException(InvalidCredentialsException ex,
+                                                                   HttpServletRequest request) {
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problemDetail.setTitle("Invalid Credentials");
+        problemDetail.setType(URI.create("/Errors/InvalidCredentials"));
+        problemDetail.setInstance(URI.create(request.getRequestURI()));
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
     }
 }

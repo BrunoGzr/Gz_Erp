@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.Exceptions;
+package com.erpapi.gzerp.exceptions;
 
 import java.util.ArrayList;
 import java.util.List;

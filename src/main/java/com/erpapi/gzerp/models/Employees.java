@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 @Entity
@@ -36,9 +37,15 @@ public class Employees {
     private String password;
 
     private boolean isAdmin;
+    
+    private BigDecimal salary;
 
-    public String getPassword() {
-        return password;
+    public BigDecimal getSalary() {
+        return salary;
+    }
+
+    public void setSalary(BigDecimal salary) {
+        this.salary = salary;
     }
 
     public void setPassword(String password) {
@@ -94,7 +101,7 @@ public class Employees {
         return isAdmin;
     }
 
-    public void setAdmin(boolean admin) {
+    public void  setAdmin(boolean admin) {
     isAdmin = admin;}
 
     public Long getTenantId() {

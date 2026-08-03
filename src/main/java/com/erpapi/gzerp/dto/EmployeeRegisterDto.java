@@ -5,6 +5,8 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
+import java.math.BigDecimal;
+
 public class EmployeeRegisterDto {
 
     @NotNull
@@ -24,15 +26,27 @@ public class EmployeeRegisterDto {
     @Size(min = 6, max = 254)
     private String email;
 
+    @NotBlank
+    private BigDecimal salary;
+
     public EmployeeRegisterDto() {
     }
 
-    public EmployeeRegisterDto(String userName, String password, String email, Long tenantId, String name) {
+    public EmployeeRegisterDto(String userName, String password, String email, Long tenantId, String name, BigDecimal salary) {
         this.userName = userName;
         this.password = password;
         this.email = email;
         this.tenantId = tenantId;
         this.name = name;
+        this.salary = salary;
+    }
+
+    public BigDecimal getSalary() {
+        return salary;
+    }
+
+    public void setSalary(BigDecimal salary) {
+        this.salary = salary;
     }
 
     public String getUserName() {

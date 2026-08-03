@@ -1,6 +1,6 @@
 package com.erpapi.gzerp.services;
 
-import com.erpapi.gzerp.Exceptions.UserAlreadyExistException;
+import com.erpapi.gzerp.exceptions.UserAlreadyExistException;
 import com.erpapi.gzerp.dto.PartnersRegisterDto;
 import com.erpapi.gzerp.dto.TenantRegisterDto;
 import com.erpapi.gzerp.dto.TenantResponseDto;
@@ -58,7 +58,7 @@ public class TenantsService {
             Partners newPartner = new Partners();
             newPartner.setEmail(partnerDto.getEmail());
             newPartner.setCpf(partnerDto.getCpf());
-            newPartner.setFullName(partnerDto.getFullName());
+            newPartner.setFullName(partnerDto.getName());
             newPartner.setPhone(partnerDto.getPhone());
             newPartner.setSalary(partnerDto.getSalary());
             if (partnerDto.getOwnership() != null){

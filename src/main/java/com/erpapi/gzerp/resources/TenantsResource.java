@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.resources;
 
+import com.erpapi.gzerp.dto.PartnersRegisterDto;
 import com.erpapi.gzerp.dto.TenantRegisterDto;
 import com.erpapi.gzerp.dto.TenantResponseDto;
 import com.erpapi.gzerp.repositories.TenantsRepo;
@@ -17,7 +18,6 @@ public class TenantsResource {
 
     private final TenantsRepo tenantsRepo;
     @Autowired
-    private ApplicationEventPublisher eventPublisher;
     private final TenantsService tenantsService;
 
 

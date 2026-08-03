@@ -159,7 +159,9 @@ public class Tenants {
     public void addPartner(Partners partner){
         this.partners.add(partner);
         partner.setTenant(this);
+    }
 
+    public ArrayList<Partners> getPartners(){
+        return (ArrayList<Partners>) this.partners;
     }
 }
-
