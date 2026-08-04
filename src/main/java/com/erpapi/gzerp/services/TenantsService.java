@@ -1,6 +1,6 @@
 package com.erpapi.gzerp.services;
 
-import com.erpapi.gzerp.exceptions.UserAlreadyExistException;
+import com.erpapi.gzerp.exceptions.EmployeeAlreadyExistException;
 import com.erpapi.gzerp.dto.PartnersRegisterDto;
 import com.erpapi.gzerp.dto.TenantRegisterDto;
 import com.erpapi.gzerp.dto.TenantResponseDto;
@@ -10,6 +10,8 @@ import com.erpapi.gzerp.models.Partners;
 import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.repositories.EmployeesRepo;
 import com.erpapi.gzerp.repositories.TenantsRepo;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,10 +25,12 @@ public class TenantsService {
 
     private final TenantsRepo tenantsRepo;
     private final EmployeesRepo employeesRepo;
+    private final PasswordEncoder passwordEncoder;
 
     public TenantsService(TenantsRepo tenantsRepo, EmployeesRepo employeesRepo) {
         this.tenantsRepo = tenantsRepo;
         this.employeesRepo = employeesRepo;
+        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
 
@@ -40,7 +44,7 @@ public class TenantsService {
         if (tenantsRepo.existsByRazaoSocial(dto.getRazaoSocial())){
             conflictedFields.add("The razao social already exists");}
         if (!conflictedFields.isEmpty()){
-           throw new UserAlreadyExistException(conflictedFields);}
+           throw new EmployeeAlreadyExistException(conflictedFields);}
         Tenants newTenant = new Tenants();
         newTenant.setCnpj(dto.getCnpj());
         newTenant.setEmail(dto.getEmail());
@@ -61,6 +65,7 @@ public class TenantsService {
             newPartner.setFullName(partnerDto.getName());
             newPartner.setPhone(partnerDto.getPhone());
             newPartner.setSalary(partnerDto.getSalary());
+            newPartner.setPassword(passwordEncoder.encode(dto.get));
             if (partnerDto.getOwnership() != null){
                 newPartner.setOwnership(partnerDto.getOwnership());
             };

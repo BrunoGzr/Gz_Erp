@@ -36,7 +36,7 @@ public class TenantResponseDto {
     }
 
     public void setPartners(ArrayList<PartnersResponseDto> partners) {
-
+        this.partners = new ArrayList<>();
         for (PartnersResponseDto partner : partners) {
             this.partners.add(partner);
         }

@@ -3,10 +3,10 @@ package com.erpapi.gzerp.exceptions;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UserAlreadyExistException extends RuntimeException {
+public class EmployeeAlreadyExistException extends RuntimeException {
     private List<String> conflictedFields = new ArrayList<>();
 
-    public UserAlreadyExistException(List<String> fields) {
+    public EmployeeAlreadyExistException(List<String> fields) {
         super("Conflicting fields: " + String.join(", ",fields));
         this.conflictedFields = fields;
     }

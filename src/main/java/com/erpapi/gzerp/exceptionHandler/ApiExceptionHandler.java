@@ -1,7 +1,7 @@
 package com.erpapi.gzerp.exceptionHandler;
 
 import com.erpapi.gzerp.exceptions.InvalidCredentialsException;
-import com.erpapi.gzerp.exceptions.UserAlreadyExistException;
+import com.erpapi.gzerp.exceptions.EmployeeAlreadyExistException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.MessageSource;
@@ -70,8 +70,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     }
 
-    @ExceptionHandler(UserAlreadyExistException.class)
-    public ResponseEntity<Object> HandleUserAlreadyExistException(UserAlreadyExistException ex,
+    @ExceptionHandler(EmployeeAlreadyExistException.class)
+    public ResponseEntity<Object> HandleUserAlreadyExistException(EmployeeAlreadyExistException ex,
                                                                   HttpServletRequest request) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Company already registered, please login in a partner account");
         problemDetail.setTitle("Company already registered");

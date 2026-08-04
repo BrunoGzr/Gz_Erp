@@ -6,3 +6,5 @@ ALTER TABLE employees
     ADD hire_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     ADD roles varchar(1) DEFAULT NULL;
 
+ALTER TABLE partners
+    ADD password TEXT NOT NULL;

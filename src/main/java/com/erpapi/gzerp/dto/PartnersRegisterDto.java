@@ -27,8 +27,14 @@ public class PartnersRegisterDto {
     @Nullable
     private BigDecimal salary;
 
+    private String password;
+
 
     public PartnersRegisterDto() {};
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     public String getCpf() {
         return cpf;

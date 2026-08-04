@@ -1,6 +1,6 @@
 package com.erpapi.gzerp.services;
 
-import com.erpapi.gzerp.exceptions.UserAlreadyExistException;
+import com.erpapi.gzerp.exceptions.EmployeeAlreadyExistException;
 import com.erpapi.gzerp.dto.EmployeeRegisterDto;
 import com.erpapi.gzerp.dto.EmployeeResponseDto;
 import com.erpapi.gzerp.models.Employees;
@@ -24,14 +24,14 @@ public class EmployeesService {
     private PasswordEncoder passwordEncoder;
 
     
-    public EmployeeResponseDto RegisterUserWithTenantCreated(EmployeeRegisterDto employeeRegisterDto) throws UserAlreadyExistException {
+    public EmployeeResponseDto RegisterEmployeeWithTenantCreated(EmployeeRegisterDto employeeRegisterDto) throws EmployeeAlreadyExistException {
         List<String> conflictedFields = new ArrayList<String>();
         if (employeesRepo.existsByEmail(employeeRegisterDto.getEmail(), employeeRegisterDto.getTenantId())) {
             conflictedFields.add("User with this email already exists");}
         if (employeesRepo.existsByUserName(employeeRegisterDto.getUserName(), employeeRegisterDto.getTenantId())) {
             conflictedFields.add("User with this username already exists");}
         if (!conflictedFields.isEmpty()) {
-            throw new UserAlreadyExistException(conflictedFields);}
+            throw new EmployeeAlreadyExistException(conflictedFields);}
 
         Employees newEmployee = new Employees();
         newEmployee.setEmail(employeeRegisterDto.getEmail());
@@ -44,4 +44,6 @@ public class EmployeesService {
         Employees savedUser = employeesRepo.save(newEmployee);
         return new EmployeeResponseDto(savedUser);
     }
+    
+    
 }

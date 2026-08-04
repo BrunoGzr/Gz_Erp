@@ -42,8 +42,16 @@ public class Partners {
 
     @Nullable
     private BigDecimal salary;
+    
+    @NotNull
+    @Size(min = 8, max = 32)
+    private String password;
 
     public Partners() {}
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
     public BigDecimal getSalary() {
         return salary;
