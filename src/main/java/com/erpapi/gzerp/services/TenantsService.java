@@ -65,7 +65,7 @@ public class TenantsService {
             newPartner.setFullName(partnerDto.getName());
             newPartner.setPhone(partnerDto.getPhone());
             newPartner.setSalary(partnerDto.getSalary());
-            newPartner.setPassword(passwordEncoder.encode(dto.get));
+            newPartner.setPassword(passwordEncoder.encode(partnerDto.getPassword()));
             if (partnerDto.getOwnership() != null){
                 newPartner.setOwnership(partnerDto.getOwnership());
             };

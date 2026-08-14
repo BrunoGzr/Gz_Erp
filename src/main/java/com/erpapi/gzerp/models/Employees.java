@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.models;
 
+import com.erpapi.gzerp.enums.Roles;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -9,6 +10,7 @@ import jakarta.validation.constraints.Size;
 
 
 import java.math.BigDecimal;
+import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
@@ -35,6 +37,14 @@ public class Employees {
 
     @NotBlank
     private String password;
+
+    @NotBlank
+    @Size(min = 0, max = 22)
+    private String cpf;
+
+    private Timestamp hireDate;
+
+    private Roles roles;
 
     private boolean isAdmin;
     
@@ -118,5 +128,29 @@ public class Employees {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
+    }
+
+    public Timestamp getHireDate() {
+        return hireDate;
+    }
+
+    public void setHireDate(Timestamp hireDate) {
+        this.hireDate = hireDate;
+    }
+
+    public Roles getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Roles roles) {
+        this.roles = roles;
     }
 }

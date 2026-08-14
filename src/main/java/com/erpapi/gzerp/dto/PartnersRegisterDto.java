@@ -36,6 +36,10 @@ public class PartnersRegisterDto {
         this.password = password;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
     public String getCpf() {
         return cpf;
     }

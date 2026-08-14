@@ -17,13 +17,13 @@ import java.util.List;
 @Transactional
 public class EmployeesService {
 
-    @Autowired
+
     private EmployeesRepo employeesRepo;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public EmployeesService(EmployeesRepo employeesRepo) {
+        this.employeesRepo = employeesRepo;
+    }
 
-    
     public EmployeeResponseDto RegisterEmployeeWithTenantCreated(EmployeeRegisterDto employeeRegisterDto) throws EmployeeAlreadyExistException {
         List<String> conflictedFields = new ArrayList<String>();
         if (employeesRepo.existsByEmail(employeeRegisterDto.getEmail(), employeeRegisterDto.getTenantId())) {
@@ -37,7 +37,7 @@ public class EmployeesService {
         newEmployee.setEmail(employeeRegisterDto.getEmail());
         newEmployee.setTenantId(employeeRegisterDto.getTenantId());
         newEmployee.setUserName(employeeRegisterDto.getUserName());
-        newEmployee.setPassword(passwordEncoder.encode(employeeRegisterDto.getPassword()));
+        newEmployee.setPassword(employeeRegisterDto.getPassword());
         newEmployee.setName(employeeRegisterDto.getName());
         newEmployee.setSalary(employeeRegisterDto.getSalary());
         newEmployee.setAdmin(false);

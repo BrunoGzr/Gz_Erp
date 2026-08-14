@@ -37,7 +37,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                                  HttpStatusCode status,
                                  WebRequest request) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "Teste, deu o Argument Not Valid aqui."); // Invalid Request, please verify the following fields and try again
+                "Invalid Request, please verify the following fields and try again");
         problemDetail.setTitle("Invalid Request");
         problemDetail.setType(URI.create("/Errors/Validation"));
         List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
@@ -57,7 +57,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                                  HttpHeaders headers,
                                  HttpStatusCode status,
                                  WebRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Teste, deu o MessageNotReadable"); // "The request contains invalid / malformed values"
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "The request contains invalid / malformed values");
         problemDetail.setTitle("Invalid Request");
         problemDetail.setType(URI.create("/Errors/Validation"));
         Throwable cause = ex.getCause();
