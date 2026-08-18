@@ -2,7 +2,6 @@ package com.erpapi.gzerp.models;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -10,14 +9,19 @@ import java.math.BigDecimal;
 
 @Entity
 public class Partners {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenants tenant;
+
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "user_account_id")
+    private UsersAccounts usersAccount;
 
     @NotNull
     @Size(min = 10, max = 20)
@@ -44,7 +48,7 @@ public class Partners {
     private BigDecimal salary;
     
     @NotNull
-    @Size(min = 8, max = 32)
+    @Size(min = 8, max = 256)
     private String password;
 
     public Partners() {}
@@ -116,5 +120,17 @@ public class Partners {
 
     public void setOwnership(@Nullable BigDecimal ownership) {
         this.ownership = ownership;
+    }
+
+    public UsersAccounts getUsersAccount() {
+        return usersAccount;
+    }
+
+    public void setUsersAccount(UsersAccounts usersAccount) {
+        this.usersAccount = usersAccount;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }

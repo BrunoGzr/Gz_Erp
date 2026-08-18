@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.models;
 
+import com.erpapi.gzerp.enums.AccountType;
 import com.erpapi.gzerp.enums.Roles;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
@@ -21,6 +22,15 @@ public class Employees {
 
     @NotNull
     private Long tenantId;
+
+    @OneToOne
+    @MapsId
+    @JoinColumn(name = "user_account_id")
+    private UsersAccounts usersAccount;
+
+    @Enumerated(EnumType.STRING)
+    @NotBlank
+    private AccountType accountType;
 
     @NotBlank
     @Size(min = 3, max = 20)
@@ -152,5 +162,17 @@ public class Employees {
 
     public void setRoles(Roles roles) {
         this.roles = roles;
+    }
+
+    public UsersAccounts getUserAccounts() {
+        return usersAccount;
+    }
+
+    public void setUserAccounts(UsersAccounts usersAccounts) {
+        this.usersAccount = usersAccounts;
+    }
+
+    public String getPassword() {
+        return password;
     }
 }

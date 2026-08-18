@@ -72,7 +72,7 @@ public class Tenants {
         return isAdmin;
     }
 
-    public void setisAdmin(Boolean admin) {
+    public void setIsAdmin(Boolean admin) {
         this.isAdmin = admin;
     }
 

@@ -52,7 +52,7 @@ public class TenantsService {
         newTenant.setDemo(false);
         newTenant.setPlan(Plans.FREE);
         newTenant.setStatus(Status.ACTIVE);
-        newTenant.setisAdmin(false);
+        newTenant.setIsAdmin(false);
         newTenant.setPhone(dto.getPhone());
 
         if (dto.getNomeFantasia() != null) {
@@ -62,7 +62,7 @@ public class TenantsService {
             Partners newPartner = new Partners();
             newPartner.setEmail(partnerDto.getEmail());
             newPartner.setCpf(partnerDto.getCpf());
-            newPartner.setFullName(partnerDto.getName());
+            newPartner.setFullName(partnerDto.getFullName());
             newPartner.setPhone(partnerDto.getPhone());
             newPartner.setSalary(partnerDto.getSalary());
             newPartner.setPassword(passwordEncoder.encode(partnerDto.getPassword()));

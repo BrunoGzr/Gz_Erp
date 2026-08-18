@@ -12,7 +12,7 @@ public class PartnersRegisterDto {
     private String cpf;
 
     @NotEmpty
-    private String name;
+    private String fullName;
 
     @NotEmpty
     @Email
@@ -48,12 +48,12 @@ public class PartnersRegisterDto {
         this.cpf = cpf;
     }
 
-    public String getName() {
-        return name;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 
     public String getEmail() {

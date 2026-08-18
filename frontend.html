@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GzErp - Teste de Features</title>
+<style>
+  :root {
+    --bg: #f4f6f9; --card: #fff; --border: #d9dee5; --text: #1f2933;
+    --muted: #6b7785; --primary: #1a6ee0; --primary-dark: #1558b5;
+    --danger: #d64545; --success: #2e8b57; --warn: #b57d15;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+  header { background: #10233f; color: #fff; padding: 14px 20px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 1.15rem; font-weight: 600; }
+  header .meta { font-size: .8rem; color: #9fb3d1; }
+  main { max-width: 1200px; margin: 0 auto; padding: 20px 16px 60px; display: grid; gap: 20px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+  .card h2 { font-size: 1rem; margin-bottom: 4px; }
+  .card .sub { font-size: .8rem; color: var(--muted); margin-bottom: 14px; }
+  .badge { display: inline-block; font-size: .7rem; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 6px; vertical-align: middle; }
+  .badge.get { background: #e3f0ff; color: var(--primary); }
+  .badge.post { background: #e6f6ec; color: var(--success); }
+  .badge.put { background: #fff4e0; color: var(--warn); }
+  .badge.delete { background: #fdeaea; color: var(--danger); }
+  .table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; }
+  table { width: 100%; border-collapse: collapse; font-size: .82rem; min-width: 900px; }
+  th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+  th { background: #eef2f7; font-weight: 600; position: sticky; top: 0; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f7fafd; }
+  .empty { padding: 24px; text-align: center; color: var(--muted); font-size: .85rem; }
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .form-grid .full { grid-column: 1 / -1; }
+  label { display: block; font-size: .75rem; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  label .req { color: var(--danger); }
+  input, select { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: .85rem; background: #fff; color: var(--text); }
+  input:focus, select:focus { outline: 2px solid var(--primary); outline-offset: -1px; border-color: var(--primary); }
+  .actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+  button { padding: 9px 18px; border: none; border-radius: 6px; font-size: .85rem; font-weight: 600; cursor: pointer; transition: background .15s; }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-primary:hover { background: var(--primary-dark); }
+  .btn-danger { background: #fdeaea; color: var(--danger); }
+  .btn-danger:hover { background: #f9d7d7; }
+  .btn-ghost { background: #eef2f7; color: var(--text); }
+  .btn-ghost:hover { background: #e2e9f2; }
+  .btn-sm { padding: 5px 10px; font-size: .75rem; }
+  .btn:disabled { opacity: .5; cursor: not-allowed; }
+  .partner-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; padding: 10px; border: 1px dashed var(--border); border-radius: 8px; margin-bottom: 10px; position: relative; }
+  .partner-row .remove { grid-column: 1 / -1; justify-self: end; }
+  .log { background: #0f1c2e; color: #cfe3ff; font-family: ui-monospace, "Cascadia Code", Consolas, monospace; font-size: .75rem; padding: 12px; border-radius: 8px; max-height: 220px; overflow: auto; white-space: pre-wrap; word-break: break-all; }
+  .log .ok { color: #7fd6a2; }
+  .log .err { color: #ff9c9c; }
+  .editing-banner { background: #fff4e0; border: 1px solid #e8c98a; color: #7a5410; padding: 8px 12px; border-radius: 6px; font-size: .8rem; margin-bottom: 12px; display: none; align-items: center; justify-content: space-between; gap: 10px; }
+  @media (max-width: 600px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .actions { flex-direction: column; }
+    .actions button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <h1>GzErp &mdash; Teste de Features</h1>
+  <div class="meta">Base: <code>/api</code> &middot; Spring Boot REST</div>
+</header>
+<main>
+
+  <section class="card">
+    <h2>Employees <span class="badge get">GET /employees</span> <span class="badge post">POST /employees/register</span> <span class="badge put">PUT /employees/{id}</span> <span class="badge delete">DELETE /employees/{id}</span></h2>
+    <p class="sub">Campos do modelo: id, tenantId, userName, name, email, password, cpf, hireDate, roles, isAdmin, salary</p>
+
+    <div class="table-wrap">
+      <table id="emp-table">
+        <thead>
+          <tr>
+            <th>id</th><th>tenantId</th><th>userName</th><th>name</th><th>email</th>
+            <th>password</th><th>cpf</th><th>hireDate</th><th>roles</th><th>isAdmin</th><th>salary</th><th>Ações</th>
+          </tr>
+        </thead>
+        <tbody id="emp-tbody"></tbody>
+      </table>
+      <div class="empty" id="emp-empty">Nenhum registro retornado.</div>
+    </div>
+
+    <div class="editing-banner" id="emp-edit-banner">
+      <span id="emp-edit-label"></span>
+      <button class="btn-ghost btn-sm" onclick="cancelEdit()">Cancelar edição</button>
+    </div>
+
+    <form id="emp-form" novalidate>
+      <div class="form-grid">
+        <div><label>tenantId <span class="req">*</span></label><input type="number" name="tenantId" required min="1"></div>
+        <div><label>userName <span class="req">*</span></label><input type="text" name="userName" required minlength="1" maxlength="32"></div>
+        <div><label>name <span class="req">*</span></label><input type="text" name="name" required></div>
+        <div><label>email <span class="req">*</span></label><input type="email" name="email" required minlength="6" maxlength="254"></div>
+        <div><label>password <span class="req">*</span></label><input type="password" name="password" required minlength="6" maxlength="20"></div>
+        <div><label>cpf</label><input type="text" name="cpf" maxlength="22"></div>
+        <div><label>hireDate</label><input type="date" name="hireDate"></div>
+        <div><label>roles</label><input type="text" name="roles" placeholder="(enum vazio no backend)"></div>
+        <div><label>isAdmin</label><select name="isAdmin"><option value="false">false</option><option value="true">true</option></select></div>
+        <div><label>salary <span class="req">*</span></label><input type="number" step="0.01" name="salary" required></div>
+      </div>
+      <div class="actions">
+        <button type="submit" class="btn-primary" id="emp-submit">Criar (POST)</button>
+        <button type="button" class="btn-ghost" onclick="loadEmployees()">Recarregar lista (GET)</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Tenant <span class="badge post">POST /register</span></h2>
+    <p class="sub">Campos: cnpj, email, razaoSocial, nomeFantasia, phone, plan, status, demo, isAdmin + partners (mín. 1)</p>
+
+    <form id="tenant-form" novalidate>
+      <div class="form-grid">
+        <div><label>cnpj <span class="req">*</span></label><input type="text" name="cnpj" required maxlength="100" placeholder="12345678000195"></div>
+        <div><label>email <span class="req">*</span></label><input type="email" name="email" required minlength="5" maxlength="254"></div>
+        <div><label>razaoSocial <span class="req">*</span></label><input type="text" name="razaoSocial" required minlength="6" maxlength="180"></div>
+        <div><label>nomeFantasia</label><input type="text" name="nomeFantasia"></div>
+        <div><label>phone <span class="req">*</span></label><input type="tel" name="phone" required minlength="11" maxlength="15" placeholder="11999999999"></div>
+        <div><label>plan</label><select name="plan"><option>FREE</option><option>INICIAL</option><option>SCALING</option><option>ENTERPRISE</option></select></div>
+        <div><label>status</label><select name="status"><option>ACTIVE</option><option>PENDENT</option><option>INACTIVE</option><option>BLOCKED</option><option>DELETED</option></select></div>
+        <div><label>demo</label><select name="demo"><option value="false">false</option><option value="true">true</option></select></div>
+        <div><label>isAdmin</label><select name="isAdmin"><option value="false">false</option><option value="true">true</option></select></div>
+      </div>
+
+      <h3 style="margin-top:18px;font-size:.9rem;">Partners <span class="req">*</span> (mínimo 1)</h3>
+      <div id="partners-list" style="margin-top:10px;"></div>
+      <div class="actions">
+        <button type="button" class="btn-ghost" onclick="addPartner()">+ Adicionar partner</button>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn-primary">Criar tenant (POST /register)</button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card">
+    <h2>Log de requisições</h2>
+    <div class="sub">Últimas respostas da API (status + corpo)</div>
+    <div class="log" id="log">Aguardando requisições...</div>
+  </section>
+
+</main>
+
+<script>
+const API = "http://localhost:89 89";
+let editingId = null;
+
+function log(msg, cls) {
+  const el = document.getElementById("log");
+  const time = new Date().toLocaleTimeString();
+  el.innerHTML = '<span class="' + (cls || "") + '">[' + time + '] ' + msg + '</span>\n' + el.innerHTML;
+}
+
+function esc(v) {
+  return String(v ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+async function request(method, url, body) {
+  log(method + " " + url);
+  const opts = { method, headers: {} };
+  if (body !== undefined) {
+    opts.headers["Content-Type"] = "application/json";
+    opts.body = JSON.stringify(body);
+  }
+  const res = await fetch(API + url, opts);
+  let text = "";
+  try { text = await res.text(); } catch (e) {}
+  let parsed = null;
+  try { parsed = text ? JSON.parse(text) : null; } catch (e) { parsed = text; }
+  log(res.status + " " + res.statusText + " — " + (text || "(vazio)"), res.ok ? "ok" : "err");
+  return { res, data: parsed };
+}
+
+async function loadEmployees() {
+  const tbody = document.getElementById("emp-tbody");
+  const empty = document.getElementById("emp-empty");
+  try {
+    const { res, data } = await request("GET", "/employees");
+    const rows = (res.status === 204) ? [] : (Array.isArray(data) ? data : []);
+    tbody.innerHTML = "";
+    empty.style.display = rows.length ? "none" : "block";
+    rows.forEach(e => {
+      const tr = document.createElement("tr");
+      tr.innerHTML =
+        "<td>" + esc(e.id) + "</td>" +
+        "<td>" + esc(e.tenantId ?? e.tenantid) + "</td>" +
+        "<td>" + esc(e.userName) + "</td>" +
+        "<td>" + esc(e.name) + "</td>" +
+        "<td>" + esc(e.email) + "</td>" +
+        "<td>" + esc(e.password) + "</td>" +
+        "<td>" + esc(e.cpf) + "</td>" +
+        "<td>" + esc(e.hireDate) + "</td>" +
+        "<td>" + esc(e.roles) + "</td>" +
+        "<td>" + esc(e.isAdmin) + "</td>" +
+        "<td>" + esc(e.salary) + "</td>" +
+        '<td><button class="btn-ghost btn-sm" data-edit="' + esc(e.id) + '">Editar</button> ' +
+        '<button class="btn-danger btn-sm" data-del="' + esc(e.id) + '">Deletar</button></td>';
+      tr.querySelector("[data-edit]").onclick = () => fillForm(e);
+      tr.querySelector("[data-del]").onclick = () => deleteEmployee(e.id);
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    log("Erro de rede: " + err.message, "err");
+  }
+}
+
+function formToEmployee(form) {
+  const fd = new FormData(form);
+  return {
+    tenantId: Number(fd.get("tenantId")),
+    userName: fd.get("userName"),
+    name: fd.get("name"),
+    email: fd.get("email"),
+    password: fd.get("password"),
+    cpf: fd.get("cpf") || null,
+    hireDate: fd.get("hireDate") || null,
+    roles: fd.get("roles") || null,
+    isAdmin: fd.get("isAdmin") === "true",
+    salary: Number(fd.get("salary"))
+  };
+}
+
+function fillForm(e) {
+  const form = document.getElementById("emp-form");
+  form.tenantId.value = e.tenantId ?? e.tenantid ?? "";
+  form.userName.value = e.userName ?? "";
+  form.name.value = e.name ?? "";
+  form.email.value = e.email ?? "";
+  form.password.value = e.password ?? "";
+  form.cpf.value = e.cpf ?? "";
+  form.hireDate.value = e.hireDate ? String(e.hireDate).slice(0, 10) : "";
+  form.roles.value = e.roles ?? "";
+  form.isAdmin.value = e.isAdmin === true ? "true" : "false";
+  form.salary.value = e.salary ?? "";
+  editingId = e.id;
+  document.getElementById("emp-edit-banner").style.display = "flex";
+  document.getElementById("emp-edit-label").textContent = "Editando employee id=" + e.id + " (salvar via PUT)";
+  document.getElementById("emp-submit").textContent = "Salvar (PUT /employees/" + e.id + ")";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function cancelEdit() {
+  editingId = null;
+  document.getElementById("emp-form").reset();
+  document.getElementById("emp-edit-banner").style.display = "none";
+  document.getElementById("emp-submit").textContent = "Criar (POST)";
+}
+
+async function deleteEmployee(id) {
+  if (!confirm("Deletar employee id=" + id + " ?")) return;
+  try {
+    await request("DELETE", "/employees/" + id);
+    loadEmployees();
+  } catch (err) {
+    log("Erro de rede: " + err.message, "err");
+  }
+}
+
+document.getElementById("emp-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const form = ev.target;
+  if (!form.reportValidity()) return;
+  const payload = formToEmployee(form);
+  try {
+    if (editingId !== null) {
+      await request("PUT", "/employees/" + editingId, { ...payload, id: editingId });
+      cancelEdit();
+    } else {
+      await request("POST", "/employees/register", payload);
+      form.reset();
+    }
+    loadEmployees();
+  } catch (err) {
+    log("Erro de rede: " + err.message, "err");
+  }
+});
+
+function addPartner(values) {
+  values = values || {};
+  const list = document.getElementById("partners-list");
+  const div = document.createElement("div");
+  div.className = "partner-row";
+  div.innerHTML =
+    '<div><label>name <span class="req">*</span></label><input type="text" name="p-name" required value="' + esc(values.name ?? "") + '"></div>' +
+    '<div><label>cpf <span class="req">*</span></label><input type="text" name="p-cpf" required maxlength="20" value="' + esc(values.cpf ?? "") + '"></div>' +
+    '<div><label>email <span class="req">*</span></label><input type="email" name="p-email" required value="' + esc(values.email ?? "") + '"></div>' +
+    '<div><label>phone <span class="req">*</span></label><input type="tel" name="p-phone" required value="' + esc(values.phone ?? "") + '"></div>' +
+    '<div><label>ownership</label><input type="number" step="0.01" name="p-ownership" value="' + esc(values.ownership ?? "") + '"></div>' +
+    '<div><label>salary</label><input type="number" step="0.01" name="p-salary" value="' + esc(values.salary ?? "") + '"></div>' +
+    '<div><label>password</label><input type="password" name="p-password" value="' + esc(values.password ?? "") + '"></div>' +
+    '<button type="button" class="btn-danger btn-sm remove">Remover</button>';
+  div.querySelector(".remove").onclick = () => div.remove();
+  list.appendChild(div);
+}
+
+document.getElementById("tenant-form").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  const form = ev.target;
+  if (!form.reportValidity()) return;
+  const fd = new FormData(form);
+  const partners = [];
+  form.querySelectorAll(".partner-row").forEach(row => {
+    const get = n => row.querySelector('[name="' + n + '"]')?.value ?? "";
+    partners.push({
+      name: get("p-name"),
+      cpf: get("p-cpf"),
+      email: get("p-email"),
+      phone: get("p-phone"),
+      ownership: get("p-ownership") ? Number(get("p-ownership")) : null,
+      salary: get("p-salary") ? Number(get("p-salary")) : null,
+      password: get("p-password") || null
+    });
+  });
+  if (!partners.length) { alert("Informe pelo menos 1 partner."); return; }
+  const payload = {
+    cnpj: fd.get("cnpj"),
+    email: fd.get("email"),
+    razaoSocial: fd.get("razaoSocial"),
+    nomeFantasia: fd.get("nomeFantasia") || null,
+    phone: fd.get("phone"),
+    plan: fd.get("plan"),
+    status: fd.get("status"),
+    demo: fd.get("demo") === "true",
+    isAdmin: fd.get("isAdmin") === "true",
+    partners
+  };
+  try {
+    await request("POST", "/register", payload);
+    form.reset();
+    document.getElementById("partners-list").innerHTML = "";
+    addPartner();
+  } catch (err) {
+    log("Erro de rede: " + err.message, "err");
+  }
+});
+
+addPartner();
+loadEmployees();
+</script>
+</body>
+</html>

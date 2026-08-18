@@ -4,9 +4,11 @@ import com.erpapi.gzerp.models.Partners;
 import com.erpapi.gzerp.models.Tenants;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.util.List;
+
 public interface TenantsRepo extends JpaRepository<Tenants, Long> {
 
-    boolean existsByEmailAndId(String email, Long tenantId);
+    boolean existsByEmailAndId(String email, Long id);
 
     boolean existsByEmail(String email);
 
@@ -14,7 +16,6 @@ public interface TenantsRepo extends JpaRepository<Tenants, Long> {
 
     boolean existsByRazaoSocial(String razaoSocial);
 
-    Partners findByTenantId(Long tenantId);
     
 
 
