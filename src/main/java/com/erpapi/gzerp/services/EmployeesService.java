@@ -5,8 +5,6 @@ import com.erpapi.gzerp.dto.EmployeeRegisterDto;
 import com.erpapi.gzerp.dto.EmployeeResponseDto;
 import com.erpapi.gzerp.models.Employees;
 import com.erpapi.gzerp.repositories.EmployeesRepo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,7 +36,7 @@ public class EmployeesService {
         newEmployee.setTenantId(employeeRegisterDto.getTenantId());
         newEmployee.setUserName(employeeRegisterDto.getUserName());
         newEmployee.setPassword(employeeRegisterDto.getPassword());
-        newEmployee.setName(employeeRegisterDto.getName());
+        newEmployee.setFullName(employeeRegisterDto.getName());
         newEmployee.setSalary(employeeRegisterDto.getSalary());
         newEmployee.setAdmin(false);
         Employees savedUser = employeesRepo.save(newEmployee);

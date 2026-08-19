@@ -15,10 +15,10 @@ public class UsersAccounts {
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @Size(max = 100)
+    @Size(max = 256)
     @NotBlank
     @Email
-    @Column(name = "email", nullable = false, length = 100)
+    @Column(name = "email", nullable = false, length = 256)
     private String email;
 
     @Size(max = 50)

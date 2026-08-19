@@ -2,6 +2,7 @@ package com.erpapi.gzerp.models;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
@@ -23,15 +24,15 @@ public class Partners {
     @JoinColumn(name = "user_account_id")
     private UsersAccounts usersAccount;
 
-    @NotNull
+    @NotBlank
     @Size(min = 10, max = 20)
     private String cpf;
 
-    @NotNull
+    @NotBlank
     @Size(min = 2, max = 256)
     private String fullName;
 
-    @NotNull
+    @NotBlank
     @Size(min = 5, max = 256)
     @Email
     private String email;

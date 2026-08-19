@@ -17,7 +17,6 @@ import java.util.Objects;
 @Entity
 public class Employees {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @NotNull
@@ -37,8 +36,8 @@ public class Employees {
     private String userName;
 
     @NotBlank
-    @Size(min = 3, max = 100)
-    private String name;
+    @Size(min = 3, max = 256)
+    private String fullName;
 
     @Size(min = 6, max = 256)
     @NotBlank
@@ -132,12 +131,12 @@ public class Employees {
         this.tenantId = tenantId;
     }
 
-    public String getName() {
-        return name;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFullName(String name) {
+        this.fullName = name;
     }
 
     public String getCpf() {

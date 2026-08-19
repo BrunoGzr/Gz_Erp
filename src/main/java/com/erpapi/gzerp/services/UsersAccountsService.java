@@ -1,6 +1,9 @@
 package com.erpapi.gzerp.services;
 
 
+import com.erpapi.gzerp.dto.UserAccountRegisterDto;
+import com.erpapi.gzerp.dto.UserAccountResponseDto;
+import com.erpapi.gzerp.models.UsersAccounts;
 import com.erpapi.gzerp.repositories.UsersAccountRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,4 +19,9 @@ public class UsersAccountsService {
     }
 
 
+
+    public UserAccountResponseDto UserRegister(UserAccountRegisterDto dto){
+         
+
+    }
 }

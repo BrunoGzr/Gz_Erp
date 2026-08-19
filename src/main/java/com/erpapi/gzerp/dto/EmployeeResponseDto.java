@@ -17,7 +17,7 @@ public class EmployeeResponseDto {
 
     public EmployeeResponseDto(Employees user) {
         this.id = user.getId();
-        this.name = user.getName();
+        this.name = user.getFullName();
         this.tenantId = user.getTenantId();
         this.userName = user.getUserName();
         this.email = user.getEmail();
