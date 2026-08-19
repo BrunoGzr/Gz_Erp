@@ -1,12 +1,8 @@
 package com.erpapi.gzerp.dto;
 
-import com.erpapi.gzerp.enums.AccountType;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -23,12 +19,9 @@ public class UserAccountRegisterDto {
     private String username;
 
     @NotBlank
-    @Size(max = 255)
+    @Size(max = 256)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    @NotBlank
-    private AccountType accountType;
 
     @NotBlank
     private Long tenantId;
@@ -77,14 +70,6 @@ public class UserAccountRegisterDto {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public AccountType getAccountType() {
-        return accountType;
-    }
-
-    public void setAccountType(AccountType accountType) {
-        this.accountType = accountType;
     }
 
     public Long getTenantId() {

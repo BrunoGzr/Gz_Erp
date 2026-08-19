@@ -22,7 +22,7 @@ public class Partners {
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_account_id")
-    private UsersAccounts usersAccount;
+    private UsersAccounts usersAccounts;
 
     @NotBlank
     @Size(min = 10, max = 20)
@@ -123,12 +123,12 @@ public class Partners {
         this.ownership = ownership;
     }
 
-    public UsersAccounts getUsersAccount() {
-        return usersAccount;
+    public UsersAccounts getUsersAccounts() {
+        return usersAccounts;
     }
 
-    public void setUsersAccount(UsersAccounts usersAccount) {
-        this.usersAccount = usersAccount;
+    public void setUsersAccounts(UsersAccounts usersAccounts) {
+        this.usersAccounts = usersAccounts;
     }
 
     public String getPassword() {

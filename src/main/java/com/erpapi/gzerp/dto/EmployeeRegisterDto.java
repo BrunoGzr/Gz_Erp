@@ -16,7 +16,7 @@ public class EmployeeRegisterDto {
     private String userName;
 
     @NotBlank
-    private String name;
+    private String fullName;
 
     @NotBlank
     @Size(min = 6, max = 20)
@@ -29,16 +29,42 @@ public class EmployeeRegisterDto {
     @NotBlank
     private BigDecimal salary;
 
-    public EmployeeRegisterDto() {
+    @NotBlank
+    @Size(min = 11, max = 14)
+    private String cpf;
+
+    @NotBlank
+    @Size(min = 11, max = 15)
+    private String phone;
+
+    public EmployeeRegisterDto(UserAccountRegisterDto dto) {
+        this.email = dto.getEmail();
+        this.userName = dto.getUsername();
+        this.password = dto.getPassword();
+        this.tenantId = dto.getTenantId();
+        this.cpf = dto.getCpf();
+        this.phone = dto.getPhone();
+        this.fullName = dto.getFullName();
     }
 
-    public EmployeeRegisterDto(String userName, String password, String email, Long tenantId, String name, BigDecimal salary) {
-        this.userName = userName;
-        this.password = password;
-        this.email = email;
-        this.tenantId = tenantId;
-        this.name = name;
-        this.salary = salary;
+    public EmployeeRegisterDto() {
+
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getCpf() {
+        return cpf;
+    }
+
+    public void setCpf(String cpf) {
+        this.cpf = cpf;
     }
 
     public BigDecimal getSalary() {
@@ -81,11 +107,11 @@ public class EmployeeRegisterDto {
         this.tenantId = tenantId;
     }
 
-    public String getName() {
-        return name;
+    public String getFullName() {
+        return fullName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
     }
 }

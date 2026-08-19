@@ -1,6 +1,7 @@
 package com.erpapi.gzerp.models;
 
-import com.erpapi.gzerp.enums.AccountType;
+import com.erpapi.gzerp.dto.UserAccountRegisterDto;
+import com.erpapi.gzerp.enums.UserType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -29,7 +30,7 @@ public class UsersAccounts {
     @Enumerated(EnumType.STRING)
     @NotNull
     @Column(name = "user_type", nullable = false)
-    private AccountType userType;
+    private UserType userType;
 
     @Size(max = 255)
     @NotBlank
@@ -39,14 +40,21 @@ public class UsersAccounts {
     @Column(name = "tenant_id", nullable = false)
     private Long tenantId;
 
-    @OneToOne(mappedBy = "userAccount", cascade = CascadeType.ALL, optional = true )
+    @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true )
     private Partners partner;
 
-    @OneToOne(mappedBy = "userAccount", cascade = CascadeType.ALL, optional = true )
+    @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true )
     private Employees employee;
 
 
     public UsersAccounts() {
+    }
+
+    public UsersAccounts(UserAccountRegisterDto dto){
+        this.email = dto.getEmail();
+        this.username = dto.getUsername();
+        this.password = dto.getPassword();
+        this.tenantId = dto.getTenantId();
     }
 
     public Partners getPartner() {
@@ -81,11 +89,11 @@ public class UsersAccounts {
         this.tenantId = tenantId;
     }
 
-    public AccountType getUserType() {
+    public UserType getUserType() {
         return userType;
     }
 
-    public void setUserType(AccountType userType) {
+    public void setUserType(UserType userType) {
         this.userType = userType;
     }
 

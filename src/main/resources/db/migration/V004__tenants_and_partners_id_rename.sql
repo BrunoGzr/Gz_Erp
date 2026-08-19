@@ -1,4 +1,4 @@
-CREATE TABLE user_accounts (
+CREATE TABLE users_accounts (
     id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
     email VARCHAR(100) NOT NULL UNIQUE,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -12,11 +12,11 @@ ALTER TABLE employees
 RENAME COLUMN id TO user_account_id;
 
 ALTER TABLE employees ADD FOREIGN KEY (user_account_id)
-    REFERENCES user_accounts(id);
+    REFERENCES users_accounts(id);
 
 ALTER TABLE partners
 RENAME COLUMN id TO user_account_id;
 
 ALTER TABLE partners ADD FOREIGN KEY (user_account_id)
-    REFERENCES user_accounts(id);
+    REFERENCES users_accounts(id);
 

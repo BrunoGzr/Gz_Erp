@@ -1,7 +1,7 @@
 package com.erpapi.gzerp.models;
 
-import com.erpapi.gzerp.enums.AccountType;
-import com.erpapi.gzerp.enums.Roles;
+import com.erpapi.gzerp.dto.EmployeeRegisterDto;
+import com.erpapi.gzerp.enums.UserType;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -16,6 +16,7 @@ import java.util.Objects;
 
 @Entity
 public class Employees {
+
     @Id
     private Long id;
 
@@ -25,11 +26,11 @@ public class Employees {
     @OneToOne
     @MapsId
     @JoinColumn(name = "user_account_id")
-    private UsersAccounts usersAccount;
+    private UsersAccounts usersAccounts;
 
     @Enumerated(EnumType.STRING)
     @NotBlank
-    private AccountType accountType;
+    private UserType userType;
 
     @NotBlank
     @Size(min = 3, max = 20)
@@ -53,11 +54,36 @@ public class Employees {
 
     private Timestamp hireDate;
 
-    private Roles roles;
-
     private boolean isAdmin;
-    
+
+    @NotBlank
     private BigDecimal salary;
+
+    private String phone;
+
+
+    public Employees(EmployeeRegisterDto dto) {
+        this.tenantId = dto.getTenantId();
+        this.userName = dto.getUserName();
+        this.email = dto.getEmail();
+        this.password = dto.getPassword();
+        this.cpf = dto.getCpf();
+        this.salary = dto.getSalary();
+        this.isAdmin = false;
+
+
+    }
+
+    public Employees() {
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
     public BigDecimal getSalary() {
         return salary;
@@ -121,7 +147,7 @@ public class Employees {
     }
 
     public void  setAdmin(boolean admin) {
-    isAdmin = admin;}
+    this.isAdmin = admin;}
 
     public Long getTenantId() {
         return tenantId;
@@ -155,20 +181,12 @@ public class Employees {
         this.hireDate = hireDate;
     }
 
-    public Roles getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Roles roles) {
-        this.roles = roles;
-    }
-
     public UsersAccounts getUserAccounts() {
-        return usersAccount;
+        return usersAccounts;
     }
 
-    public void setUserAccounts(UsersAccounts usersAccounts) {
-        this.usersAccount = usersAccounts;
+    public void setUsersAccounts(UsersAccounts usersAccounts) {
+        this.usersAccounts = usersAccounts;
     }
 
     public String getPassword() {

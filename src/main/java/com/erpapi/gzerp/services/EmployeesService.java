@@ -36,7 +36,7 @@ public class EmployeesService {
         newEmployee.setTenantId(employeeRegisterDto.getTenantId());
         newEmployee.setUserName(employeeRegisterDto.getUserName());
         newEmployee.setPassword(employeeRegisterDto.getPassword());
-        newEmployee.setFullName(employeeRegisterDto.getName());
+        newEmployee.setFullName(employeeRegisterDto.getFullName());
         newEmployee.setSalary(employeeRegisterDto.getSalary());
         newEmployee.setAdmin(false);
         Employees savedUser = employeesRepo.save(newEmployee);
