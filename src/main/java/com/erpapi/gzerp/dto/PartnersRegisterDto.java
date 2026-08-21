@@ -7,12 +7,16 @@ import java.math.BigDecimal;
 
 public class PartnersRegisterDto {
 
-    @NotNull
+    @NotBlank
     @Size(min = 10, max = 20)
     private String cpf;
 
     @NotEmpty
     private String fullName;
+
+    @Size(max = 50)
+    @NotBlank
+    private String username;
 
     @NotEmpty
     @Email
@@ -31,6 +35,14 @@ public class PartnersRegisterDto {
 
 
     public PartnersRegisterDto() {};
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
 
     public void setPassword(String password) {
         this.password = password;

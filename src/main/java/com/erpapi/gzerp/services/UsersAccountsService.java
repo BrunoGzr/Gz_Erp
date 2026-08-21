@@ -1,15 +1,14 @@
 package com.erpapi.gzerp.services;
 
 
-import com.erpapi.gzerp.dto.EmployeeRegisterDto;
-import com.erpapi.gzerp.dto.UserAccountRegisterDto;
-import com.erpapi.gzerp.dto.UserAccountResponseDto;
+import com.erpapi.gzerp.dto.PartnersRegisterDto;
 import com.erpapi.gzerp.enums.UserType;
-import com.erpapi.gzerp.models.Employees;
+import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.models.UsersAccounts;
 import com.erpapi.gzerp.repositories.EmployeesRepo;
 import com.erpapi.gzerp.repositories.PartnersRepo;
-import com.erpapi.gzerp.repositories.UsersAccountRepo;
+import com.erpapi.gzerp.repositories.UsersAccountsRepo;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,34 +16,35 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class UsersAccountsService {
 
-    private final UsersAccountRepo usersRepo;
-    private final EmployeesRepo employeesRepo;
-    private final PartnersRepo partnersRepo;
+    private final UsersAccountsRepo usersRepo;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsersAccountsService(UsersAccountRepo usersRepo, EmployeesRepo employeesRepo, PartnersRepo partnersRepo) {
+    public UsersAccountsService(UsersAccountsRepo usersRepo, EmployeesRepo employeesRepo, PartnersRepo partnersRepo, PasswordEncoder passwordEncoder) {
         this.usersRepo = usersRepo;
-        this.employeesRepo = employeesRepo;
-        this.partnersRepo = partnersRepo;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    public UserAccountResponseDto UserRegisterEmployee(UserAccountRegisterDto UserRegisterDto) {
+//    public UsersAccounts UserRegisterEmployee(EmployeeRegisterDto dto) {
+//        UsersAccounts savedUser = new UsersAccounts();
+//
+//
+//
+//        savedUser.setUserType(UserType.EMPLOYEE);
+//        savedUser.setTenantId(UserRegisterDto.getTenantId());
+//        savedUser.setPassword(passwordEncoder.encode(UserRegisterDto.getPassword()));
+//        savedUser = usersRepo.save(savedUser);
+//        return savedUser;
+//    }
 
-        UsersAccounts savedUser = new UsersAccounts(UserRegisterDto);
-        savedUser.setUserType(UserType.EMPLOYEE);
-        savedUser.setTenantId(UserRegisterDto.getTenantId());
-        savedUser = usersRepo.save(savedUser);
-
-        EmployeeRegisterDto newEmployee = new EmployeeRegisterDto(UserRegisterDto);
-        Employees savedEmployee = new Employees(newEmployee);
-        savedEmployee.setUsersAccounts(savedUser);
-        employeesRepo.save(savedEmployee);
-
-        UserAccountResponseDto responseDto = new UserAccountResponseDto(savedUser);
-        return responseDto;
-    }
-
-    public UserAccountResponseDto UserRegisterPartner(UserAccountRegisterDto userDto){
-        UsersAccounts savedUser = new UsersAccounts(userDto);
-        savedUser.setUserType(UserType.PARTNER);
+    @Transactional
+    public UsersAccounts userRegisterPartner(PartnersRegisterDto dto, Tenants tenant){
+        UsersAccounts newUser = new UsersAccounts();
+        newUser.setUserType(UserType.PARTNER);
+        newUser.setEmail(dto.getEmail());
+        newUser.setUsername(dto.getUsername());
+        newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
+        newUser.setTenant(tenant);
+        newUser = usersRepo.save(newUser);
+        return newUser;
     }
 }

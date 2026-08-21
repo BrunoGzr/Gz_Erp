@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
 
-public class UserAccountRegisterDto {
+public class UsersAccountRegisterDto {
 
     @Email
     @NotBlank
@@ -45,7 +45,7 @@ public class UserAccountRegisterDto {
     private BigDecimal salary;
 
 
-    public UserAccountRegisterDto() {
+    public UsersAccountRegisterDto() {
     }
 
     public String getEmail() {

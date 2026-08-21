@@ -1,22 +1,23 @@
 package com.erpapi.gzerp.dto;
 
+import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.models.UsersAccounts;
 
-public class UserAccountResponseDto {
+public class UsersAccountsResponseDto {
 
     private String email;
 
     private String username;
 
-    private Long tenantId;
+    private Tenants tenant;
 
-    public UserAccountResponseDto() {
+    public UsersAccountsResponseDto() {
     }
 
-    public UserAccountResponseDto(UsersAccounts user) {
+    public UsersAccountsResponseDto(UsersAccounts user) {
         this.email = user.getEmail();
         this.username = user.getUsername();
-        this.tenantId = user.getTenantId();
+        this.tenant = user.getTenant();
     }
 
     public String getEmail() {
@@ -35,11 +36,11 @@ public class UserAccountResponseDto {
         this.username = username;
     }
 
-    public Long getTenantId() {
-        return tenantId;
+    public Tenants getTenant() {
+        return tenant;
     }
 
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
+    public void setTenant(Tenants tenant) {
+        this.tenant = tenant;
     }
 }

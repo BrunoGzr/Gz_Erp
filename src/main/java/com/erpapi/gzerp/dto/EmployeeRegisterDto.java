@@ -37,7 +37,7 @@ public class EmployeeRegisterDto {
     @Size(min = 11, max = 15)
     private String phone;
 
-    public EmployeeRegisterDto(UserAccountRegisterDto dto) {
+    public EmployeeRegisterDto(UsersAccountRegisterDto dto) {
         this.email = dto.getEmail();
         this.userName = dto.getUsername();
         this.password = dto.getPassword();

@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 public class Partners {
 
     @Id
+    @Column(name = "user_account_id")
     private Long id;
 
     @NotNull
@@ -47,16 +48,8 @@ public class Partners {
 
     @Nullable
     private BigDecimal salary;
-    
-    @NotNull
-    @Size(min = 8, max = 256)
-    private String password;
 
     public Partners() {}
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
 
     public BigDecimal getSalary() {
         return salary;
@@ -131,7 +124,4 @@ public class Partners {
         this.usersAccounts = usersAccounts;
     }
 
-    public String getPassword() {
-        return password;
-    }
 }

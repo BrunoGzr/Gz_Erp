@@ -8,6 +8,7 @@ import com.erpapi.gzerp.enums.Plans;
 import com.erpapi.gzerp.enums.Status;
 import com.erpapi.gzerp.models.Partners;
 import com.erpapi.gzerp.models.Tenants;
+import com.erpapi.gzerp.models.UsersAccounts;
 import com.erpapi.gzerp.repositories.EmployeesRepo;
 import com.erpapi.gzerp.repositories.TenantsRepo;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -24,13 +25,13 @@ public class TenantsService {
 
 
     private final TenantsRepo tenantsRepo;
-    private final EmployeesRepo employeesRepo;
-    private final PasswordEncoder passwordEncoder;
+    private final PartnersService partnersService;
+    private final UsersAccountsService usersAccountsService;
 
-    public TenantsService(TenantsRepo tenantsRepo, EmployeesRepo employeesRepo) {
+    public TenantsService(TenantsRepo tenantsRepo, PartnersService partnersService, UsersAccountsService usersAccountsService) {
         this.tenantsRepo = tenantsRepo;
-        this.employeesRepo = employeesRepo;
-        this.passwordEncoder = new BCryptPasswordEncoder();
+        this.partnersService = partnersService;
+        this.usersAccountsService = usersAccountsService;
     }
 
 
@@ -54,25 +55,16 @@ public class TenantsService {
         newTenant.setStatus(Status.ACTIVE);
         newTenant.setIsAdmin(false);
         newTenant.setPhone(dto.getPhone());
-
         if (dto.getNomeFantasia() != null) {
             newTenant.setNomeFantasia(dto.getNomeFantasia());}
-
+        newTenant = tenantsRepo.save(newTenant);
         for (PartnersRegisterDto partnerDto : dto.getPartners()) {
-            Partners newPartner = new Partners();
-            newPartner.setEmail(partnerDto.getEmail());
-            newPartner.setCpf(partnerDto.getCpf());
-            newPartner.setFullName(partnerDto.getFullName());
-            newPartner.setPhone(partnerDto.getPhone());
-            newPartner.setSalary(partnerDto.getSalary());
-            newPartner.setPassword(passwordEncoder.encode(partnerDto.getPassword()));
-            if (partnerDto.getOwnership() != null){
-                newPartner.setOwnership(partnerDto.getOwnership());
-            };
+            UsersAccounts newUser = usersAccountsService.userRegisterPartner(partnerDto, newTenant);
+            Partners newPartner = partnersService.registerPartners(partnerDto,newUser, newTenant);
             newTenant.addPartner(newPartner);
         };
-        Tenants savedTenant = tenantsRepo.save(newTenant);
-        return new TenantResponseDto (savedTenant);
+
+        return new TenantResponseDto (newTenant);
     }
 
 

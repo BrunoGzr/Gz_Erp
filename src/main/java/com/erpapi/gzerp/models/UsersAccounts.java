@@ -1,6 +1,6 @@
 package com.erpapi.gzerp.models;
 
-import com.erpapi.gzerp.dto.UserAccountRegisterDto;
+import com.erpapi.gzerp.dto.UsersAccountRegisterDto;
 import com.erpapi.gzerp.enums.UserType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -37,8 +37,9 @@ public class UsersAccounts {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @Column(name = "tenant_id", nullable = false)
-    private Long tenantId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenants tenant;
 
     @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true )
     private Partners partner;
@@ -48,13 +49,6 @@ public class UsersAccounts {
 
 
     public UsersAccounts() {
-    }
-
-    public UsersAccounts(UserAccountRegisterDto dto){
-        this.email = dto.getEmail();
-        this.username = dto.getUsername();
-        this.password = dto.getPassword();
-        this.tenantId = dto.getTenantId();
     }
 
     public Partners getPartner() {
@@ -81,12 +75,12 @@ public class UsersAccounts {
         this.password = password;
     }
 
-    public Long getTenantId() {
-        return tenantId;
+    public Tenants getTenant() {
+        return tenant;
     }
 
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
+    public void setTenant(Tenants tenant) {
+        this.tenant = tenant;
     }
 
     public UserType getUserType() {

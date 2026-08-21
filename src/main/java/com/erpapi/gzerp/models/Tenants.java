@@ -3,10 +3,8 @@ package com.erpapi.gzerp.models;
 import com.erpapi.gzerp.enums.Plans;
 import com.erpapi.gzerp.enums.Status;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
+
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,7 +26,7 @@ public class Tenants {
     @Size(min = 5, max = 256)
     private String email;
 
-    @NotEmpty
+    @NotBlank
     @Size(min = 11, max = 15)
     @Column(name = "phone")
     private String phone;
@@ -161,7 +159,7 @@ public class Tenants {
         partner.setTenant(this);
     }
 
-    public ArrayList<Partners> getPartners(){
-        return (ArrayList<Partners>) this.partners;
+    public List<Partners> getPartners(){
+        return this.partners;
     }
 }
