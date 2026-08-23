@@ -14,16 +14,16 @@ import java.util.ArrayList;
 
 public class TenantRegisterDto {
 
-    @NotNull
+    @NotEmpty(message = "Please inform the Tenant: CNPJ")
     @Size(min = 1, max = 100)
     private String cnpj;
 
-    @NotNull
+    @NotEmpty(message = "Please inform the Tenant: Email")
     @Email
     @Size(min = 5, max = 254)
     private String email;
 
-    @NotNull
+    @NotEmpty(message = "Please inform the Tenant: Razao Social")
     @Size(min = 6, max = 180)
     private String razaoSocial;
 
@@ -34,7 +34,7 @@ public class TenantRegisterDto {
     @Valid
     private ArrayList<PartnersRegisterDto> partners;
 
-    @NotNull
+    @NotEmpty(message = "Please inform the Tenant registered Phone")
     @Size(min = 11, max = 15)
     private String phone;
 

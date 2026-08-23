@@ -7,22 +7,22 @@ import java.math.BigDecimal;
 
 public class PartnersRegisterDto {
 
-    @NotBlank
+    @NotEmpty(message = "Please inform the Partner: CPF")
     @Size(min = 10, max = 20)
     private String cpf;
 
-    @NotEmpty
+    @NotEmpty(message = "Please inform the Partner: Name")
     private String fullName;
 
     @Size(max = 50)
-    @NotBlank
+    @NotBlank(message = "Please inform the Partner: Username")
     private String username;
 
-    @NotEmpty
+    @NotEmpty(message = "Please inform the Partner: Email")
     @Email
     private String email;
 
-    @NotEmpty
+    @NotEmpty(message = "Please inform the Partner: Phone")
     private String phone;
 
     @Nullable
@@ -32,7 +32,6 @@ public class PartnersRegisterDto {
     private BigDecimal salary;
 
     private String password;
-
 
     public PartnersRegisterDto() {};
 

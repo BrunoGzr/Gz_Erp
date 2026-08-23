@@ -11,29 +11,31 @@ public class EmployeeRegisterDto {
 
     @NotNull
     private Long tenantId;
-    @NotBlank
+
+    @NotBlank(message = "Please inform the Employee: Username")
     @Size(min = 1, max = 32)
     private String userName;
 
-    @NotBlank
+    @NotBlank(message = "Please inform the Employee: Name")
     private String fullName;
 
-    @NotBlank
+    @NotBlank(message = "Please inform the Employee: Password")
     @Size(min = 6, max = 20)
     private String password;
+
     @Email
-    @NotBlank
+    @NotBlank(message = "Please inform the Employee: Email")
     @Size(min = 6, max = 254)
     private String email;
 
-    @NotBlank
+    @NotBlank(message = "Please inform the Employee: Salary")
     private BigDecimal salary;
 
-    @NotBlank
+    @NotBlank(message = "Please inform the Employee: CPF")
     @Size(min = 11, max = 14)
     private String cpf;
 
-    @NotBlank
+    @NotBlank(message = "Please inform the Employee: Phone")
     @Size(min = 11, max = 15)
     private String phone;
 
