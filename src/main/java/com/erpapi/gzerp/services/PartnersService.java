@@ -15,14 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 public class PartnersService {
 
     private final PartnersRepo partnersRepo;
+    private final AuthService authService;
 
-    public PartnersService(PasswordEncoder passwordEncoder, PartnersRepo partnersRepo) {
+    public PartnersService(PasswordEncoder passwordEncoder, PartnersRepo partnersRepo, AuthService authService) {
         this.partnersRepo = partnersRepo;
+        this.authService = authService;
     }
 
     public Partners registerPartners(PartnersRegisterDto dto, UsersAccounts user, Tenants tenant){
         Partners newPartner = new Partners();
-        newPartner.setCpf(dto.getCpf());
+
+        authService.cpfValid(dto.getCpf());
+
+        newPartner.setCpf(authService.cpfFormater(dto.getCpf()));
         newPartner.setFullName(dto.getFullName());
         newPartner.setEmail(dto.getEmail());
         newPartner.setPhone(dto.getPhone());

@@ -65,7 +65,7 @@ public class AuthService {
         }
     }
 
-    public boolean digitValidatorCpf(String[] numbersCpf, String digit){
+    private boolean digitValidatorCpf(String[] numbersCpf, String digit){
 
         if (numbersCpf == null || numbersCpf.length < 10 ){
             return false;
