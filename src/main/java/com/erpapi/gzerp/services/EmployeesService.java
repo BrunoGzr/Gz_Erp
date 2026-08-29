@@ -17,9 +17,11 @@ public class EmployeesService {
 
 
     private EmployeesRepo employeesRepo;
+    private AuthService authService;
 
-    public EmployeesService(EmployeesRepo employeesRepo) {
+    public EmployeesService(EmployeesRepo employeesRepo, AuthService authService) {
         this.employeesRepo = employeesRepo;
+        this.authService = authService;
     }
 
     public EmployeeResponseDto RegisterEmployeeWithTenantCreated(EmployeeRegisterDto employeeRegisterDto) throws EmployeeAlreadyExistException {
@@ -32,6 +34,8 @@ public class EmployeesService {
             throw new EmployeeAlreadyExistException(conflictedFields);}
 
         Employees newEmployee = new Employees();
+        authService.cpfValid(employeeRegisterDto.getCpf());
+        newEmployee.setCpf(authService.cpfFormater(employeeRegisterDto.getCpf()));
         newEmployee.setEmail(employeeRegisterDto.getEmail());
         newEmployee.setTenantId(employeeRegisterDto.getTenantId());
         newEmployee.setUserName(employeeRegisterDto.getUserName());

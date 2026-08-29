@@ -40,7 +40,7 @@ public class AuthService {
         return formatedCpf.toString();
     }
 
-    public boolean cpfValid(String cpf) throws InvalidCredentialsException {
+    public void cpfValid(String cpf) throws InvalidCredentialsException {
         if (cpf == null || cpf.isEmpty()){
             throw new InvalidCredentialsException("Cpf is blank, please enter a valid one");
         }
@@ -60,8 +60,6 @@ public class AuthService {
 
         if (!firstDigit || !secondDigit ){
             throw new InvalidCredentialsException("Invalid CPF, please enter a valid one");
-        } else {
-            return true;
         }
     }
 
