@@ -10,11 +10,7 @@ import java.util.Arrays;
 @Service
 public class AuthService {
 
-    private ArrayList<String> chars;
-
     public AuthService() {
-        this.chars = new ArrayList<>(Arrays.asList("1","2","3","4","5","6","7","8","9","0"));
-
     }
 
     public String cpfFormater(String cpf) throws InvalidCredentialsException {
@@ -27,7 +23,6 @@ public class AuthService {
 
         StringBuilder formatedCpf = new StringBuilder();
         for (int i = 0; i < cpfArray.length; i++){
-            if (chars.contains(cpfArray[i])){
                 if (i == 3 || i == 6){
                     formatedCpf.append(".");
                 }
@@ -36,8 +31,32 @@ public class AuthService {
                 }
                 formatedCpf.append(cpfArray[i]);
             }
-        }
         return formatedCpf.toString();
+    }
+
+    public String cnpjFormater(String cnpj) throws InvalidCredentialsException{
+        String numberOnly = cnpj.replaceAll("[^0-9]","");
+        String[] cnpjArray = numberOnly.split("");
+        StringBuilder cnpjString = new StringBuilder();
+        if (cnpjArray.length != 14) {
+            throw new InvalidCredentialsException("Invalid Cnpj, please send a valid one reason: More/less then 14 digits");
+        }
+
+        for (int i = 0; i < 14 ; i++ ){
+
+            if (i == 2 || i == 5 ) {
+                cnpjString.append(".");
+            }
+            if (i == 8 ){
+                cnpjString.append("/");
+            }
+            if (i == 12){
+                cnpjString.append("-");
+            }
+            cnpjString.append(cnpjArray[i]);
+        }
+
+        return cnpjString.toString();
     }
 
     public void cpfValid(String cpf) throws InvalidCredentialsException {
