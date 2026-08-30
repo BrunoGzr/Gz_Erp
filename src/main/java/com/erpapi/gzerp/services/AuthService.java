@@ -63,6 +63,29 @@ public class AuthService {
         }
     }
 
+    public void cnpjValid(String cnpj) throws InvalidCredentialsException{
+        if (cnpj == null || cnpj.isEmpty() ){
+            throw new InvalidCredentialsException("Cnpj is blank, please enter a valid one");
+        }
+
+
+        String numberOnly = cnpj.replaceAll("[^0-9]","");
+
+        if (numberOnly.length() != 14 || numberOnly.matches("(\\d)\\1{13}")) {
+            throw new InvalidCredentialsException("Invalid Cnpj , please enter a valid one");
+        }
+
+        String[] cnpjArray = numberOnly.split("");
+
+        boolean first = digitValidatorCnpj(cnpjArray,"first");
+        boolean second = digitValidatorCnpj(cnpjArray, "second");
+
+        if (!first || !second ){
+            throw new InvalidCredentialsException("Invalid cnpj, please enter a valid one");
+        }
+
+    }
+
     private boolean digitValidatorCpf(String[] numbersCpf, String digit){
 
         if (numbersCpf == null || numbersCpf.length < 10 ){
@@ -82,6 +105,25 @@ public class AuthService {
 
         return  firstDigit == Integer.parseInt(numbersCpf[verify]);
 
+    }
+
+    private boolean digitValidatorCnpj(String[] numbersCnpj,String digit){
+        int sum = 0;
+        int[] multiplayer = digit.equals("first")
+                ? new int[] {5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2}
+                : new int[] {6,5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2};
+
+        int digitToValidate = digit.equals("first") ? 12 : 13;
+
+        for (int i = 0; i < digitToValidate ; i++){
+            sum += Integer.parseInt(numbersCnpj[i]) * multiplayer[i];
+        }
+        int cnpjDigit = ((sum % 11) < 2)? 0 : 11 -  (sum % 11) ;
+
+        if (Integer.parseInt(numbersCnpj[digitToValidate]) == cnpjDigit){
+            return true;
+        }
+        return false;
     }
 
 
