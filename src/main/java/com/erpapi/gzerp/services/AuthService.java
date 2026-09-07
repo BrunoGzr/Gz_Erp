@@ -86,8 +86,6 @@ public class AuthService {
         if (cnpj == null || cnpj.isEmpty() ){
             throw new InvalidCredentialsException("Cnpj is blank, please enter a valid one");
         }
-
-
         String numberOnly = cnpj.replaceAll("[^0-9]","");
 
         if (numberOnly.length() != 14 || numberOnly.matches("(\\d)\\1{13}")) {
@@ -139,10 +137,7 @@ public class AuthService {
         }
         int cnpjDigit = ((sum % 11) < 2)? 0 : 11 -  (sum % 11) ;
 
-        if (Integer.parseInt(numbersCnpj[digitToValidate]) == cnpjDigit){
-            return true;
-        }
-        return false;
+        return Integer.parseInt(numbersCnpj[digitToValidate]) == cnpjDigit;
     }
 
 

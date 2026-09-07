@@ -47,6 +47,17 @@ public class UsersAccounts {
     @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true )
     private Employees employee;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "role_id")
+    private Roles role;
+
+    public Roles getRole() {
+        return role;
+    }
+
+    public void setRole(Roles role) {
+        this.role = role;
+    }
 
     public UsersAccounts() {
     }
