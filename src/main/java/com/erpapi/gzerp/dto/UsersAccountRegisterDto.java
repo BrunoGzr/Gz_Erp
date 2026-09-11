@@ -22,7 +22,6 @@ public class UsersAccountRegisterDto {
     @Size(max = 256)
     private String password;
 
-
     @NotBlank
     private Long tenantId;
 
@@ -41,9 +40,7 @@ public class UsersAccountRegisterDto {
     @Size(min = 3 , max = 256)
     private String fullName;
 
-
     private BigDecimal salary;
-
 
     public UsersAccountRegisterDto() {
     }

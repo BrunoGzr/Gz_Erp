@@ -106,13 +106,27 @@ case "$1" in
         ;;
 
     stop)
-        echo "### Parando o servidor MySQL ###"
+        echo "### Parando e removendo o servidor MySQL ###"
         if container_exists; then
-            docker stop "$CONTAINER_NAME"
-            echo ">>> Container parado."
+            if container_running; then
+                docker stop "$CONTAINER_NAME"
+                echo ">>> Container parado."
+            fi
+            docker rm -f "$CONTAINER_NAME"
+            echo ">>> Container removido."
         else
             echo ">>> Container não existe. Nada a fazer."
         fi
+
+        # Remove a imagem se existir
+        if image_exists; then
+            docker rmi "$IMAGE_NAME:$IMAGE_TAG"
+            echo ">>> Imagem '$IMAGE_NAME:$IMAGE_TAG' removida."
+        else
+            echo ">>> Imagem não existe. Nada a fazer."
+        fi
+
+        echo ">>> Tudo removido com sucesso."
         ;;
 
     *)

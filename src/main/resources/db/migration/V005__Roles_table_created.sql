@@ -1,7 +1,7 @@
 CREATE TABLE roles(
-    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT UNIQUE,
-    tenant_id BIGINT UNSIGNED UNIQUE NULL,
-    name VARCHAR(100) NOT NULL UNIQUE ,
+    id BIGINT UNSIGNED PRIMARY KEY UNIQUE,
+    tenant_id BIGINT UNSIGNED NULL,
+    name VARCHAR(100) NOT NULL ,
     is_system BOOL DEFAULT false,
     description TEXT NULL,
     FOREIGN KEY (tenant_id) REFERENCES tenants(id),
@@ -16,3 +16,17 @@ CREATE TABLE role_permissions(
     PRIMARY KEY (role_id,permission),
     CONSTRAINT fk_role_permissions_role FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+ALTER TABLE users_accounts ADD COLUMN role_id BIGINT UNSIGNED NOT NULL DEFAULT 0;
+
+INSERT INTO roles(id, tenant_id, name, is_system, description)
+VALUES (1, null, 'DefaultRoleEmployees', true, 'Default role for new Employees Accounts');
+
+INSERT INTO roles(id, tenant_id, name, is_system, description)
+VALUES (2, null, 'DefaultRolePartners', true, 'Default role for new Partners Accounts');
+
+ALTER TABLE roles AUTO_INCREMENT = 3 ;
+
+ALTER TABLE users_accounts ADD CONSTRAINT fk_users_accounts_role
+    FOREIGN KEY (role_id) REFERENCES roles(id);
+

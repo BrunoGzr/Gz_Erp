@@ -1,0 +1,1704 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GzErp Test Frontend — Painel de Testes API</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-width: 280px;
+        }
+        body { background: #f0f2f5; font-size: 0.9rem; }
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0;
+            width: var(--sidebar-width); background: #1a1d23; color: #fff;
+            overflow-y: auto; z-index: 1000; padding-top: 0;
+        }
+        .sidebar .nav-link { color: #adb5bd; padding: 0.6rem 1rem; border-radius: 0; border-left: 3px solid transparent; }
+        .sidebar .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .sidebar .nav-link.active { color: #fff; background: rgba(99,179,237,0.15); border-left-color: #63b3ed; }
+        .sidebar .nav-link i { width: 20px; text-align: center; margin-right: 8px; }
+        .sidebar-brand { padding: 1.2rem 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 700; font-size: 1.1rem; }
+        .main-content { margin-left: var(--sidebar-width); padding: 1.5rem; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .response-box {
+            background: #1e1e1e; color: #d4d4d4; border-radius: 6px;
+            padding: 1rem; font-family: 'Courier New', monospace; font-size: 0.82rem;
+            max-height: 400px; overflow: auto; white-space: pre-wrap; word-break: break-all;
+        }
+        .response-box.success { border-left: 4px solid #38a169; }
+        .response-box.error { border-left: 4px solid #e53e3e; }
+        .response-box.info { border-left: 4px solid #3182ce; }
+        .status-badge { display: inline-block; padding: 0.25rem 0.6rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .status-2xx { background: #c6f6d5; color: #22543d; }
+        .status-4xx { background: #fed7d7; color: #9b2c2c; }
+        .status-5xx { background: #fefcbf; color: #744210; }
+        .status-default { background: #e2e8f0; color: #2d3748; }
+        .time-badge { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: #edf2f7; color: #4a5568; }
+        .endpoint-card { border-left: 4px solid #63b3ed; background: #fff; border-radius: 6px; padding: 1rem; margin-bottom: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .endpoint-card .method { font-weight: 700; font-size: 0.75rem; padding: 0.15rem 0.5rem; border-radius: 3px; color: #fff; display: inline-block; min-width: 55px; text-align: center; }
+        .method-GET { background: #38a169; }
+        .method-POST { background: #3182ce; }
+        .method-PUT { background: #d69e2e; }
+        .method-DELETE { background: #e53e3e; }
+        .method-PATCH { background: #805ad5; }
+        .method-OPTIONS { background: #718096; }
+        .log-table { font-size: 0.78rem; }
+        .log-table th { position: sticky; top: 0; background: #f7fafc; z-index: 10; }
+        .jwt-decode { background: #f7fafc; border-radius: 6px; padding: 1rem; }
+        .jwt-decode .claim { display: inline-block; padding: 0.2rem 0.5rem; margin: 0.2rem; background: #e2e8f0; border-radius: 4px; font-size: 0.8rem; }
+        .flow-step { border-left: 3px solid #cbd5e0; padding-left: 1rem; margin-bottom: 1rem; }
+        .flow-step.completed { border-left-color: #38a169; }
+        .flow-step.error { border-left-color: #e53e3e; }
+        .flow-step.pending { border-left-color: #cbd5e0; }
+        .perf-chart-container { position: relative; height: 300px; }
+        .config-panel { background: #fff; border-radius: 8px; padding: 1.2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+        .section-title { font-weight: 700; color: #2d3748; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e2e8f0; }
+        textarea.json-input { font-family: 'Courier New', monospace; font-size: 0.82rem; min-height: 100px; }
+        .token-display { background: #1e1e1e; color: #68d391; padding: 0.5rem 0.75rem; border-radius: 4px; font-family: monospace; font-size: 0.78rem; word-break: break-all; max-height: 80px; overflow-y: auto; }
+        @media (max-width: 768px) {
+            .sidebar { width: 100%; position: relative; }
+            .main-content { margin-left: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar d-flex flex-column">
+    <div class="sidebar-brand">
+        <i class="bi bi-shield-lock"></i> GzErp Test Panel
+    </div>
+    <nav class="nav flex-column mt-2">
+        <a class="nav-link active" href="#" data-tab="config"><i class="bi bi-gear"></i> Configuração</a>
+        <a class="nav-link" href="#" data-tab="auth"><i class="bi bi-key"></i> Autenticação JWT</a>
+        <a class="nav-link" href="#" data-tab="explorer"><i class="bi bi-compass"></i> Explorador de Endpoints</a>
+        <a class="nav-link" href="#" data-tab="security"><i class="bi bi-shield-exclamation"></i> Testes de Segurança</a>
+        <a class="nav-link" href="#" data-tab="performance"><i class="bi bi-gauge"></i> Performance</a>
+        <a class="nav-link" href="#" data-tab="flows"><i class="bi bi-diagram-3"></i> Fluxos</a>
+        <a class="nav-link" href="#" data-tab="history"><i class="bi bi-clock-history"></i> Histórico</a>
+    </nav>
+    <div class="mt-auto p-3" style="font-size:0.75rem; color:#6b7280; border-top:1px solid rgba(255,255,255,0.1);">
+        <div>Token: <span id="sidebarTokenStatus">N/A</span></div>
+        <div class="mt-1">
+            <button class="btn btn-sm btn-outline-light w-100" onclick="clearToken()">Limpar Token</button>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+    <!-- ==================== CONFIGURAÇÃO ==================== -->
+    <div id="tab-config" class="tab-pane active">
+        <h4 class="section-title"><i class="bi bi-gear"></i> Configuração Global</h4>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="config-panel">
+                    <h6>URL Base do Backend</h6>
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">http://</span>
+                        <input type="text" class="form-control" id="baseUrl" value="localhost" placeholder="localhost">
+                        <span class="input-group-text">:</span>
+                        <input type="text" class="form-control" id="basePort" value="8989" placeholder="8080">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Token JWT (automático após login)</label>
+                        <textarea class="form-control font-monospace" id="manualToken" rows="2" placeholder="Cole seu token JWT aqui..."></textarea>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary" onclick="saveConfig()"><i class="bi bi-check-lg"></i> Salvar Config</button>
+                        <button class="btn btn-outline-danger" onclick="clearToken()"><i class="bi bi-x-lg"></i> Limpar Token</button>
+                        <button class="btn btn-outline-secondary" onclick="resetAll()"><i class="bi bi-arrow-counterclockwise"></i> Resetar Tudo</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="config-panel">
+                    <h6>Estado Atual</h6>
+                    <table class="table table-sm table-borderless">
+                        <tr><td><strong>URL Base:</strong></td><td id="cfgUrl">-</td></tr>
+                        <tr><td><strong>Token:</strong></td><td id="cfgToken">-</td></tr>
+                        <tr><td><strong>Requisições feitas:</strong></td><td id="cfgRequests">0</td></tr>
+                        <tr><td><strong>Erros:</strong></td><td id="cfgErrors">0</td></tr>
+                    </table>
+                    <h6 class="mt-3">Endpoints Identificados</h6>
+                    <ul class="list-group list-group-flush" id="endpointList" style="font-size:0.82rem;"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== AUTENTICAÇÃO JWT ==================== -->
+    <div id="tab-auth" class="tab-pane">
+        <h4 class="section-title"><i class="bi bi-key"></i> Autenticação JWT</h4>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-primary text-white"><strong>POST /auth/login</strong> <span class="badge bg-light text-dark">Planejado</span></div>
+                    <div class="card-body">
+                        <p class="text-muted small">Este endpoint é esperado pelo projeto mas pode não estar implementado ainda. Tente os métodos abaixo.</p>
+                        <div class="mb-2">
+                            <label class="form-label small">Email</label>
+                            <input type="email" class="form-control form-control-sm" id="loginEmail" value="partner@test.com">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Senha</label>
+                            <input type="password" class="form-control form-control-sm" id="loginPassword" value="password123">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Tenant ID</label>
+                            <input type="number" class="form-control form-control-sm" id="loginTenantId" value="1">
+                        </div>
+                        <button class="btn btn-primary btn-sm" onclick="testLogin()"><i class="bi bi-box-arrow-in-right"></i> Tentar Login</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header bg-success text-white"><strong>POST /register (Criar Tenant + Login)</strong></div>
+                    <div class="card-body">
+                        <p class="text-muted small">Cadastra uma empresa e um parceiro (que serve como login). Use dados únicos.</p>
+                        <div class="mb-2">
+                            <label class="form-label small">CNPJ</label>
+                            <input type="text" class="form-control form-control-sm" id="regCnpj" value="12345678000190">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Email da Empresa</label>
+                            <input type="email" class="form-control form-control-sm" id="regEmail" value="empresa_teste_@test.com">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Razão Social</label>
+                            <input type="text" class="form-control form-control-sm" id="regRazao" value="Empresa Teste LTDA">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Telefone</label>
+                            <input type="text" class="form-control form-control-sm" id="regPhone" value="11999990000">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Nome Fantasia (opcional)</label>
+                            <input type="text" class="form-control form-control-sm" id="regNomeFantasia" value="Empresa Teste">
+                        </div>
+                        <hr>
+                        <div class="mb-2">
+                            <label class="form-label small">Partner Username</label>
+                            <input type="text" class="form-control form-control-sm" id="regPartnerUser" value="testpartner">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Partner Email</label>
+                            <input type="email" class="form-control form-control-sm" id="regPartnerEmail" value="partner@test.com">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Partner Senha</label>
+                            <input type="password" class="form-control form-control-sm" id="regPartnerPass" value="password123">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Partner CPF</label>
+                            <input type="text" class="form-control form-control-sm" id="regPartnerCpf" value="12345678909">
+                        </div>
+                        <div class="mb-2">
+                            <label class="form-label small">Partner Phone</label>
+                            <input type="text" class="form-control form-control-sm" id="regPartnerPhone" value="11988880000">
+                        </div>
+                        <button class="btn btn-success btn-sm" onclick="testRegisterTenant()"><i class="bi bi-plus-circle"></i> Cadastrar Tenant + Partner</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="mt-4">Resultados de Autenticação</h6>
+        <div class="row">
+            <div class="col-12">
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <strong>Token Atual:</strong>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="copyToken()"><i class="bi bi-clipboard"></i> Copiar</button>
+                    </div>
+                    <div class="token-display" id="authTokenDisplay">Nenhum token armazenado</div>
+                </div>
+                <div id="authTokenDecoded" class="jwt-decode" style="display:none;">
+                    <h6>Decodificação do Payload JWT</h6>
+                    <pre id="authTokenPayload" class="response-box info" style="max-height:200px;"></pre>
+                </div>
+            </div>
+        </div>
+
+        <h6 class="mt-4">Testes de Autorização</h6>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header"><strong>Com Token Válido</strong></div>
+                    <div class="card-body">
+                        <p class="small text-muted">GET /employees com token</p>
+                        <button class="btn btn-success btn-sm w-100" onclick="testAuthWithToken('GET','/employees')">Testar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header"><strong>Sem Token</strong></div>
+                    <div class="card-body">
+                        <p class="small text-muted">GET /employees sem token (esperado: 401)</p>
+                        <button class="btn btn-warning btn-sm w-100" onclick="testAuthNoToken('GET','/employees')">Testar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header"><strong>Token Inválido</strong></div>
+                    <div class="card-body">
+                        <p class="small text-muted">GET /employees com token "invalid"</p>
+                        <button class="btn btn-danger btn-sm w-100" onclick="testAuthInvalidToken('GET','/employees')">Testar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <div class="response-box info" id="authResult">Clique em um botão de teste acima...</div>
+        </div>
+    </div>
+
+    <!-- ==================== EXPLORADOR DE ENDPOINTS ==================== -->
+    <div id="tab-explorer" class="tab-pane">
+        <h4 class="section-title"><i class="bi bi-compass"></i> Explorador de Endpoints</h4>
+
+        <div class="d-flex gap-2 mb-3">
+            <input type="text" class="form-control form-control-sm" id="newEndpointMethod" placeholder="MÉTODO" style="width:100px;" value="GET">
+            <input type="text" class="form-control form-control-sm" id="newEndpointPath" placeholder="/path" style="flex:1;">
+            <button class="btn btn-sm btn-outline-primary" onclick="addCustomEndpoint()"><i class="bi bi-plus"></i> Adicionar</button>
+        </div>
+
+        <div id="endpointsContainer"></div>
+    </div>
+
+    <!-- ==================== TESTES DE SEGURANÇA ==================== -->
+    <div id="tab-security" class="tab-pane">
+        <h4 class="section-title"><i class="bi bi-shield-exclamation"></i> Testes de Segurança</h4>
+
+        <div class="row">
+            <!-- SQL Injection -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-danger text-white"><i class="bi bi-database-exclamation"></i> SQL Injection</div>
+                    <div class="card-body">
+                        <p class="small">Testar payloads SQL injection nos campos de entrada</p>
+                        <div class="mb-2">
+                            <label class="form-label small">Payload SQL</label>
+                            <select class="form-select form-select-sm" id="sqlPayload" onchange="document.getElementById('sqlPayloadInput').value=this.value">
+                                <option value="' OR 1=1 --">' OR 1=1 --</option>
+                                <option value="'; DROP TABLE employees;--">'; DROP TABLE employees;--</option>
+                                <option value="1' UNION SELECT * FROM users_accounts--">1' UNION SELECT * FROM users_accounts--</option>
+                                <option value="admin'--">admin'--</option>
+                                <option value="1; WAITFOR DELAY '0:0:5'--">1; WAITFOR DELAY '0:0:5'--</option>
+                            </select>
+                            <input type="text" class="form-control form-control-sm mt-1" id="sqlPayloadInput" value="' OR 1=1 --">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-danger" onclick="testSqlInjection('login')">Testar no Login</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="testSqlInjection('register')">Testar no Register</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- XSS -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-warning text-dark"><i class="bi bi-code-slash"></i> XSS (Cross-Site Scripting)</div>
+                    <div class="card-body">
+                        <p class="small">Testar payloads XSS nos campos de entrada</p>
+                        <div class="mb-2">
+                            <label class="form-label small">Payload XSS</label>
+                            <select class="form-select form-select-sm" id="xssPayload" onchange="document.getElementById('xssPayloadInput').value=this.value">
+                                <option value="<script>alert('XSS')</script>">&lt;script&gt;alert('XSS')&lt;/script&gt;</option>
+                                <option value="<img src=x onerror=alert(1)>">&lt;img src=x onerror=alert(1)&gt;</option>
+                                <option value="javascript:alert(document.cookie)">javascript:alert(document.cookie)</option>
+                                <option value="<svg/onload=alert('XSS')>">&lt;svg/onload=alert('XSS')&gt;</option>
+                            </select>
+                            <input type="text" class="form-control form-control-sm mt-1" id="xssPayloadInput" value="<script>alert('XSS')</script>">
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-sm btn-outline-warning" onclick="testXss('register')">Testar no Register</button>
+                            <button class="btn btn-sm btn-outline-warning" onclick="testXss('employee')">Testar no Employee</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Validation -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-info text-white"><i class="bi bi-exclamation-triangle"></i> Validação de Entrada</div>
+                    <div class="card-body">
+                        <p class="small">Testar campos obrigatórios ausentes e formatos inválidos</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-sm btn-outline-info" onclick="testValidation('emptyBody')">Body vazio no POST /employees/register</button>
+                            <button class="btn btn-sm btn-outline-info" onclick="testValidation('missingFields')">Campos obrigatórios ausentes</button>
+                            <button class="btn btn-sm btn-outline-info" onclick="testValidation('invalidEmail')">Email inválido</button>
+                            <button class="btn btn-sm btn-outline-info" onclick="testValidation('oversized')">Campos com tamanho excessivo</button>
+                            <button class="btn btn-sm btn-outline-info" onclick="testValidation('wrongType')">Tipo de dado incorreto</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authorization -->
+            <div class="col-md-6 mb-3">
+                <div class="card h-100">
+                    <div class="card-header bg-secondary text-white"><i class="bi bi-lock"></i> Autorização & CORS</div>
+                    <div class="card-body">
+                        <p class="small">Testar acesso sem permissão e verificar headers CORS</p>
+                        <div class="d-grid gap-2">
+                            <button class="btn btn-sm btn-outline-secondary" onclick="testAuthorization('unauthenticated')">Acesso Não Autenticado</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="testAuthorization('wrongRole')">Acesso com Papel Incorreto</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="testCorsHeaders()">Verificar Headers CORS</button>
+                            <button class="btn btn-sm btn-outline-secondary" onclick="testRateLimiting()">Teste de Rate Limiting (10 req)</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <div class="response-box info" id="securityResult">Selecione um teste de segurança acima...</div>
+        </div>
+    </div>
+
+    <!-- ==================== PERFORMANCE ==================== -->
+    <div id="tab-performance" class="tab-pane">
+        <h4 class="section-title"><i class="bi bi-gauge"></i> Testes de Performance</h4>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="config-panel">
+                    <h6>Configuração do Teste</h6>
+                    <div class="mb-3">
+                        <label class="form-label small">Endpoint</label>
+                        <select class="form-select form-select-sm" id="perfEndpoint">
+                            <option value="GET /employees">GET /employees</option>
+                            <option value="POST /register">POST /register</option>
+                            <option value="POST /employees/register">POST /employees/register</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Número de Requisições</label>
+                        <input type="number" class="form-control form-control-sm" id="perfCount" value="10" min="1" max="200">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small">Delay entre requisições (ms)</label>
+                        <input type="number" class="form-control form-control-sm" id="perfDelay" value="100" min="0" max="5000">
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-primary" onclick="runPerformanceTest()"><i class="bi bi-play"></i> Iniciar Teste</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="stopPerformanceTest()"><i class="bi bi-stop"></i> Parar</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="config-panel">
+                    <h6>Resultados</h6>
+                    <div id="perfResults" class="row g-2 mb-3">
+                        <div class="col-6 col-md-3"><div class="badge bg-success">Média: <span id="perfAvg">-</span></div></div>
+                        <div class="col-6 col-md-3"><div class="badge bg-info">Mediana: <span id="perfMedian">-</span></div></div>
+                        <div class="col-6 col-md-3"><div class="badge bg-warning text-dark">P90: <span id="perfP90">-</span></div></div>
+                        <div class="col-6 col-md-3"><div class="badge bg-danger">Máx: <span id="perfMax">-</span></div></div>
+                        <div class="col-6 col-md-3"><div class="badge bg-secondary">Mín: <span id="perfMin">-</span></div></div>
+                        <div class="col-6 col-md-3"><div class="badge bg-primary">Total: <span id="perfTotal">-</span></div></div>
+                        <div class="col-6 col-md-3"><div class="badge bg-light text-dark">Sucessos: <span id="perfSuccess">-</span></div></div>
+                        <div class="col-6 col-md-3"><div class="badge bg-danger">Erros: <span id="perfFailures">-</span></div></div>
+                    </div>
+                    <div class="perf-chart-container">
+                        <canvas id="perfChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <h6>Detalhes por Requisição</h6>
+            <div class="response-box info" id="perfDetail" style="max-height:200px;">Aguardando início do teste...</div>
+        </div>
+    </div>
+
+    <!-- ==================== FLUXOS ==================== -->
+    <div id="tab-flows" class="tab-pane">
+        <h4 class="section-title"><i class="bi bi-diagram-3"></i> Fluxos de Teste</h4>
+
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-primary text-white"><i class="bi bi-person-plus"></i> Fluxo 1: Registrar Tenant + Login</div>
+                    <div class="card-body">
+                        <p class="small text-muted">Cria uma empresa, cadastra um partner e tenta login.</p>
+                        <button class="btn btn-primary btn-sm w-100" onclick="runFlow('tenantLogin')">Executar Fluxo</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-success text-white"><i class="bi bi-people"></i> Fluxo 2: Employee CRUD</div>
+                    <div class="card-body">
+                        <p class="small text-muted">Registra um employee, lista, atualiza e deleta.</p>
+                        <button class="btn btn-success btn-sm w-100" onclick="runFlow('employeeCrud')">Executar Fluxo</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header bg-info text-white"><i class="bi bi-lightning"></i> Fluxo 3: Full Cycle</div>
+                    <div class="card-body">
+                        <p class="small text-muted">Tenant → Partner → Employee → Listar → Autenticar → Verificar permissões.</p>
+                        <button class="btn btn-info btn-sm w-100" onclick="runFlow('fullCycle')">Executar Fluxo</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="flowResults">
+            <h6>Execução do Fluxo</h6>
+            <div id="flowSteps"></div>
+            <div class="response-box info mt-2" id="flowResult" style="max-height:300px;">Selecione um fluxo acima...</div>
+        </div>
+    </div>
+
+    <!-- ==================== HISTÓRICO ==================== -->
+    <div id="tab-history" class="tab-pane">
+        <h4 class="section-title"><i class="bi bi-clock-history"></i> Histórico de Requisições</h4>
+
+        <div class="d-flex gap-2 mb-3">
+            <input type="text" class="form-control form-control-sm" id="historyFilter" placeholder="Filtrar por método, path, status..." oninput="filterHistory()">
+            <select class="form-select form-select-sm" id="historyFilterStatus" style="width:120px;" onchange="filterHistory()">
+                <option value="">Todos os Status</option>
+                <option value="2">2xx Sucesso</option>
+                <option value="4">4xx Erro Cliente</option>
+                <option value="5">5xx Erro Servidor</option>
+                <option value="0">Falha de Rede</option>
+            </select>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportHistory('json')"><i class="bi bi-filetype-json"></i> Exportar JSON</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="exportHistory('csv')"><i class="bi bi-filetype-csv"></i> Exportar CSV</button>
+            <button class="btn btn-sm btn-outline-danger" onclick="clearHistory()"><i class="bi bi-trash"></i> Limpar</button>
+        </div>
+
+        <div style="max-height: 600px; overflow-y: auto;">
+            <table class="table table-sm table-hover log-table" id="historyTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Timestamp</th>
+                        <th>Método</th>
+                        <th>Path</th>
+                        <th>Status</th>
+                        <th>Tempo (ms)</th>
+                        <th>Resumo</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody"></tbody>
+            </table>
+        </div>
+        <div class="mt-2 small text-muted">
+            Total: <span id="historyTotal">0</span> requisições
+        </div>
+    </div>
+
+</div>
+
+<!-- Detail Modal -->
+<div class="modal fade" id="detailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalhes da Requisição</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-3"><strong>Método:</strong></div><div class="col-md-9" id="detailMethod"></div>
+                    <div class="col-md-3"><strong>URL:</strong></div><div class="col-md-9" id="detailUrl"></div>
+                    <div class="col-md-3"><strong>Status:</strong></div><div class="col-md-9" id="detailStatus"></div>
+                    <div class="col-md-3"><strong>Tempo:</strong></div><div class="col-md-9" id="detailTime"></div>
+                </div>
+                <h6>Request Headers</h6>
+                <pre id="detailReqHeaders" class="response-box info" style="max-height:150px;"></pre>
+                <h6 class="mt-3">Request Body</h6>
+                <pre id="detailReqBody" class="response-box info" style="max-height:200px;"></pre>
+                <h6 class="mt-3">Response Headers</h6>
+                <pre id="detailResHeaders" class="response-box info" style="max-height:150px;"></pre>
+                <h6 class="mt-3">Response Body</h6>
+                <pre id="detailResBody" class="response-box" style="max-height:300px;"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<!-- Axios -->
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let state = {
+    baseUrl: 'http://localhost:8989',
+    token: localStorage.getItem('gzerp_token') || '',
+    history: JSON.parse(localStorage.getItem('gzerp_history') || '[]'),
+    requestCount: 0,
+    errorCount: 0,
+    perfChart: null,
+    perfRunning: false,
+    perfAbortController: null
+};
+
+// ============================================================
+// KNOWN ENDPOINTS
+// ============================================================
+const knownEndpoints = [
+    { method: 'POST', path: '/register', desc: 'Cadastrar Tenant + Partners', auth: false },
+    { method: 'POST', path: '/auth/login', desc: 'Login (planejado)', auth: false, planned: true },
+    { method: 'POST', path: '/employees/register', desc: 'Cadastrar Employee', auth: true },
+    { method: 'GET', path: '/employees', desc: 'Listar Employees', auth: true },
+    { method: 'DELETE', path: '/employees/{id}', desc: 'Deletar Employee', auth: true },
+    // Planned endpoints from README
+    { method: 'GET', path: '/tenants/{id}', desc: 'Ver Tenant (planejado)', auth: true, planned: true },
+    { method: 'PUT', path: '/tenants/{id}', desc: 'Atualizar Tenant (planejado)', auth: true, planned: true },
+    { method: 'POST', path: '/auth/refresh', desc: 'Refresh Token (planejado)', auth: true, planned: true },
+    { method: 'GET', path: '/products', desc: 'Listar Produtos (planejado)', auth: true, planned: true },
+    { method: 'POST', path: '/products', desc: 'Criar Produto (planejado)', auth: true, planned: true },
+    { method: 'PUT', path: '/products/{id}', desc: 'Atualizar Produto (planejado)', auth: true, planned: true },
+    { method: 'DELETE', path: '/products/{id}', desc: 'Deletar Produto (planejado)', auth: true, planned: true },
+];
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Sidebar nav
+    document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            const tab = link.dataset.tab;
+            switchTab(tab);
+        });
+    });
+
+    // Load config from localStorage
+    const saved = localStorage.getItem('gzerp_config');
+    if (saved) {
+        try {
+            const cfg = JSON.parse(saved);
+            document.getElementById('baseUrl').value = cfg.baseUrl.replace('http://', '').replace('http://', '');
+            if (cfg.baseUrl.includes(':')) {
+                const parts = cfg.baseUrl.split(':');
+                document.getElementById('baseUrl').value = parts[0].replace('http://', '');
+                document.getElementById('basePort').value = parts[1];
+            }
+            if (cfg.token) state.token = cfg.token;
+        } catch(e) {}
+    }
+
+    updateConfigDisplay();
+    renderEndpoints();
+    renderHistory();
+    updateSidebarToken();
+});
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(tabId) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+    document.getElementById('tab-' + tabId).classList.add('active');
+    document.querySelector(`.sidebar .nav-link[data-tab="${tabId}"]`).classList.add('active');
+}
+
+// ============================================================
+// CONFIGURATION
+// ============================================================
+function saveConfig() {
+    let host = document.getElementById('baseUrl').value.trim();
+    let port = document.getElementById('basePort').value.trim();
+    if (!host) host = 'localhost';
+    if (!port) port = '8989';
+    const url = `http://${host}:${port}`;
+    state.baseUrl = url;
+
+    const manualToken = document.getElementById('manualToken').value.trim();
+    if (manualToken) {
+        state.token = manualToken;
+        localStorage.setItem('gzerp_token', token);
+    }
+
+    localStorage.setItem('gzerp_config', JSON.stringify({ baseUrl: url, token: state.token }));
+    updateConfigDisplay();
+    updateSidebarToken();
+    alert('Configuração salva!');
+}
+
+function updateConfigDisplay() {
+    document.getElementById('cfgUrl').textContent = state.baseUrl;
+    document.getElementById('cfgToken').textContent = state.token ? '✓ Armazenado' : '✗ Nenhum';
+    document.getElementById('cfgRequests').textContent = state.requestCount;
+    document.getElementById('cfgErrors').textContent = state.errorCount;
+
+    // Endpoint list
+    const el = document.getElementById('endpointList');
+    el.innerHTML = knownEndpoints.map(ep => {
+        const authBadge = ep.auth ? '<span class="badge bg-warning text-dark">Auth</span>' : '<span class="badge bg-success">Pub</span>';
+        const plannedBadge = ep.planned ? '<span class="badge bg-secondary">Planejado</span>' : '';
+        return `<li class="list-group-item d-flex justify-content-between align-items-center">
+            <code>${ep.method} ${ep.path}</code>
+            <div>${authBadge} ${plannedBadge}</div>
+        </li>`;
+    }).join('');
+}
+
+function clearToken() {
+    state.token = '';
+    localStorage.removeItem('gzerp_token');
+    updateConfigDisplay();
+    updateSidebarToken();
+    document.getElementById('authTokenDisplay').textContent = 'Nenhum token armazenado';
+    document.getElementById('authTokenDecoded').style.display = 'none';
+}
+
+function resetAll() {
+    if (!confirm('Resetar toda a configuração e histórico?')) return;
+    localStorage.removeItem('gzerp_config');
+    localStorage.removeItem('gzerp_history');
+    state.token = '';
+    state.history = [];
+    state.requestCount = 0;
+    state.errorCount = 0;
+    updateConfigDisplay();
+    updateSidebarToken();
+    renderHistory();
+    document.getElementById('authTokenDisplay').textContent = 'Nenhum token armazenado';
+    document.getElementById('authTokenDecoded').style.display = 'none';
+}
+
+function updateSidebarToken() {
+    document.getElementById('sidebarTokenStatus').textContent = state.token ? '✓' : '✗';
+    document.getElementById('sidebarTokenStatus').style.color = state.token ? '#68d391' : '#e53e3e';
+}
+
+function copyToken() {
+    if (state.token) {
+        navigator.clipboard.writeText(state.token).then(() => alert('Token copiado!'));
+    }
+}
+
+// ============================================================
+// HTTP HELPERS
+// ============================================================
+function buildUrl(path) {
+    return state.baseUrl + path;
+}
+
+function getHeaders(withAuth = true) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (withAuth && state.token) {
+        headers['Authorization'] = `Bearer ${state.token}`;
+    }
+    return headers;
+}
+
+async function makeRequest(method, path, body = null, withAuth = true) {
+    const startTime = Date.now();
+    state.requestCount++;
+    updateConfigDisplay();
+
+    const url = buildUrl(path);
+    const headers = getHeaders(withAuth);
+    const authHeader = withAuth && state.token ? `Bearer ${state.token}` : '(nenhum)';
+
+    let status = null, statusText = '', responseHeaders = '', responseBody = '', error = null, time = 0;
+
+    try {
+        const config = {
+            method, url,
+            headers,
+            data: body,
+            timeout: 15000,
+            validateStatus: () => true // accept all status codes
+        };
+        const response = await axios(config);
+        status = response.status;
+        statusText = response.statusText;
+        time = Date.now() - startTime;
+
+        // Collect response headers
+        responseHeaders = JSON.stringify(response.headers, null, 2);
+
+        // Collect response body
+        responseBody = typeof response.data === 'string' ? response.data : JSON.stringify(response.data, null, 2);
+
+        // Log to history
+        addHistoryEntry(method, path, body, status, time, responseHeaders, responseBody, authHeader);
+
+        if (status >= 400) {
+            state.errorCount++;
+        }
+
+        return { status, statusText, time, responseHeaders, responseBody, headers: response.headers };
+    } catch (err) {
+        time = Date.now() - startTime;
+        error = err.message;
+        status = 0;
+        statusText = 'Falha de rede';
+
+        if (err.response) {
+            status = err.response.status;
+            statusText = err.response.statusText;
+            responseBody = typeof err.response.data === 'string' ? err.response.data : JSON.stringify(err.response.data, null, 2);
+            responseHeaders = JSON.stringify(err.response.headers, null, 2);
+        } else if (err.code === 'ECONNABORTED' || err.message.includes('timeout')) {
+            statusText = 'Timeout';
+        } else if (err.message.includes('Network Error') || err.message.includes('canceled')) {
+            statusText = 'Network Error / CORS';
+        }
+
+        state.errorCount++;
+        addHistoryEntry(method, path, body, status, time, responseHeaders, responseBody, authHeader, error);
+
+        return { status, statusText, time, responseHeaders, responseBody, error };
+    }
+}
+
+// ============================================================
+// HISTORY
+// ============================================================
+function addHistoryEntry(method, path, body, status, time, resHeaders, resBody, authHeader, error) {
+    const entry = {
+        id: state.history.length + 1,
+        timestamp: new Date().toISOString(),
+        method, path,
+        body: body ? JSON.stringify(body).substring(0, 500) : null,
+        status,
+        time,
+        resHeaders: resHeaders ? resHeaders.substring(0, 500) : null,
+        resBody: resBody ? resBody.substring(0, 1000) : null,
+        authHeader,
+        error
+    };
+    state.history.unshift(entry);
+    if (state.history.length > 500) state.history.pop();
+    localStorage.setItem('gzerp_history', JSON.stringify(state.history));
+    renderHistory();
+}
+
+function renderHistory(filter = '', statusFilter = '') {
+    const tbody = document.getElementById('historyBody');
+    let items = state.history;
+
+    if (filter) {
+        const f = filter.toLowerCase();
+        items = items.filter(h =>
+            h.method.toLowerCase().includes(f) ||
+            h.path.toLowerCase().includes(f) ||
+            String(h.status).includes(f)
+        );
+    }
+    if (statusFilter) {
+        items = items.filter(h => {
+            if (statusFilter === '0') return h.status === 0 || h.error;
+            return String(h.status).startsWith(statusFilter);
+        });
+    }
+
+    tbody.innerHTML = items.slice(0, 100).map(h => {
+        let badgeClass = 'status-default';
+        if (h.status >= 200 && h.status < 300) badgeClass = 'status-2xx';
+        else if (h.status >= 400 && h.status < 500) badgeClass = 'status-4xx';
+        else if (h.status >= 500) badgeClass = 'status-5xx';
+
+        const summary = (h.resBody || '').substring(0, 80).replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+        return `<tr>
+            <td>${h.id}</td>
+            <td class="small">${new Date(h.timestamp).toLocaleTimeString()}</td>
+            <td><span class="badge ${getMethodBadge(h.method)}">${h.method}</span></td>
+            <td class="small"><code>${h.path}</code></td>
+            <td><span class="status-badge ${badgeClass}">${h.status || '?'}</span></td>
+            <td><span class="time-badge">${h.time}ms</span></td>
+            <td class="small text-truncate" style="max-width:200px;">${summary || '-'}</td>
+            <td><button class="btn btn-sm btn-outline-primary" onclick="showDetail(${h.id})"><i class="bi bi-eye"></i></button></td>
+        </tr>`;
+    }).join('');
+
+    document.getElementById('historyTotal').textContent = items.length;
+}
+
+function filterHistory() {
+    const filter = document.getElementById('historyFilter').value;
+    const statusFilter = document.getElementById('historyFilterStatus').value;
+    renderHistory(filter, statusFilter);
+}
+
+function clearHistory() {
+    state.history = [];
+    localStorage.removeItem('gzerp_history');
+    renderHistory();
+}
+
+function exportHistory(format) {
+    let content, filename, type;
+    if (format === 'json') {
+        content = JSON.stringify(state.history, null, 2);
+        filename = 'gzerp_history.json';
+        type = 'application/json';
+    } else {
+        const header = 'ID,Timestamp,Method,Path,Status,Time(ms),Error\n';
+        const rows = state.history.map(h =>
+            `${h.id},"${h.timestamp}",${h.method},${h.path},${h.status || '0'},${h.time},"${(h.error || '').replace(/"/g, '""')}"`
+        ).join('\n');
+        content = header + rows;
+        filename = 'gzerp_history.csv';
+        type = 'text/csv';
+    }
+    const blob = new Blob([content], { type });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
+
+function showDetail(id) {
+    const h = state.history.find(x => x.id === id);
+    if (!h) return;
+
+    document.getElementById('detailMethod').innerHTML = `<span class="badge ${getMethodBadge(h.method)}">${h.method}</span>`;
+    document.getElementById('detailUrl').textContent = state.baseUrl + h.path;
+    let badgeClass = 'status-default';
+    if (h.status >= 200 && h.status < 300) badgeClass = 'status-2xx';
+    else if (h.status >= 400 && h.status < 500) badgeClass = 'status-4xx';
+    else if (h.status >= 500) badgeClass = 'status-5xx';
+    document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${badgeClass}">${h.status || 'Erro de Rede'} ${h.statusText || ''}</span> · ${h.time}ms`;
+    document.getElementById('detailTime').textContent = h.time + 'ms';
+    document.getElementById('detailReqHeaders').textContent = `Authorization: ${h.authHeader || '(nenhum)'}`;
+    document.getElementById('detailReqBody').textContent = h.body || '(nenhum)';
+    document.getElementById('detailResHeaders').textContent = h.resHeaders || '(nenhum)';
+    document.getElementById('detailResBody').textContent = h.resBody || '(vazio)';
+
+    new bootstrap.Modal(document.getElementById('detailModal')).show();
+}
+
+function getMethodBadge(method) {
+    const map = { GET: 'method-GET', POST: 'method-POST', PUT: 'method-PUT', DELETE: 'method-DELETE', PATCH: 'method-PATCH' };
+    return map[method] || 'method-GET';
+}
+
+// ============================================================
+// ENDPOINT EXPLORER
+// ============================================================
+function renderEndpoints() {
+    const container = document.getElementById('endpointsContainer');
+    container.innerHTML = knownEndpoints.map((ep, i) => createEndpointCard(ep, i)).join('');
+}
+
+function createEndpointCard(ep, index) {
+    const authNote = ep.auth ? ' <span class="badge bg-warning text-dark">Requer Auth</span>' : ' <span class="badge bg-success">Público</span>';
+    const plannedNote = ep.planned ? ' <span class="badge bg-secondary">Planejado</span>' : '';
+    const placeholder = ep.path.replace(/{id}/g, '1');
+
+    return `
+    <div class="endpoint-card" id="ep-card-${index}">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <span class="method ${getMethodBadge(ep.method)}">${ep.method}</span>
+                <code class="ms-2">${ep.path}</code>
+                ${authNote}${plannedNote}
+            </div>
+            <div>
+                <button class="btn btn-sm btn-outline-primary" onclick="executeEndpoint(${index})"><i class="bi bi-send"></i> Enviar</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="removeEndpoint(${index})"><i class="bi bi-x"></i></button>
+            </div>
+        </div>
+        <p class="small text-muted mb-2">${ep.desc}</p>
+        <div class="row g-2">
+            <div class="col-md-4">
+                <label class="form-label small">Path Params</label>
+                <input type="text" class="form-control form-control-sm ep-path-params" id="ep-path-${index}" placeholder="{id} → 1" value="${ep.path.includes('{id}') ? '1' : ''}">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small">Query Params</label>
+                <input type="text" class="form-control form-control-sm ep-query-params" id="ep-query-${index}" placeholder="param=value&foo=bar">
+            </div>
+            <div class="col-md-4">
+                <label class="form-label small">Body JSON</label>
+                <textarea class="form-control form-control-sm json-input ep-body" id="ep-body-${index}" rows="2" placeholder='{"key": "value"}'></textarea>
+            </div>
+        </div>
+        <div class="mt-2">
+            <div class="response-box info ep-response" id="ep-response-${index}" style="max-height:200px; font-size:0.75rem;">
+                Aguardando requisição...
+            </div>
+        </div>
+    </div>`;
+}
+
+function addCustomEndpoint() {
+    const method = document.getElementById('newEndpointMethod').value.toUpperCase();
+    const path = document.getElementById('newEndpointPath').value.trim();
+    if (!method || !path) return alert('Preencha método e path.');
+    knownEndpoints.push({ method, path, desc: 'Personalizado', auth: true, planned: false });
+    const idx = knownEndpoints.length - 1;
+    const container = document.getElementById('endpointsContainer');
+    container.insertAdjacentHTML('beforeend', createEndpointCard(knownEndpoints[idx], idx));
+    document.getElementById('newEndpointPath').value = '';
+}
+
+function removeEndpoint(index) {
+    knownEndpoints.splice(index, 1);
+    renderEndpoints();
+}
+
+async function executeEndpoint(index) {
+    const ep = knownEndpoints[index];
+    const responseEl = document.getElementById(`ep-response-${index}`);
+    const cardEl = document.getElementById(`ep-card-${index}`);
+
+    let path = ep.path;
+    const pathParams = document.getElementById(`ep-path-${index}`).value.trim();
+    if (pathParams) {
+        path = path.replace(/{id}/g, pathParams);
+    }
+
+    let query = '';
+    const queryParams = document.getElementById(`ep-query-${index}`).value.trim();
+    if (queryParams) {
+        query = '?' + queryParams;
+    }
+
+    let body = null;
+    const bodyText = document.getElementById(`ep-body-${index}`).value.trim();
+    if (bodyText) {
+        try { body = JSON.parse(bodyText); } catch(e) {
+            responseEl.innerHTML = `<span class="text-danger">JSON inválido: ${e.message}</span>`;
+            return;
+        }
+    }
+
+    responseEl.className = 'response-box info';
+    responseEl.textContent = 'Enviando...';
+
+    const result = await makeRequest(ep.method, path + query, body, ep.auth);
+
+    const statusClass = result.status >= 200 && result.status < 300 ? 'success' :
+                        result.status >= 400 ? 'error' : 'info';
+    responseEl.className = `response-box ${statusClass}`;
+
+    let output = `HTTP ${result.status} ${result.statusText}\n`;
+    output += `Tempo: ${result.time}ms\n`;
+    if (result.responseHeaders) output += `\n--- Response Headers ---\n${result.responseHeaders}\n`;
+    if (result.responseBody) output += `\n--- Response Body ---\n${result.responseBody}\n`;
+    if (result.error) output += `\n--- Error ---\n${result.error}\n`;
+
+    responseEl.textContent = output;
+}
+
+// ============================================================
+// AUTHENTICATION TESTS
+// ============================================================
+function testLogin() {
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const tenantId = document.getElementById('loginTenantId').value;
+
+    showAuthResult('Enviando POST /auth/login...');
+
+    makeRequest('POST', '/auth/login', { email, password, tenantId: parseInt(tenantId) })
+        .then(r => {
+            if (r.status === 200 && r.responseBody) {
+                try {
+                    const data = JSON.parse(r.responseBody);
+                    if (data.token) {
+                        state.token = data.token;
+                        localStorage.setItem('gzerp_token', data.token);
+                        updateSidebarToken();
+                        updateConfigDisplay();
+                        decodeJwt(data.token);
+                        showAuthResult(`✓ LOGIN SUCESSO!\nStatus: ${r.status}\nTempo: ${r.time}ms\nToken: ${data.token}\n\nDecodificado:`, true);
+                    } else {
+                        showAuthResult(`Resposta sem token:\n${r.responseBody}`);
+                    }
+                } catch(e) {
+                    showAuthResult(`Resposta não-JSON:\n${r.responseBody}`);
+                }
+            } else {
+                showAuthResult(`✗ Status: ${r.status} ${r.statusText}\nTempo: ${r.time}ms\n\n${r.responseBody || r.error || '(sem resposta)'}`);
+            }
+        });
+}
+
+function testRegisterTenant() {
+    const cnpj = document.getElementById('regCnpj').value;
+    const email = document.getElementById('regEmail').value;
+    const razao = document.getElementById('regRazao').value;
+    const phone = document.getElementById('regPhone').value;
+    const nomeFantasia = document.getElementById('regNomeFantasia').value;
+    const partnerUser = document.getElementById('regPartnerUser').value;
+    const partnerEmail = document.getElementById('regPartnerEmail').value;
+    const partnerPass = document.getElementById('regPartnerPass').value;
+    const partnerCpf = document.getElementById('regPartnerCpf').value;
+    const partnerPhone = document.getElementById('regPartnerPhone').value;
+
+    const body = {
+        cnpj, email, razaoSocial: razao, phone,
+        nomeFantasia: nomeFantasia || undefined,
+        partners: [{
+            cpf: partnerCpf,
+            fullName: partnerUser,
+            username: partnerUser,
+            email: partnerEmail,
+            phone: partnerPhone,
+            password: partnerPass
+        }]
+    };
+
+    showAuthResult('Enviando POST /register...');
+
+    makeRequest('POST', '/register', body, false)
+        .then(r => {
+            if (r.status === 201 || r.status === 200) {
+                showAuthResult(`✓ TENANT CRIADO!\nStatus: ${r.status}\nTempo: ${r.time}ms\n\n${r.responseBody}\n\nAgora tente login com:\nEmail: ${partnerEmail}\nSenha: ${partnerPass}`);
+            } else {
+                showAuthResult(`✗ Status: ${r.status} ${r.statusText}\nTempo: ${r.time}ms\n\n${r.responseBody || r.error || '(sem resposta)'}`);
+            }
+        });
+}
+
+function testAuthWithToken(method, path) {
+    if (!state.token) return showAuthResult('✗ Nenhum token armazenado. Faça login primeiro.');
+    showAuthResult(`Enviando ${method} ${path} com token...`);
+    makeRequest(method, path, null, true)
+        .then(r => {
+            const statusClass = r.status >= 200 && r.status < 400 ? 'success' : 'error';
+            showAuthResult(`Status: ${r.status} ${r.statusText}\nTempo: ${r.time}ms\n\n${r.responseBody || r.error || '(vazio)'}`, true);
+        });
+}
+
+function testAuthNoToken(method, path) {
+    showAuthResult(`Enviando ${method} ${path} SEM token (esperado: 401/403)...`);
+    makeRequest(method, path, null, false)
+        .then(r => {
+            const isBlocked = r.status === 401 || r.status === 403;
+            const icon = isBlocked ? '✓' : '✗';
+            showAuthResult(`${icon} Status: ${r.status} ${r.statusText}\nTempo: ${r.time}ms\n\n${r.responseBody || r.error || '(sem resposta)'}\n\n${isBlocked ? 'Correto: endpoint bloqueado sem autenticação.' : 'Atenção: endpoint acessível sem autenticação!'}`);
+        });
+}
+
+function testAuthInvalidToken(method, path) {
+    showAuthResult(`Enviando ${method} ${path} com token "invalid" (esperado: 401/403)...`);
+    const origToken = state.token;
+    state.token = 'invalid.token.here';
+    makeRequest(method, path, null, true)
+        .then(r => {
+            state.token = origToken;
+            const isBlocked = r.status === 401 || r.status === 403;
+            const icon = isBlocked ? '✓' : '✗';
+            showAuthResult(`${icon} Status: ${r.status} ${r.statusText}\nTempo: ${r.time}ms\n\n${r.responseBody || r.error || '(sem resposta)'}\n\n${isBlocked ? 'Correto: token inválido bloqueado.' : 'Atenção: token inválido foi aceito!'}`);
+        });
+}
+
+function decodeJwt(token) {
+    try {
+        const parts = token.split('.');
+        if (parts.length !== 3) throw new Error('Token JWT inválido');
+        const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+        document.getElementById('authTokenPayload').textContent = JSON.stringify(payload, null, 2);
+        document.getElementById('authTokenDecoded').style.display = 'block';
+
+        // Show expiry info
+        if (payload.exp) {
+            const expDate = new Date(payload.exp * 1000);
+            const now = new Date();
+            const diff = expDate - now;
+            const expired = diff < 0;
+            document.getElementById('authTokenPayload').textContent += `\n\n--- Expiry Info ---\nExpiração: ${expDate.toISOString()}\n${expired ? '⚠ EXPIRADO!' : `Restante: ${Math.floor(diff/1000)}s`}`;
+        }
+    } catch(e) {
+        document.getElementById('authTokenPayload').textContent = `Erro ao decodificar: ${e.message}`;
+        document.getElementById('authTokenDecoded').style.display = 'block';
+    }
+}
+
+function showAuthResult(text, keepToken = false) {
+    const el = document.getElementById('authResult');
+    el.textContent = text;
+    el.className = 'response-box ' + (text.includes('✓') || text.includes('SUCESSO') ? 'success' : text.includes('✗') || text.includes('Atenção') ? 'error' : 'info');
+
+    if (!keepToken) {
+        document.getElementById('authTokenDisplay').textContent = state.token || 'Nenhum token';
+        if (state.token) {
+            try { decodeJwt(state.token); } catch(e) {}
+        }
+    }
+}
+
+// ============================================================
+// SECURITY TESTS
+// ============================================================
+function testSqlInjection(target) {
+    const payload = document.getElementById('sqlPayloadInput').value;
+    let resultText = `Testando SQL Injection: "${payload}"\n`;
+
+    if (target === 'login') {
+        resultText += '\nEnviando POST /auth/login com email malicioso...\n';
+        showSecurityResult(resultText + 'Enviando...');
+        makeRequest('POST', '/auth/login', { email: payload, password: 'test', tenantId: 1 })
+            .then(r => {
+                showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\nTempo: ${r.time}ms\n\nResponse:\n${r.responseBody || '(vazio)'}`);
+            });
+    } else if (target === 'register') {
+        resultText += '\nEnviando POST /register com CNPJ malicioso...\n';
+        showSecurityResult(resultText + 'Enviando...');
+        const body = {
+            cnpj: payload,
+            email: 'test@test.com',
+            razaoSocial: 'Test',
+            phone: '11999990000',
+            partners: [{
+                cpf: '12345678909',
+                fullName: 'Test',
+                username: 'test',
+                email: 'test@test.com',
+                phone: '11988880000',
+                password: 'password123'
+            }]
+        };
+        makeRequest('POST', '/register', body, false)
+            .then(r => {
+                const safe = r.status === 400 || r.status === 409 ? '✓ Backend rejeitou input malicioso' : '⚠ Backend aceitou input potencialmente perigoso';
+                showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n${safe}\n\nResponse:\n${r.responseBody || '(vazio)'}`);
+            });
+    }
+}
+
+function testXss(target) {
+    const payload = document.getElementById('xssPayloadInput').value;
+    let resultText = `Testando XSS: "${payload}"\n`;
+
+    if (target === 'register') {
+        resultText += '\nEnviando POST /register com nome malicioso...\n';
+        showSecurityResult(resultText + 'Enviando...');
+        const body = {
+            cnpj: '12345678000191',
+            email: 'testxss@test.com',
+            razaoSocial: payload,
+            phone: '11999990001',
+            partners: [{
+                cpf: '12345678909',
+                fullName: payload,
+                username: 'testxss',
+                email: 'testxss@test.com',
+                phone: '11988880001',
+                password: 'password123'
+            }]
+        };
+        makeRequest('POST', '/register', body, false)
+            .then(r => {
+                const hasXss = r.responseBody && r.responseBody.includes('<script');
+                const safe = r.status === 400 ? '✓ Backend rejeitou input' : (hasXss ? '⚠ POSSIBLE XSS: script encontrado na resposta!' : '✓ Input armazenado sem execução');
+                showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n${safe}\n\nResponse:\n${r.responseBody || '(vazio)'}`);
+            });
+    } else if (target === 'employee') {
+        resultText += '\nEnviando POST /employees/register com nome malicioso...\n';
+        showSecurityResult(resultText + 'Enviando...');
+        const body = {
+            tenantId: 1,
+            userName: 'testxss',
+            fullName: payload,
+            password: 'password123',
+            email: 'testxss@test.com',
+            salary: 3000,
+            cpf: '12345678909',
+            phone: '11988880001'
+        };
+        makeRequest('POST', '/employees/register', body, true)
+            .then(r => {
+                const hasXss = r.responseBody && r.responseBody.includes('<script');
+                const safe = r.status === 400 ? '✓ Backend rejeitou input' : (hasXss ? '⚠ POSSIBLE XSS!' : '✓ Input processado');
+                showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n${safe}\n\nResponse:\n${r.responseBody || '(vazio)'}`);
+            });
+    }
+}
+
+function testValidation(type) {
+    let resultText = `Testando validação: ${type}\n\n`;
+
+    if (type === 'emptyBody') {
+        showSecurityResult(resultText + 'Enviando body vazio...');
+        // Use fetch to send empty body
+        fetch(buildUrl('/employees/register'), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${state.token}` },
+            body: ''
+        }).then(async r => {
+            const body = await r.text();
+            showSecurityResult(resultText + `Status: ${r.status}\nTempo: N/A\n\nResponse:\n${body}`);
+        }).catch(e => showSecurityResult(resultText + `Erro: ${e.message}`));
+    } else if (type === 'missingFields') {
+        showSecurityResult(resultText + 'Enviando body com campos faltando...');
+        makeRequest('POST', '/employees/register', { userName: 'test' }, true)
+            .then(r => showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n\nResponse:\n${r.responseBody || '(vazio)'}`));
+    } else if (type === 'invalidEmail') {
+        showSecurityResult(resultText + 'Enviando email inválido...');
+        makeRequest('POST', '/employees/register', {
+            tenantId: 1, userName: 'testval', fullName: 'Test',
+            password: 'password123', email: 'not-an-email',
+            salary: 3000, cpf: '12345678909', phone: '11988880001'
+        }, true)
+        .then(r => showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n\nResponse:\n${r.responseBody || '(vazio)'}`));
+    } else if (type === 'oversized') {
+        showSecurityResult(resultText + 'Enviando campo com tamanho excessivo...');
+        makeRequest('POST', '/employees/register', {
+            tenantId: 1, userName: 'a'.repeat(100), fullName: 'Test',
+            password: 'password123', email: 'test@test.com',
+            salary: 3000, cpf: '12345678909', phone: '11988880001'
+        }, true)
+        .then(r => showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n\nResponse:\n${r.responseBody || '(vazio)'}`));
+    } else if (type === 'wrongType') {
+        showSecurityResult(resultText + 'Enviando tipo de dado incorreto...');
+        makeRequest('POST', '/employees/register', {
+            tenantId: 'not-a-number', userName: 'test', fullName: 'Test',
+            password: 'password123', email: 'test@test.com',
+            salary: 'not-a-number', cpf: '12345678909', phone: '11988880001'
+        }, true)
+        .then(r => showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n\nResponse:\n${r.responseBody || '(vazio)'}`));
+    }
+}
+
+function testAuthorization(type) {
+    let resultText = `Testando autorização: ${type}\n\n`;
+
+    if (type === 'unauthenticated') {
+        showSecurityResult(resultText + 'Testando acesso sem token...');
+        makeRequest('GET', '/employees', null, false)
+            .then(r => {
+                const isProtected = r.status === 401 || r.status === 403;
+                showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n${isProtected ? '✓ Endpoint corretamente protegido' : '⚠ Endpoint acessível sem autenticação!'}\n\n${r.responseBody || '(vazio)'}`);
+            });
+    } else if (type === 'wrongRole') {
+        showSecurityResult(resultText + 'Testando com token de funcionário comum (se disponível)...');
+        if (!state.token) {
+            showSecurityResult(resultText + '⚠ Nenhum token disponível. Faça login primeiro.');
+        } else {
+            makeRequest('GET', '/employees', null, true)
+                .then(r => {
+                    showSecurityResult(resultText + `Status: ${r.status} ${r.statusText}\n\n${r.responseBody || '(vazio)'}`);
+                });
+        }
+    }
+}
+
+function testCorsHeaders() {
+    showSecurityResult('Testando headers CORS...');
+    // Make a request and check CORS headers in response
+    makeRequest('GET', '/employees', null, true)
+        .then(r => {
+            let corsInfo = '';
+            if (r.responseHeaders) {
+                const corsHeaders = ['access-control-allow-origin', 'access-control-allow-methods', 'access-control-allow-headers', 'access-control-max-age'];
+                corsHeaders.forEach(h => {
+                    if (r.responseHeaders.toLowerCase().includes(h)) {
+                        corsInfo += `  ${h}: [encontrado]\n`;
+                    }
+                });
+            }
+            showSecurityResult(`Headers CORS detectados:\n${corsInfo || '  (nenhum header CORS encontrado — servidor pode não estar configurado para CORS)'}\n\nNota: O navegador bloqueia automaticamente requisições cross-origin. Esta verificação mostra os headers retornados pelo servidor.`);
+        });
+}
+
+function testRateLimiting() {
+    showSecurityResult('Enviando 10 requisições rápidas ao mesmo endpoint...');
+    let results = [];
+    let completed = 0;
+
+    for (let i = 0; i < 10; i++) {
+        makeRequest('GET', '/employees', null, true)
+            .then(r => {
+                results.push({ index: i, status: r.status, time: r.time });
+                completed++;
+                if (completed === 10) {
+                    const rateLimited = results.some(r => r.status === 429);
+                    const errors = results.filter(r => r.status >= 400).length;
+                    showSecurityResult(`Rate Limiting Test Results:\nTotal: 10 requisições\nSucessos (2xx): ${results.filter(r => r.status >= 200 && r.status < 300).length}\nErros (4xx/5xx): ${results.filter(r => r.status >= 400).length}\nRate Limited (429): ${results.filter(r => r.status === 429).length}\n\n${rateLimited ? '✓ Rate limiting DETECTADO!' : '⚠ Rate limiting NÃO detectado (ou não implementado)'}\n\nDetalhes:\n${results.map(r => `  #${r.index + 1}: ${r.status} ${r.time}ms`).join('\n')}`);
+                }
+            });
+    }
+}
+
+function showSecurityResult(text) {
+    const el = document.getElementById('securityResult');
+    el.textContent = text;
+    el.className = 'response-box ' + (text.includes('✓') || text.includes('CORRETAMENTE') ? 'success' : text.includes('⚠') || text.includes('POSSIBLE') ? 'error' : 'info');
+}
+
+// ============================================================
+// PERFORMANCE TESTS
+// ============================================================
+function runPerformanceTest() {
+    if (state.perfRunning) return;
+    state.perfRunning = true;
+    state.perfAbortController = new AbortController();
+
+    const endpoint = document.getElementById('perfEndpoint').value;
+    const count = parseInt(document.getElementById('perfCount').value) || 10;
+    const delay = parseInt(document.getElementById('perfDelay').value) || 100;
+
+    const [method, path] = endpoint.split(' ');
+    const times = [];
+    const details = [];
+
+    document.getElementById('perfDetail').textContent = `Iniciando: ${count} requisições ${method} ${path}...`;
+
+    async function runBatch() {
+        for (let i = 0; i < count && state.perfRunning; i++) {
+            const start = Date.now();
+            try {
+                await makeRequest(method, path, null, true);
+                const elapsed = Date.now() - start;
+                times.push(elapsed);
+                details.push({ index: i + 1, time: elapsed, success: true });
+            } catch(e) {
+                const elapsed = Date.now() - start;
+                times.push(elapsed);
+                details.push({ index: i + 1, time: elapsed, success: false, error: e.message });
+            }
+
+            // Update display
+            const stats = calcStats(times);
+            document.getElementById('perfAvg').textContent = stats.avg.toFixed(1) + 'ms';
+            document.getElementById('perfMedian').textContent = stats.median.toFixed(1) + 'ms';
+            document.getElementById('perfP90').textContent = stats.p90.toFixed(1) + 'ms';
+            document.getElementById('perfMax').textContent = stats.max + 'ms';
+            document.getElementById('perfMin').textContent = stats.min + 'ms';
+            document.getElementById('perfTotal').textContent = times.length + '/' + count;
+            document.getElementById('perfSuccess').textContent = times.filter((_, j) => details[j]?.success).length;
+            document.getElementById('perfFailures').textContent = times.filter((_, j) => !details[j]?.success).length;
+
+            document.getElementById('perfDetail').textContent = details.map(d =>
+                `#${d.index}: ${d.time}ms ${d.success ? '✓' : '✗ ' + (d.error || '')}`
+            ).join('\n');
+
+            updatePerfChart(times);
+
+            if (state.perfRunning && i < count - 1) {
+                await new Promise(r => setTimeout(r, delay));
+            }
+        }
+
+        state.perfRunning = false;
+        document.getElementById('perfDetail').textContent += `\n\n=== CONCLUÍDO ===\nMédia: ${stats.avg.toFixed(1)}ms | Mediana: ${stats.median.toFixed(1)}ms | P90: ${stats.p90.toFixed(1)}ms | Mín: ${stats.min}ms | Máx: ${stats.max}ms`;
+    }
+
+    runBatch();
+}
+
+function stopPerformanceTest() {
+    state.perfRunning = false;
+}
+
+function calcStats(times) {
+    if (!times.length) return { avg: 0, median: 0, p90: 0, min: 0, max: 0 };
+    const sorted = [...times].sort((a, b) => a - b);
+    const sum = sorted.reduce((a, b) => a + b, 0);
+    const avg = sum / sorted.length;
+    const median = sorted.length % 2 === 0
+        ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+        : sorted[Math.floor(sorted.length / 2)];
+    const p90Index = Math.ceil(sorted.length * 0.9) - 1;
+    return {
+        avg,
+        median,
+        p90: sorted[p90Index] || sorted[sorted.length - 1],
+        min: sorted[0],
+        max: sorted[sorted.length - 1]
+    };
+}
+
+function updatePerfChart(times) {
+    const ctx = document.getElementById('perfChart').getContext('2d');
+    if (state.perfChart) state.perfChart.destroy();
+
+    state.perfChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: times.map((_, i) => i + 1),
+            datasets: [{
+                label: 'Tempo (ms)',
+                data: times,
+                borderColor: '#3182ce',
+                backgroundColor: 'rgba(49,130,206,0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.3,
+                pointRadius: times.length > 50 ? 0 : 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                x: { title: { display: true, text: 'Requisição #' } },
+                y: { title: { display: true, text: 'Tempo (ms)' }, beginAtZero: true }
+            },
+            plugins: {
+                legend: { display: true },
+                tooltip: { mode: 'index', intersect: false }
+            }
+        }
+    });
+}
+
+// ============================================================
+// FLOW TESTS
+// ============================================================
+async function runFlow(type) {
+    const stepsEl = document.getElementById('flowSteps');
+    const resultEl = document.getElementById('flowResult');
+    stepsEl.innerHTML = '';
+    resultEl.textContent = 'Executando fluxo...';
+    resultEl.className = 'response-box info';
+
+    const addStep = (name, status = 'pending') => {
+        const div = document.createElement('div');
+        div.className = `flow-step ${status}`;
+        div.innerHTML = `<strong>${name}</strong> <span class="badge ${status === 'completed' ? 'bg-success' : status === 'error' ? 'bg-danger' : 'bg-secondary'}">${status.toUpperCase()}</span>`;
+        stepsEl.appendChild(div);
+        return div;
+    };
+
+    const setStep = (el, status, detail = '') => {
+        el.className = `flow-step ${status}`;
+        const badge = el.querySelector('.badge');
+        if (badge) {
+            badge.className = `badge ${status === 'completed' ? 'bg-success' : status === 'error' ? 'bg-danger' : 'bg-secondary'}`;
+            badge.textContent = status.toUpperCase();
+        }
+        if (detail) {
+            const detailEl = document.createElement('div');
+            detailEl.className = 'small text-muted mt-1';
+            detailEl.textContent = detail;
+            el.appendChild(detailEl);
+        }
+    };
+
+    let flowError = null;
+
+    try {
+        if (type === 'tenantLogin') {
+            // Step 1: Register tenant
+            const step1 = addStep('1. Cadastrar Tenant + Partner');
+            const cnpj = '12345678' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+            const email = `t${Date.now()}@test.com`;
+            const body = {
+                cnpj, email, razaoSocial: 'Flow Test LTDA', phone: '11999990000',
+                nomeFantasia: 'Flow Test',
+                partners: [{
+                    cpf: '12345678909', fullName: 'FlowPartner', username: 'flowpartner',
+                    email: 'flow@test.com', phone: '11988880000', password: 'password123'
+                }]
+            };
+            const r1 = await makeRequest('POST', '/register', body, false);
+            if (r1.status === 201 || r1.status === 200) {
+                setStep(step1, 'completed', `Status ${r1.status} - ${r1.responseBody?.substring(0, 100)}`);
+            } else {
+                setStep(step1, 'error', `Status ${r1.status}: ${r1.responseBody || r1.error}`);
+                throw new Error('Falha no registro do tenant');
+            }
+
+            // Step 2: Login
+            const step2 = addStep('2. Login com Partner');
+            const r2 = await makeRequest('POST', '/auth/login', { email: 'flow@test.com', password: 'password123', tenantId: 1 });
+            if (r2.status === 200 && r2.responseBody) {
+                try {
+                    const data = JSON.parse(r2.responseBody);
+                    if (data.token) {
+                        state.token = data.token;
+                        localStorage.setItem('gzerp_token', data.token);
+                        updateSidebarToken();
+                        decodeJwt(data.token);
+                        setStep(step2, 'completed', `Token obtido (expira: ${data.exp ? new Date(data.exp * 1000).toISOString() : 'N/A'})`);
+                    } else {
+                        throw new Error('Resposta sem token');
+                    }
+                } catch(e) {
+                    setStep(step2, 'error', `Parse error: ${e.message}\n${r2.responseBody}`);
+                    throw new Error('Login sem token');
+                }
+            } else {
+                setStep(step2, 'error', `Status ${r2.status}: ${r2.responseBody || r2.error}`);
+                throw new Error('Falha no login');
+            }
+
+            // Step 3: Verify token works
+            const step3 = addStep('3. Verificar token com GET /employees');
+            const r3 = await makeRequest('GET', '/employees', null, true);
+            if (r3.status === 200 || r3.status === 204 || r3.status === 201) {
+                setStep(step3, 'completed', `Status ${r3.status} - Token válido`);
+            } else {
+                setStep(step3, 'error', `Status ${r3.status}: ${r3.responseBody || r3.error}`);
+            }
+
+            resultEl.textContent = `✓ Fluxo concluído! Tenant criado, login realizado, token verificado.`;
+            resultEl.className = 'response-box success';
+
+        } else if (type === 'employeeCrud') {
+            // Ensure we have a token
+            if (!state.token) {
+                const step0 = addStep('0. Obter token primeiro (login)');
+                setStep(step0, 'error', 'Token necessário. Execute o Fluxo 1 primeiro.');
+                resultEl.textContent = '⚠ Execute o Fluxo 1 primeiro para obter um token.';
+                resultEl.className = 'response-box error';
+                return;
+            }
+
+            // Step 1: Create employee
+            const step1 = addStep('1. Criar Employee');
+            const empBody = {
+                tenantId: 1,
+                userName: `emp${Date.now()}`,
+                fullName: 'Employee Test',
+                password: 'password123',
+                email: `emp${Date.now()}@test.com`,
+                salary: 3000,
+                cpf: '12345678909',
+                phone: '11988880001'
+            };
+            const r1 = await makeRequest('POST', '/employees/register', empBody, true);
+            if (r1.status === 201 || r1.status === 200) {
+                setStep(step1, 'completed', `Status ${r1.status}`);
+                const empData = JSON.parse(r1.responseBody);
+                window._testEmpId = empData.id;
+            } else {
+                setStep(step1, 'error', `Status ${r1.status}: ${r1.responseBody || r1.error}`);
+                throw new Error('Falha ao criar employee');
+            }
+
+            // Step 2: List employees
+            const step2 = addStep('2. Listar Employees (GET /employees)');
+            const r2 = await makeRequest('GET', '/employees', null, true);
+            if (r2.status === 200 || r2.status === 204) {
+                setStep(step2, 'completed', `Status ${r2.status} - ${r2.responseBody?.substring(0, 100) || 'vazio'}`);
+            } else {
+                setStep(step2, 'error', `Status ${r2.status}: ${r2.responseBody || r2.error}`);
+            }
+
+            // Step 3: Delete employee
+            if (window._testEmpId) {
+                const step3 = addStep(`3. Deletar Employee (ID: ${window._testEmpId})`);
+                const r3 = await makeRequest('DELETE', `/employees/${window._testEmpId}`, null, true);
+                if (r3.status === 202 || r3.status === 200) {
+                    setStep(step3, 'completed', `Status ${r3.status} - Deletado`);
+                } else {
+                    setStep(step3, 'error', `Status ${r3.status}: ${r3.responseBody || r3.error}`);
+                }
+            }
+
+            resultEl.textContent = `✓ Fluxo CRUD de Employee concluído!`;
+            resultEl.className = 'response-box success';
+
+        } else if (type === 'fullCycle') {
+            // Step 1: Register tenant
+            const step1 = addStep('1. Cadastrar Tenant + Partner');
+            const cnpj = '12345678' + Math.floor(Math.random() * 100000000).toString().padStart(8, '0');
+            const email = `full${Date.now()}@test.com`;
+            const body = {
+                cnpj, email, razaoSocial: 'Full Cycle LTDA', phone: '11999990000',
+                nomeFantasia: 'Full Cycle',
+                partners: [{
+                    cpf: '12345678909', fullName: 'FullPartner', username: 'fullpartner',
+                    email: 'full@test.com', phone: '11988880000', password: 'password123'
+                }]
+            };
+            const r1 = await makeRequest('POST', '/register', body, false);
+            if (r1.status === 201 || r1.status === 200) {
+                setStep(step1, 'completed', `Status ${r1.status}`);
+            } else {
+                setStep(step1, 'error', `Status ${r1.status}: ${r1.responseBody || r1.error}`);
+                throw new Error('Falha no tenant');
+            }
+
+            // Step 2: Login
+            const step2 = addStep('2. Login');
+            const r2 = await makeRequest('POST', '/auth/login', { email: 'full@test.com', password: 'password123', tenantId: 1 });
+            if (r2.status === 200 && r2.responseBody) {
+                const data = JSON.parse(r2.responseBody);
+                if (data.token) {
+                    state.token = data.token;
+                    localStorage.setItem('gzerp_token', data.token);
+                    updateSidebarToken();
+                    setStep(step2, 'completed', `Token: ${data.token.substring(0, 30)}...`);
+                }
+            } else {
+                setStep(step2, 'error', `Status ${r2.status}: ${r2.responseBody || r2.error}`);
+            }
+
+            // Step 3: Create employee
+            const step3 = addStep('3. Criar Employee');
+            const empBody = {
+                tenantId: 1, userName: `full${Date.now()}`, fullName: 'Full Employee',
+                password: 'password123', email: `full${Date.now()}@test.com`,
+                salary: 5000, cpf: '12345678909', phone: '11988880001'
+            };
+            const r3 = await makeRequest('POST', '/employees/register', empBody, true);
+            if (r3.status === 201 || r3.status === 200) {
+                setStep(step3, 'completed', `Status ${r3.status}`);
+            } else {
+                setStep(step3, 'error', `Status ${r3.status}: ${r3.responseBody || r3.error}`);
+            }
+
+            // Step 4: List employees
+            const step4 = addStep('4. Listar Employees');
+            const r4 = await makeRequest('GET', '/employees', null, true);
+            if (r4.status === 200 || r4.status === 204) {
+                setStep(step4, 'completed', `Status ${r4.status}`);
+            } else {
+                setStep(step4, 'error', `Status ${r4.status}: ${r4.responseBody || r4.error}`);
+            }
+
+            // Step 5: Verify auth without token
+            const step5 = addStep('5. Verificar acesso sem token (esperado: 401/403)');
+            const r5 = await makeRequest('GET', '/employees', null, false);
+            if (r5.status === 401 || r5.status === 403) {
+                setStep(step5, 'completed', `Status ${r5.status} - Corretamente protegido`);
+            } else {
+                setStep(step5, 'error', `Status ${r5.status} - Acesso sem autenticação!`);
+            }
+
+            resultEl.textContent = `✓ Fluxo Full Cycle concluído! Tenant → Login → Employee → Listar → Auth check.`;
+            resultEl.className = 'response-box success';
+        }
+    } catch(e) {
+        resultEl.textContent = `✗ Fluxo falhou: ${e.message}`;
+        resultEl.className = 'response-box error';
+    }
+}
+
+// ============================================================
+// UTILITY
+// ============================================================
+function buildUrl(path) {
+    return state.baseUrl + path;
+}
+</script>
+
+</body>
+</html>

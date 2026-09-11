@@ -5,6 +5,7 @@ import com.erpapi.gzerp.dto.EmployeeRegisterDto;
 import com.erpapi.gzerp.dto.EmployeeResponseDto;
 import com.erpapi.gzerp.models.Employees;
 import com.erpapi.gzerp.repositories.EmployeesRepo;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,10 +19,12 @@ public class EmployeesService {
 
     private EmployeesRepo employeesRepo;
     private AuthService authService;
+    private PasswordEncoder passwordEncoder;
 
-    public EmployeesService(EmployeesRepo employeesRepo, AuthService authService) {
+    public EmployeesService(EmployeesRepo employeesRepo, AuthService authService, PasswordEncoder passwordEncoder) {
         this.employeesRepo = employeesRepo;
         this.authService = authService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public EmployeeResponseDto RegisterEmployeeWithTenantCreated(EmployeeRegisterDto employeeRegisterDto) throws EmployeeAlreadyExistException {
@@ -39,7 +42,7 @@ public class EmployeesService {
         newEmployee.setEmail(employeeRegisterDto.getEmail());
         newEmployee.setTenantId(employeeRegisterDto.getTenantId());
         newEmployee.setUserName(employeeRegisterDto.getUserName());
-        newEmployee.setPassword(employeeRegisterDto.getPassword());
+        newEmployee.setPassword(passwordEncoder.encode(employeeRegisterDto.getPassword()));
         newEmployee.setFullName(employeeRegisterDto.getFullName());
         newEmployee.setSalary(employeeRegisterDto.getSalary());
         newEmployee.setAdmin(false);

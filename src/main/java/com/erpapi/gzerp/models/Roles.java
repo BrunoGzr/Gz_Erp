@@ -19,7 +19,7 @@ public class Roles {
     private Tenants tenant;
 
     @Column(name = "is_system")
-    private boolean system = false;
+    private boolean isSystem = false;
 
     @Column(name = "name")
     private String name;
@@ -41,5 +41,45 @@ public class Roles {
 
     public Long getId() {
         return id;
+    }
+
+    public Tenants getTenant() {
+        return tenant;
+    }
+
+    public void setTenant(Tenants tenant) {
+        this.tenant = tenant;
+    }
+
+    public boolean isIsSystem() {
+        return isSystem;
+    }
+
+    public void setIsSystem(boolean system) {
+        this.isSystem = system;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public Set<Permissions> getPermissions() {
+        return permissions;
+    }
+
+    public void setPermissions(Set<Permissions> permissions) {
+        this.permissions = permissions;
     }
 }

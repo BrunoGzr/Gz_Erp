@@ -23,9 +23,9 @@ import java.util.List;
 @ControllerAdvice
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
-    private MessageSource messageSource;
+    private final MessageSource messageSource;
 
-    public ApiExceptionHandler(MessageSource messageSource, ArrayList<String> errors) {
+    public ApiExceptionHandler(MessageSource messageSource) {
         this.messageSource = messageSource;
     }
 
