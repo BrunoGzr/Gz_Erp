@@ -8,23 +8,30 @@ import jakarta.validation.constraints.Size;
 public class LoginRequestDto {
 
     @Email
-    @NotBlank
     private String email;
 
     @NotBlank
     @Size(min = 6, max = 256)
     private String password;
 
-    @NotNull
-    private Long tenantId;
+    @NotBlank
+    private String username;
 
     public LoginRequestDto() {
     }
 
-    public LoginRequestDto(String email, String password, Long tenantId) {
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public LoginRequestDto(String email, String password, String username) {
         this.email = email;
         this.password = password;
-        this.tenantId = tenantId;
+        this.username = username;
     }
 
     public String getEmail() {
@@ -41,13 +48,5 @@ public class LoginRequestDto {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public Long getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
     }
 }
