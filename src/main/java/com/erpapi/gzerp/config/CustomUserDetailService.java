@@ -36,12 +36,15 @@ public class CustomUserDetailService implements UserDetailsService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
+    public CustomUserDetails loadUserByUsername(@NonNull String username) throws UsernameNotFoundException {
         UsersAccounts user = usersAccountsRepo.findByUsername(username).orElseThrow(()-> new UsernameNotFoundException("User not found"));
-        return new User(user.getUsername(),user.getPassword(), setUserAuthorities(user) );
+
+
+
+        return new CustomUserDetails(user, buildAuthorities(user));
     }
 
-    private Set<GrantedAuthority> setUserAuthorities(UsersAccounts user) {
+    private Set<GrantedAuthority> buildAuthorities(UsersAccounts user) {
         Set<GrantedAuthority> authorities = new HashSet<>();
 
         String baseRole = "ROLE_" + user.getUserType();
@@ -51,12 +54,12 @@ public class CustomUserDetailService implements UserDetailsService {
         if(user.getUserType() == UserType.EMPLOYEE && user.getRole() != null){
             for (Permissions permission : user.getRole().getPermissions()){
                     authorities.add(new SimpleGrantedAuthority("PERM_" + permission.name()));
-            };
+            }
         }
 
         if (user.getUserType() == UserType.PARTNER || user.getUserType() == UserType.ADMIN){
             for (Permissions permission : Permissions.values()){
-                authorities.add(new SimpleGrantedAuthority("PERM_" + permission));
+                authorities.add(new SimpleGrantedAuthority("PERM_" + permission.name()));
 
             }
         }
