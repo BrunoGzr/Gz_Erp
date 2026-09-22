@@ -1,6 +1,8 @@
 package com.erpapi.gzerp.resources;
 
+import com.erpapi.gzerp.config.JwtConfig;
 import com.erpapi.gzerp.dto.LoginRequestDto;
+import com.erpapi.gzerp.dto.LoginResponseDto;
 import com.erpapi.gzerp.models.UsersAccounts;
 import com.erpapi.gzerp.repositories.RolesRepo;
 import com.erpapi.gzerp.repositories.UsersAccountsRepo;
@@ -17,15 +19,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/")
 public class AuthResource {
 
     private AuthenticationManager authenticationManager;
     private UsersAccountsRepo usersAccountsRepo;
     private RolesRepo rolesRepo;
     private PasswordEncoder passwordEncoder;
+    private JwtConfig jwtConfig;
 
-    public AuthResource(AuthenticationManager authenticationManager, UsersAccountsRepo usersAccountsRepo, RolesRepo rolesRepo, PasswordEncoder passwordEncoder) {
+    public AuthResource(AuthenticationManager authenticationManager, UsersAccountsRepo usersAccountsRepo, RolesRepo rolesRepo, PasswordEncoder passwordEncoder, JwtConfig jwtConfig) {
+        this.jwtConfig = jwtConfig;
         this.authenticationManager = authenticationManager;
         this.usersAccountsRepo = usersAccountsRepo;
         this.rolesRepo = rolesRepo;
@@ -34,20 +37,21 @@ public class AuthResource {
 
 
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequestDto loginRequestDto){
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto){
+        System.out.println(">>> username recebido: [" + loginRequestDto.getUsername() + "]");
+        System.out.println(">>> tamanho: " + loginRequestDto.getUsername().length());
+
+
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(),loginRequestDto.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        return new ResponseEntity<>("User Signed In succesfull", HttpStatus.OK);
+
+        String token = jwtConfig.generateToken(authentication);
+
+        LoginResponseDto response = new LoginResponseDto(token,jwtConfig.getExpirationMs());
+
+        return ResponseEntity.ok(response);
     }
-
-
-
-
-
-
-
-
 
 }

@@ -20,7 +20,7 @@ public class Partners {
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenants tenant;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY)
     @MapsId
     @JoinColumn(name = "user_account_id")
     private UsersAccounts usersAccounts;

@@ -4,20 +4,16 @@ public class LoginResponseDto {
 
     private String token;
     private String type;
-    private String email;
-    private Long tenantId;
-    private boolean isAdmin;
+    private Long expirationIn;
 
     public LoginResponseDto() {
         this.type = "Bearer";
     }
 
-    public LoginResponseDto(String token, String email, Long tenantId, boolean isAdmin) {
+    public LoginResponseDto(String token, Long expirationIn) {
         this.token = token;
         this.type = "Bearer";
-        this.email = email;
-        this.tenantId = tenantId;
-        this.isAdmin = isAdmin;
+        this.expirationIn = expirationIn;
     }
 
     public String getToken() {
@@ -36,27 +32,11 @@ public class LoginResponseDto {
         this.type = type;
     }
 
-    public String getEmail() {
-        return email;
+    public Long getExpirationIn() {
+        return expirationIn;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public Long getTenantId() {
-        return tenantId;
-    }
-
-    public void setTenantId(Long tenantId) {
-        this.tenantId = tenantId;
-    }
-
-    public boolean isAdmin() {
-        return isAdmin;
-    }
-
-    public void setAdmin(boolean admin) {
-        isAdmin = admin;
+    public void setExpirationIn(Long expirationIn) {
+        this.expirationIn = expirationIn;
     }
 }

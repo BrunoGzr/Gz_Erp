@@ -1,6 +1,5 @@
 package com.erpapi.gzerp.config;
 
-import com.erpapi.gzerp.models.UsersAccounts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -16,7 +15,6 @@ import java.util.List;
 
 @Service
 public class JwtConfig {
-
 
     @Value("${JWT_SECRET}")
     private String secretKey;

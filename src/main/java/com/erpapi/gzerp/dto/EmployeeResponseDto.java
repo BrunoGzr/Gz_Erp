@@ -10,8 +10,6 @@ public class EmployeeResponseDto {
 
     private Long tenantId;
 
-    private String userName;
-
     private String email;
 
 
@@ -19,8 +17,6 @@ public class EmployeeResponseDto {
         this.id = user.getId();
         this.name = user.getFullName();
         this.tenantId = user.getTenantId();
-        this.userName = user.getUserName();
-        this.email = user.getEmail();
     }
 
     public Long getId() {
@@ -47,13 +43,6 @@ public class EmployeeResponseDto {
         this.tenantId = tenantId;
     }
 
-    public String getUserName() {
-        return userName;
-    }
-
-    public void setUserName(String userName) {
-        this.userName = userName;
-    }
 
     public String getEmail() {
         return email;

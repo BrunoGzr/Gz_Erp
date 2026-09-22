@@ -27,12 +27,12 @@ public class EmployeesResource {
     }
 
 
-    @PostMapping("/register")
-    @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<EmployeeResponseDto> registerUser(@Valid @RequestBody EmployeeRegisterDto userDto, HttpServletResponse response) {
-        EmployeeResponseDto savedUser = employeesService.RegisterEmployeeWithTenantCreated(userDto);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
-    }
+//    @PostMapping("/register")
+//    @ResponseStatus(HttpStatus.CREATED)
+//    public ResponseEntity<EmployeeResponseDto> registerUser(@Valid @RequestBody EmployeeRegisterDto userDto, HttpServletResponse response) {
+//        EmployeeResponseDto savedUser = employeesService.RegisterEmployeeWithTenantCreated(userDto);
+//        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+//    }
 
     @GetMapping
     public ResponseEntity<?> getUsers() {

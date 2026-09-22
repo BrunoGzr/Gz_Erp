@@ -108,12 +108,24 @@ case "$1" in
     stop)
         echo "### Parando e removendo o servidor MySQL ###"
         if container_exists; then
+            # Coleta os volumes antes de remover o container
+            VOLUMES=$(docker inspect --format='{{range .Mounts}}{{if .Name}}{{.Name}}{{"\n"}}{{end}}{{end}}' "$CONTAINER_NAME" 2>/dev/null | grep -v '^$' || true)
+
             if container_running; then
                 docker stop "$CONTAINER_NAME"
                 echo ">>> Container parado."
             fi
             docker rm -f "$CONTAINER_NAME"
             echo ">>> Container removido."
+
+            # Remove os volumes coletados
+            if [ -n "$VOLUMES" ]; then
+                while IFS= read -r vol; do
+                    echo ">>> Removendo volume '$vol'..."
+                    docker volume rm "$vol" 2>/dev/null || echo ">>> Aviso: volume '$vol' não pôde ser removido."
+                done <<< "$VOLUMES"
+                echo ">>> Volumes removidos."
+            fi
         else
             echo ">>> Container não existe. Nada a fazer."
         fi

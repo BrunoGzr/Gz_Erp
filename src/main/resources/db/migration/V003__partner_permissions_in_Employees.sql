@@ -4,5 +4,7 @@ ALTER TABLE employees
     ADD salary DECIMAL(10,2) NOT NULL,
     ADD cpf VARCHAR(11) NOT NULL,
     ADD hire_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    ADD roles varchar(1) DEFAULT NULL;
+    ADD roles varchar(100) DEFAULT NULL,
+    ADD full_name TEXT NOT NULL,
+    ADD phone VARCHAR(11) NOT NULL;
 

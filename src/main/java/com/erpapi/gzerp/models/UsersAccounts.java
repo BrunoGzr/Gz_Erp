@@ -41,7 +41,7 @@ public class UsersAccounts {
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenants tenant;
 
-    @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true )
+    @OneToOne(mappedBy = "usersAccounts",fetch = FetchType.LAZY  ,cascade = CascadeType.ALL, optional = true )
     private Partners partner;
 
     @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true )

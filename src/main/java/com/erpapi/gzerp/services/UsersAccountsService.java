@@ -50,7 +50,15 @@ public class UsersAccountsService {
         newUser.setRole(role);
         newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
         newUser.setTenant(tenant);
+        String usernameBefore = newUser.getUsername();
+        System.out.println(">>> username antes do save: [" + usernameBefore + "]");
+        System.out.println(">>> tamanho antes do save: " + usernameBefore.length());
+        System.out.println(">>> chars antes do save: " + java.util.Arrays.toString(usernameBefore.toCharArray()));
         newUser = usersRepo.save(newUser);
+        String usernameAfter = newUser.getUsername();
+        System.out.println(">>> username depois do save: [" + usernameAfter + "]");
+        System.out.println(">>> tamanho depois do save: " + usernameAfter.length());
+        System.out.println(">>> chars depois do save: " + java.util.Arrays.toString(usernameAfter.toCharArray()));
         return newUser;
     }
 }

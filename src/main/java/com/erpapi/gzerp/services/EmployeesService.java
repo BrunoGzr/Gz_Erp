@@ -27,28 +27,24 @@ public class EmployeesService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public EmployeeResponseDto RegisterEmployeeWithTenantCreated(EmployeeRegisterDto employeeRegisterDto) throws EmployeeAlreadyExistException {
-        List<String> conflictedFields = new ArrayList<String>();
-        if (employeesRepo.existsByEmail(employeeRegisterDto.getEmail(), employeeRegisterDto.getTenantId())) {
-            conflictedFields.add("User with this email already exists");}
-        if (employeesRepo.existsByUserName(employeeRegisterDto.getUserName(), employeeRegisterDto.getTenantId())) {
-            conflictedFields.add("User with this username already exists");}
-        if (!conflictedFields.isEmpty()) {
-            throw new EmployeeAlreadyExistException(conflictedFields);}
-
-        Employees newEmployee = new Employees();
-        authService.cpfValid(employeeRegisterDto.getCpf());
-        newEmployee.setCpf(authService.cpfFormater(employeeRegisterDto.getCpf()));
-        newEmployee.setEmail(employeeRegisterDto.getEmail());
-        newEmployee.setTenantId(employeeRegisterDto.getTenantId());
-        newEmployee.setUserName(employeeRegisterDto.getUserName());
-        newEmployee.setPassword(passwordEncoder.encode(employeeRegisterDto.getPassword()));
-        newEmployee.setFullName(employeeRegisterDto.getFullName());
-        newEmployee.setSalary(employeeRegisterDto.getSalary());
-        newEmployee.setAdmin(false);
-        Employees savedUser = employeesRepo.save(newEmployee);
-        return new EmployeeResponseDto(savedUser);
-    }
+//    public EmployeeResponseDto RegisterEmployeeWithTenantCreated(EmployeeRegisterDto employeeRegisterDto) throws EmployeeAlreadyExistException {
+//        List<String> conflictedFields = new ArrayList<String>();
+//        if (employeesRepo.existsByEmail(employeeRegisterDto.getEmail(), employeeRegisterDto.getTenantId())) {
+//            conflictedFields.add("User with this email already exists");}
+//        if (employeesRepo.existsByUserName(employeeRegisterDto.getUserName(), employeeRegisterDto.getTenantId())) {
+//            conflictedFields.add("User with this username already exists");}
+//        if (!conflictedFields.isEmpty()) {
+//            throw new EmployeeAlreadyExistException(conflictedFields);}
+//
+//        Employees newEmployee = new Employees();
+//        authService.cpfValid(employeeRegisterDto.getCpf());
+//        newEmployee.setCpf(authService.cpfFormater(employeeRegisterDto.getCpf()));
+//        newEmployee.setTenantId(employeeRegisterDto.getTenantId());
+//        newEmployee.setFullName(employeeRegisterDto.getFullName());
+//        newEmployee.setSalary(employeeRegisterDto.getSalary());
+//        Employees savedUser = employeesRepo.save(newEmployee);
+//        return new EmployeeResponseDto(savedUser);
+//    }
     
     
 }
