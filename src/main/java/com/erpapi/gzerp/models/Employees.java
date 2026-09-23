@@ -46,7 +46,6 @@ public class Employees {
 
     private String phone;
 
-
     public Employees(EmployeeRegisterDto dto) {
         this.tenantId = dto.getTenantId();
         this.cpf = dto.getCpf();
@@ -73,7 +72,6 @@ public class Employees {
         this.salary = salary;
     }
 
-
     public Long getId() {
         return id;
     }
@@ -81,7 +79,6 @@ public class Employees {
     public void setId(Long id) {
         this.id = id;
     }
-
 
     public Long getTenantid() {
         return tenantId;

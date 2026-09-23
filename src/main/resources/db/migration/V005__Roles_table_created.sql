@@ -25,7 +25,10 @@ VALUES (1, null, 'DefaultRoleEmployees', true, 'Default role for new Employees A
 INSERT INTO roles(id, tenant_id, name, is_system, description)
 VALUES (2, null, 'DefaultRolePartners', true, 'Default role for new Partners Accounts');
 
-ALTER TABLE roles AUTO_INCREMENT = 3 ;
+INSERT INTO roles(id, tenant_id, name, is_system, description)
+VALUES (3, null, 'DefaultRoleAdmin', true, 'Default role for new Admins Accounts');
+
+ALTER TABLE roles AUTO_INCREMENT = 4 ;
 
 ALTER TABLE users_accounts ADD CONSTRAINT fk_users_accounts_role
     FOREIGN KEY (role_id) REFERENCES roles(id);

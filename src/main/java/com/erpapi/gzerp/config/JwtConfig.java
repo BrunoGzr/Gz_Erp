@@ -22,6 +22,9 @@ public class JwtConfig {
     @Value("${JWT_EXPIRATION_MS}")
     private long jwtExpiration;
 
+    @Value("${JWT_REFRESH_EXPIRATION_MS}")
+    private long refreshExpirationMs;
+
     public String generateToken(Authentication authentication){
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
