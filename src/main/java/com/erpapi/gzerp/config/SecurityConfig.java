@@ -42,7 +42,7 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers(HttpMethod.POST,"/register",
-                                        "/api/authlogin",
+                                        "/api/auth/login",
                                         "/api/auth/logout",
                                         "/api/auth/refresh"
                                 ).permitAll()

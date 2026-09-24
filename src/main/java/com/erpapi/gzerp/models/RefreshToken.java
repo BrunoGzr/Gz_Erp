@@ -15,7 +15,7 @@ public class RefreshToken {
     private String token;
 
     @ManyToOne(fetch = FetchType.EAGER, optional = false)
-    @JoinColumn(name = "user_account_id", nullable = false)
+    @JoinColumn(name = "user_accounts_id", nullable = false)
     private UsersAccounts userAccount;
 
     @Column(name = "expires_at", nullable = false)

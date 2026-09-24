@@ -73,4 +73,12 @@ public class LoginResponseDto {
     public void setTenantId(Long tenantId) {
         this.tenantId = tenantId;
     }
+
+    public String getUserType() {
+        return userType;
+    }
+
+    public void setUserType(String userType) {
+        this.userType = userType;
+    }
 }
