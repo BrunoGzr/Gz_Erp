@@ -60,9 +60,6 @@ public class TenantsService {
         newTenant = tenantsRepo.save(newTenant);
         for (PartnersRegisterDto partnerDto : dto.getPartners()) {
             String dtoUsername = partnerDto.getUsername();
-            System.out.println(">>> [TenantsService] username no DTO: [" + dtoUsername + "]");
-            System.out.println(">>> [TenantsService] tamanho no DTO: " + dtoUsername.length());
-            System.out.println(">>> [TenantsService] chars no DTO: " + java.util.Arrays.toString(dtoUsername.toCharArray()));
             UsersAccounts newUser = usersAccountsService.userRegisterPartner(partnerDto, newTenant);
             Partners newPartner = partnersService.registerPartners(partnerDto,newUser, newTenant);
             newTenant.addPartner(newPartner);

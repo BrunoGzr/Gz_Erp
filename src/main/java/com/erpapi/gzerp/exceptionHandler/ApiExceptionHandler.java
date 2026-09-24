@@ -2,7 +2,9 @@ package com.erpapi.gzerp.exceptionHandler;
 
 import com.erpapi.gzerp.exceptions.InvalidCredentialsException;
 import com.erpapi.gzerp.exceptions.EmployeeAlreadyExistException;
+import com.erpapi.gzerp.exceptions.InvalidRefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.apache.coyote.Response;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -89,5 +91,14 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problemDetail.setType(URI.create("/Errors/InvalidCredentials"));
         problemDetail.setInstance(URI.create(request.getRequestURI()));
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problemDetail);
+    }
+
+    @ExceptionHandler(InvalidRefreshTokenException.class)
+    public ResponseEntity<ProblemDetail> HandleInvalidRefreshTokenException(InvalidRefreshTokenException ex,
+                                                                     HttpServletRequest request){
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problem.setTitle("Refresh Token invalid");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+
     }
 }

@@ -1,15 +1,13 @@
-package com.erpapi.gzerp.config;
+package com.erpapi.gzerp.services;
 
+import com.erpapi.gzerp.config.CustomUserDetails;
 import com.erpapi.gzerp.enums.Permissions;
 import com.erpapi.gzerp.enums.UserType;
 import com.erpapi.gzerp.models.UsersAccounts;
 import com.erpapi.gzerp.repositories.UsersAccountsRepo;
-import jakarta.validation.constraints.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;

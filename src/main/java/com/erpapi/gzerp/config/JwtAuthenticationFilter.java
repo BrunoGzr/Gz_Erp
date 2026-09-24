@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.config;
 
+import com.erpapi.gzerp.services.CustomUserDetailService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

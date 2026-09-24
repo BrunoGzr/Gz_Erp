@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.config;
 
+import com.erpapi.gzerp.models.UsersAccounts;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -26,25 +27,28 @@ public class JwtConfig {
     private long refreshExpirationMs;
 
     public String generateToken(Authentication authentication){
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        return generateTokenFromUserDetails((CustomUserDetails) authentication.getPrincipal());
+    }
 
-        List<String> roles = authentication.getAuthorities().stream()
+    public String generateTokenFromUserDetails(CustomUserDetails user){
+        List<String> roles = user.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtExpiration);
 
         return Jwts.builder()
-                .subject(authentication.getName())
-                .claim("id", userDetails.getId())
-                .claim("tenantId", userDetails.getTenantId())
-                .claim("userType", userDetails.getUserType().name())
+                .subject(user.getUsername())
+                .claim("id", user.getId())
+                .claim("tenantId", user.getTenantId())
+                .claim("userType", user.getUserType().name())
                 .claim("roles", roles )
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getSigningKey())
                 .compact();
     }
+
 
     public Claims extractAllClaims(String token){
         return Jwts.parser()
