@@ -14,3 +14,4 @@ CREATE TABLE refresh_tokens
         FOREIGN KEY (user_accounts_id) REFERENCES users_accounts(id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+

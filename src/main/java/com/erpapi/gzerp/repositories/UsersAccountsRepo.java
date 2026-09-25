@@ -15,4 +15,6 @@ public interface UsersAccountsRepo extends JpaRepository<UsersAccounts, Long> {
     Optional<UsersAccounts> findByUsernameAndPassword(String username, String password);
     Optional<UsersAccounts> findByIdAndTenantId (Long id, Long tenantId);
     Optional<UsersAccounts> findByEmailAndTenantId(String email, Long tenantId);
+
+    Optional<UsersAccounts> findByUsernameOrEmail(String username, String email);
 }

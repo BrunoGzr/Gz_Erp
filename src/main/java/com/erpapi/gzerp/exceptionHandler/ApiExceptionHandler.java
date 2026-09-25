@@ -1,15 +1,18 @@
 package com.erpapi.gzerp.exceptionHandler;
 
+import com.erpapi.gzerp.exceptions.InvalidCharactersException;
 import com.erpapi.gzerp.exceptions.InvalidCredentialsException;
 import com.erpapi.gzerp.exceptions.EmployeeAlreadyExistException;
 import com.erpapi.gzerp.exceptions.InvalidRefreshTokenException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.coyote.Response;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.parsing.Problem;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -94,11 +97,28 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(InvalidRefreshTokenException.class)
-    public ResponseEntity<ProblemDetail> HandleInvalidRefreshTokenException(InvalidRefreshTokenException ex,
-                                                                     HttpServletRequest request){
+    public ResponseEntity<ProblemDetail> HandleInvalidRefreshTokenException(InvalidRefreshTokenException ex){
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
         problem.setTitle("Refresh Token invalid");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+
+    }
+
+
+    @ExceptionHandler(InvalidCharactersException.class)
+    public ResponseEntity<ProblemDetail> HandleInvalidCharactersException(InvalidCharactersException ex){
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, ex.getMessage());
+        problem.setTitle("Invalid Character in Form");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(problem);
+    }
+
+
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<ProblemDetail> HandleAuth(AuthenticationException ex){
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,"Bad credentials");
+        problem.setTitle("Not authorized.");
+        return ResponseEntity.status(401).body(problem);
+
 
     }
 }

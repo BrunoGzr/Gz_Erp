@@ -25,7 +25,6 @@ public class RefreshTokenCleanupJob {
         this.refreshTokenRepo = refreshTokenRepo;
     }
 
-
     @Scheduled(cron = "0 0 3 * * *")
     @Transactional
     public void cleanupExpiredTokens(){
@@ -34,7 +33,7 @@ public class RefreshTokenCleanupJob {
         int deleted = refreshTokenRepo.deleteExpiredBefore(cutoff);
 
         if (deleted > 0 ){
-            log.info("Refresh token cleanp: {} tokens expirados removidos (cutoff: {})", deleted,cutoff);
+            log.info("Refresh token cleanp: {} expired tokens removed. (cutoff: {})", deleted,cutoff);
         }else {
             log.debug("Refresh token cleanup: no tokens to cleanup.");
         }

@@ -42,7 +42,7 @@ public class AuthResource {
     public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto){
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequestDto.getUsername(),loginRequestDto.getPassword()));
+                new UsernamePasswordAuthenticationToken(loginRequestDto.getIdentifier(),loginRequestDto.getPassword()));
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
 

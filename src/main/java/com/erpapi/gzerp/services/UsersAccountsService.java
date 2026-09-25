@@ -3,6 +3,7 @@ package com.erpapi.gzerp.services;
 
 import com.erpapi.gzerp.dto.PartnersRegisterDto;
 import com.erpapi.gzerp.enums.UserType;
+import com.erpapi.gzerp.exceptions.InvalidCharactersException;
 import com.erpapi.gzerp.models.Roles;
 import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.models.UsersAccounts;
@@ -45,6 +46,9 @@ public class UsersAccountsService {
         UsersAccounts newUser = new UsersAccounts();
         newUser.setUserType(UserType.PARTNER);
         newUser.setEmail(dto.getEmail());
+        if (verifyUsername(dto.getUsername())){
+            throw new InvalidCharactersException("Invalid Username.");
+        }
         newUser.setUsername(dto.getUsername());
         Roles role = rolesRepo.findByNameAndIsSystemTrue("DefaultRolePartners").orElseThrow();
         newUser.setRole(role);
@@ -54,5 +58,9 @@ public class UsersAccountsService {
         newUser = usersRepo.save(newUser);
         String usernameAfter = newUser.getUsername();
         return newUser;
+    }
+
+    private boolean verifyUsername(String username){
+        return username.contains("@");
     }
 }

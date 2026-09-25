@@ -43,6 +43,7 @@ public class JwtConfig {
                 .claim("tenantId", user.getTenantId())
                 .claim("userType", user.getUserType().name())
                 .claim("roles", roles )
+                .claim("email", user.getEmail())
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getSigningKey())

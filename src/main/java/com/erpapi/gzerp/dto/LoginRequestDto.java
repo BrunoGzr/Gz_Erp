@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.dto;
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -7,39 +8,27 @@ import jakarta.validation.constraints.Size;
 
 public class LoginRequestDto {
 
-    @Email
-    private String email;
+    @NotBlank
+    private String identifier;
 
     @NotBlank
     @Size(min = 6, max = 256)
     private String password;
 
-    @NotBlank
-    private String username;
-
     public LoginRequestDto() {
     }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public LoginRequestDto(String email, String password, String username) {
-        this.email = email;
+    public LoginRequestDto(String identifier, String password) {
+        this.identifier = identifier;
         this.password = password;
-        this.username = username;
     }
 
-    public String getEmail() {
-        return email;
+    public String getIdentifier() {
+        return identifier;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setIdentifier(String identifier) {
+        this.identifier = identifier;
     }
 
     public String getPassword() {
