@@ -1,4 +1,25 @@
 -- Exceptions
-RoleNotFoundException
+-RoleNotFoundException
+
+
+-- Security
+
+-HTTPS Implementation and configuration
+-Cors Configure
+-TenantContext Implementation.
+
+
+---- Features ----
+
+-- Products
+-Model / migration
+-List
+-Cruds
+-Archives server configuration
+
+-- Orders
+-model / migration
+-List
+-Cruds
 
 

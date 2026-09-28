@@ -2,6 +2,7 @@ package com.erpapi.gzerp.config;
 
 
 import com.erpapi.gzerp.security.RateLimitFilter;
+import com.erpapi.gzerp.security.TenantContextFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -28,10 +29,13 @@ public class SecurityConfig {
 
     private final RateLimitFilter rateLimitFilter;
 
-    public SecurityConfig(JwtAuthEntryPoint jwtAuthEntryPoint, JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitFilter rateLimitFilter) {
+    private final TenantContextFilter tenantContextFilter;
+
+    public SecurityConfig(JwtAuthEntryPoint jwtAuthEntryPoint, JwtAuthenticationFilter jwtAuthenticationFilter, RateLimitFilter rateLimitFilter, TenantContextFilter tenantContextFilter) {
         this.jwtAuthEntryPoint = jwtAuthEntryPoint;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.rateLimitFilter = rateLimitFilter;
+        this.tenantContextFilter = tenantContextFilter;
     }
 
     @Bean
@@ -54,6 +58,7 @@ public class SecurityConfig {
                                 );
         http.addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class);
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(tenantContextFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 
