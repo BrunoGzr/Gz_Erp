@@ -22,4 +22,8 @@
 -List
 -Cruds
 
+-- Readme.md --
+
+- padrão Override com Fallback na ordem dos dados dos produtos
+
 
