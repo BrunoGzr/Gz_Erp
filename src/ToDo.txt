@@ -6,21 +6,28 @@
 
 -HTTPS Implementation and configuration
 -Cors Configure
--TenantContext Implementation.
+-TenantContext Implementation. ✅
 
 
 ---- Features ----
 
 -- Products
--Model / migration
+-Model / migration ✅
 -List
--Cruds
 -Archives server configuration
+-Service
+-Repo and cruds
+-Controllers
+-Python fastApi integration
+-RabbitMq integration.
+-ProductAlreadyExistException || RoleNotAllowedException ||
+-
+
 
 -- Orders
 -model / migration
 -List
--Cruds
+-Repo and Cruds
 
 -- Readme.md --
 

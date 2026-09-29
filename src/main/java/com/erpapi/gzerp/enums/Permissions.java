@@ -11,5 +11,6 @@ public enum Permissions {
     ALTER_DESC_PROD,
     ALTER_IMAGES_PROD,
     ALTER_STATE_PROD,
+    REGISTER_PROD,
 
 }

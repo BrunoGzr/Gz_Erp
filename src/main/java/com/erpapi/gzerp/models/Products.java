@@ -1,6 +1,11 @@
 package com.erpapi.gzerp.models;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.DynamicInsert;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -8,6 +13,7 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "products")
+@DynamicInsert
 public class Products {
 
     @Id
@@ -15,7 +21,11 @@ public class Products {
     private Long id;
 
     @Column(name = "public_id",nullable = false, unique = true, length = 36)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID publicId;
+
+    @Column(name = "sku", nullable = true, unique = true, length = 50)
+    private String sku;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id")
@@ -28,7 +38,7 @@ public class Products {
     private int stock;
 
     @Column(name = "base_price", precision = 10, scale = 2)
-    private BigDecimal basePrice;
+    private BigDecimal baseSellPrice;
 
     @Column(name = "cost", nullable = false, precision = 10, scale = 2)
     private BigDecimal costPrice;
@@ -39,7 +49,7 @@ public class Products {
     @Column(name = "sales", nullable = false)
     private int sales;
 
-    @Column(name = "created_at",nullable = false)
+    @Column(name = "created_at",nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
@@ -88,12 +98,12 @@ public class Products {
         this.stock = stock;
     }
 
-    public BigDecimal getBasePrice() {
-        return basePrice;
+    public BigDecimal getBaseSellPrice() {
+        return baseSellPrice;
     }
 
-    public void setBasePrice(BigDecimal basePrice) {
-        this.basePrice = basePrice;
+    public void setBaseSellPrice(BigDecimal basePrice) {
+        this.baseSellPrice = basePrice;
     }
 
     public BigDecimal getCostPrice() {
@@ -134,5 +144,13 @@ public class Products {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getSku() {
+        return sku;
+    }
+
+    public void setSku(String sku) {
+        this.sku = sku;
     }
 }
