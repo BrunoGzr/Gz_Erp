@@ -1,0 +1,2079 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GzErp Test Frontend</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        :root { --sidebar-width: 260px; }
+        body { background: #f0f2f5; font-size: 0.9rem; }
+        .sidebar {
+            position: fixed; top: 0; left: 0; bottom: 0; width: var(--sidebar-width);
+            background: #1a1a2e; color: #fff; overflow-y: auto; z-index: 1000;
+            transition: transform 0.3s;
+        }
+        .sidebar .nav-link { color: #adb5bd; padding: 0.6rem 1rem; border-radius: 0.35rem; margin: 2px 0.5rem; font-size: 0.88rem; }
+        .sidebar .nav-link:hover { background: #16213e; color: #fff; }
+        .sidebar .nav-link.active { background: #0f3460; color: #e94560; font-weight: 600; }
+        .sidebar .nav-link i { width: 22px; text-align: center; margin-right: 6px; }
+        .sidebar-brand { padding: 1.2rem 1rem; font-size: 1.2rem; font-weight: 700; border-bottom: 1px solid #16213e; }
+        .sidebar-brand span { color: #e94560; }
+        .main-content { margin-left: var(--sidebar-width); padding: 1.5rem; min-height: 100vh; }
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; }
+        .card { border: none; box-shadow: 0 1px 3px rgba(0,0,0,0.08); margin-bottom: 1rem; }
+        .card-header { font-weight: 600; font-size: 0.95rem; }
+        .status-badge { font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 1rem; }
+        .status-2xx { background: #d4edda; color: #155724; }
+        .status-4xx { background: #f8d7da; color: #721c24; }
+        .status-5xx { background: #fff3cd; color: #856404; }
+        .status-429 { background: #e2d5f1; color: #4a235a; }
+        .status-401 { background: #f5c6cb; color: #721c24; }
+        .status-403 { background: #f1948a; color: #fff; }
+        .response-body { background: #1e1e1e; color: #d4d4d4; padding: 1rem; border-radius: 0.5rem; font-family: 'Courier New', monospace; font-size: 0.82rem; max-height: 400px; overflow-y: auto; white-space: pre-wrap; word-break: break-all; }
+        .history-table { font-size: 0.8rem; }
+        .history-table th { position: sticky; top: 0; background: #f8f9fa; z-index: 1; }
+        .jwt-decode { font-family: 'Courier New', monospace; font-size: 0.8rem; background: #1e1e1e; color: #4ec9b0; padding: 0.75rem; border-radius: 0.5rem; max-height: 250px; overflow-y: auto; white-space: pre-wrap; }
+        .flow-step { border-left: 3px solid #dee2e6; padding-left: 1rem; margin-bottom: 0.75rem; }
+        .flow-step.success { border-left-color: #28a745; }
+        .flow-step.error { border-left-color: #dc3545; }
+        .flow-step.pending { border-left-color: #ffc107; }
+        .perf-chart-container { position: relative; height: 350px; }
+        .btn-sm-custom { font-size: 0.78rem; padding: 0.25rem 0.6rem; }
+        .method-badge { font-size: 0.7rem; padding: 0.15rem 0.5rem; border-radius: 0.25rem; font-weight: 700; min-width: 55px; text-align: center; }
+        .method-GET { background: #17a2b8; color: #fff; }
+        .method-POST { background: #28a745; color: #fff; }
+        .method-PUT { background: #ffc107; color: #000; }
+        .method-DELETE { background: #dc3545; color: #fff; }
+        .method-PATCH { background: #6f42c1; color: #fff; }
+        .config-bar { background: #fff; border-bottom: 2px solid #e94560; padding: 0.75rem 1rem; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+        .config-bar .form-control { max-width: 320px; }
+        .token-display { font-family: monospace; font-size: 0.75rem; background: #f8f9fa; padding: 0.3rem 0.6rem; border-radius: 0.25rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .sidebar.show { transform: translateX(0); }
+            .main-content { margin-left: 0; }
+        }
+        .spinner-overlay { position: absolute; inset: 0; background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; z-index: 10; }
+        .section-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid #e94560; color: #1a1a2e; }
+    </style>
+</head>
+<body>
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand"><i class="bi bi-box-seam"></i> Gz<span>Erp</span> Tester</div>
+        <div class="p-2">
+            <ul class="nav flex-column">
+                <li class="nav-item"><a class="nav-link active" href="#" data-tab="config"><i class="bi bi-gear"></i> Configuração</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="auth"><i class="bi bi-shield-lock"></i> Autenticação JWT</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="explorer"><i class="bi bi-compass"></i> Explorador de Endpoints</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="security"><i class="bi bi-shield-exclamation"></i> Testes de Segurança</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="performance"><i class="bi bi-speedometer2"></i> Performance</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="flows"><i class="bi bi-diagram-3"></i> Fluxos Funcionais</a></li>
+                <li class="nav-item"><a class="nav-link" href="#" data-tab="history"><i class="bi bi-clock-history"></i> Histórico</a></li>
+            </ul>
+        </div>
+        <div class="mt-auto p-2" style="font-size:0.7rem;color:#6c757d;">
+            <div id="sidebar-status"><i class="bi bi-circle-fill text-danger"></i> Desconectado</div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Config Bar -->
+        <div class="config-bar">
+            <label class="fw-bold mb-0">Base URL:</label>
+            <input type="text" id="baseUrl" class="form-control form-control-sm" value="http://localhost:8989">
+            <input type="text" id="jwtToken" class="form-control form-control-sm token-display" placeholder="Token JWT (auto-preenchido)">
+            <button class="btn btn-sm btn-outline-danger" onclick="clearToken()"><i class="bi bi-x-circle"></i> Limpar Token</button>
+            <button class="btn btn-sm btn-outline-secondary" onclick="toggleSidebar()"><i class="bi bi-list"></i></button>
+        </div>
+
+        <!-- ==================== TAB: CONFIG ==================== -->
+        <div class="tab-pane active" id="tab-config">
+            <h4 class="section-title"><i class="bi bi-gear"></i> Configuração Global</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Conexão</div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Base URL do Backend</label>
+                                <input type="text" id="configBaseUrl" class="form-control" value="http://localhost:8989" placeholder="http://localhost:8989">
+                                <div class="form-text">Porta padrão: 8989 (configurada em application.properties)</div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Timeout (ms)</label>
+                                <input type="number" id="configTimeout" class="form-control" value="10000" min="1000" max="60000">
+                            </div>
+                            <button class="btn btn-primary" onclick="testConnection()"><i class="bi bi-plug"></i> Testar Conexão</button>
+                            <span id="connectionStatus" class="ms-2"></span>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">Token JWT</div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <label class="form-label fw-bold">Token Atual</label>
+                                <textarea id="configToken" class="form-control" rows="3" placeholder="Cole o token JWT aqui ou obtenha via login"></textarea>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-primary" onclick="saveToken()">Salvar</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="clearToken()">Limpar</button>
+                            </div>
+                            <div id="tokenInfo" class="mt-2"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">Endpoints Disponíveis</div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-striped mb-0" style="font-size:0.82rem;">
+                                <thead><tr><th>Método</th><th>Endpoint</th><th>Auth</th><th>Descrição</th></tr></thead>
+                                <tbody id="endpointTable"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">Informações do Projeto</div>
+                        <div class="card-body" style="font-size:0.82rem;">
+                            <p><strong>Stack:</strong> Java 25 + Spring Boot 4.0.6 + MySQL + Flyway</p>
+                            <p><strong>Porta:</strong> 8989</p>
+                            <p><strong>JWT:</strong> HS256, 15min access, 7 dias refresh</p>
+                            <p><strong>Senha:</strong> Argon2 (Spring Security)</p>
+                            <p><strong>Rate Limiting:</strong> /login 5/min, /refresh 10/min, /register 3/h, outros 100/min</p>
+                            <p><strong>Multi-tenant:</strong> ScopedValue + VirtualThreads</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: AUTH ==================== -->
+        <div class="tab-pane" id="tab-auth">
+            <h4 class="section-title"><i class="bi bi-shield-lock"></i> Autenticação JWT</h4>
+
+            <!-- Login -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">Login</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-5">
+                            <label class="form-label">Identifier (username ou email)</label>
+                            <input type="text" id="loginIdentifier" class="form-control" placeholder="partner@email.com">
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label">Senha</label>
+                            <input type="password" id="loginPassword" class="form-control" placeholder="senha123">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" onclick="doLogin()"><i class="bi bi-box-arrow-in-right"></i> Login</button>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-outline-secondary me-1" onclick="fillLoginSample('test','Test123456')">Exemplo: test / Test123456</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Login Response -->
+            <div class="card" id="loginResponseCard" style="display:none;">
+                <div class="card-header">Resposta do Login</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-2">
+                                <label class="form-label fw-bold">Status</label>
+                                <span id="loginStatus" class="status-badge"></span>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-bold">Tempo</label>
+                                <span id="loginTime" class="badge bg-secondary"></span>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="mb-2">
+                                <label class="form-label fw-bold">Access Token</label>
+                                <div class="jwt-decode" id="loginToken" style="max-height:80px;"></div>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-bold">Refresh Token</label>
+                                <div class="jwt-decode" id="loginRefreshToken" style="max-height:60px;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <button class="btn btn-sm btn-success" onclick="saveTokenFromLogin()"><i class="bi bi-check-circle"></i> Salvar Token</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- JWT Decode -->
+            <div class="card">
+                <div class="card-header bg-info text-white">Decodificador JWT</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <label class="form-label">Token JWT para decodificar</label>
+                            <input type="text" id="jwtDecodeInput" class="form-control" placeholder="Cole o token JWT aqui">
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button class="btn btn-info text-white w-100" onclick="decodeJwt()"><i class="bi bi-eye"></i> Decodificar</button>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <div class="jwt-decode" id="jwtDecodeOutput" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Auth Scenarios -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">Testes de Autenticação</div>
+                <div class="card-body">
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-success w-100" onclick="testProtectedEndpoint()">
+                                <i class="bi bi-shield-check"></i> Endpoint com Token Válido
+                            </button>
+                            <div class="form-text text-center">GET /employees com token</div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-danger w-100" onclick="testUnprotectedNoAuth()">
+                                <i class="bi bi-shield-x"></i> Endpoint sem Token
+                            </button>
+                            <div class="form-text text-center">GET /employees sem auth</div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-warning w-100" onclick="testInvalidToken()">
+                                <i class="bi bi-x-circle"></i> Token Inválido
+                            </button>
+                            <div class="form-text text-center">Token fake em endpoint protegido</div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-secondary w-100" onclick="testExpiredToken()">
+                                <i class="bi bi-clock-history"></i> Token Expirado
+                            </button>
+                            <div class="form-text text-center">Token com exp=0 em endpoint protegido</div>
+                        </div>
+                    </div>
+                    <div class="row g-2 mt-2">
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-primary w-100" onclick="testRefreshToken()">
+                                <i class="bi bi-arrow-repeat"></i> Refresh Token
+                            </button>
+                            <div class="form-text text-center">POST /api/auth/refresh</div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-danger w-100" onclick="testLogout()">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                            <div class="form-text text-center">POST /api/auth/logout</div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-info w-100" onclick="testRegister()">
+                                <i class="bi bi-person-plus"></i> Testar Register
+                            </button>
+                            <div class="form-text text-center">POST /register (criar tenant)</div>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-outline-dark w-100" onclick="testProductRegister()">
+                                <i class="bi bi-box"></i> Testar Produto
+                            </button>
+                            <div class="form-text text-center">POST /products/register</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auth Test Results -->
+            <div class="card" id="authResultCard" style="display:none;">
+                <div class="card-header">Resultado do Teste</div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Status</label>
+                            <span id="authResultStatus" class="status-badge"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Tempo</label>
+                            <span id="authResultTime" class="badge bg-secondary"></span>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label fw-bold">Método</label>
+                            <span id="authResultMethod" class="badge"></span>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label fw-bold">Endpoint</label>
+                            <span id="authResultEndpoint" class="text-muted"></span>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label fw-bold">Headers de Resposta</label>
+                        <pre id="authResultHeaders" class="response-body" style="max-height:150px;font-size:0.75rem;"></pre>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold">Corpo da Resposta</label>
+                        <pre id="authResultBody" class="response-body"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: EXPLORER ==================== -->
+        <div class="tab-pane" id="tab-explorer">
+            <h4 class="section-title"><i class="bi bi-compass"></i> Explorador de Endpoints</h4>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Endpoint</span>
+                    <button class="btn btn-sm btn-outline-primary" onclick="showAddEndpoint()"><i class="bi bi-plus"></i> Adicionar</button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label">Método</label>
+                            <select id="expMethod" class="form-select">
+                                <option value="GET">GET</option>
+                                <option value="POST">POST</option>
+                                <option value="PUT">PUT</option>
+                                <option value="DELETE">DELETE</option>
+                                <option value="PATCH">PATCH</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Path</label>
+                            <select id="expPath" class="form-select" onchange="updateExpBody()">
+                                <!-- populated dynamically -->
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Path Params</label>
+                            <input type="text" id="expPathParams" class="form-control" placeholder="ex: /123">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Query Params</label>
+                            <input type="text" id="expQueryParams" class="form-control" placeholder="ex: ?page=1&size=10">
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <label class="form-label">Headers (JSON)</label>
+                        <textarea id="expHeaders" class="form-control" rows="2" placeholder='{"X-Custom-Header": "value"}'></textarea>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label">Body (JSON)</label>
+                        <textarea id="expBody" class="form-control" rows="6" placeholder='{}'></textarea>
+                    </div>
+                    <div class="mt-3 d-flex gap-2">
+                        <button class="btn btn-primary" onclick="sendRequest()"><i class="bi bi-send"></i> Enviar</button>
+                        <button class="btn btn-secondary" onclick="sendRequestRaw()"><i class="bi bi-code-slash"></i> Enviar (Raw URL)</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Response -->
+            <div class="card" id="explorerResultCard" style="display:none;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Resposta</span>
+                    <div>
+                        <span id="expResultStatus" class="status-badge me-2"></span>
+                        <span id="expResultTime" class="badge bg-secondary"></span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">URL Completa</label>
+                        <code id="expResultUrl" style="font-size:0.8rem;"></code>
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label fw-bold">Headers</label>
+                        <pre id="expResultHeaders" class="response-body" style="max-height:120px;font-size:0.72rem;"></pre>
+                    </div>
+                    <div>
+                        <label class="form-label fw-bold">Corpo</label>
+                        <pre id="expResultBody" class="response-body"></pre>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: SECURITY ==================== -->
+        <div class="tab-pane" id="tab-security">
+            <h4 class="section-title"><i class="bi bi-shield-exclamation"></i> Testes de Segurança</h4>
+
+            <!-- SQL Injection -->
+            <div class="card">
+                <div class="card-header bg-danger text-white">Injeção SQL</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">Testa se o backend filtra ou escapa inputs maliciosos em campos de login e cadastro.</p>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label">Payload SQL Injection</label>
+                            <select id="sqlPayload" class="form-select" onchange="document.getElementById('sqlPayloadInput').value=this.value">
+                                <option value="' OR 1=1 --">' OR 1=1 --</option>
+                                <option value="admin'--">admin'--</option>
+                                <option value="' OR '1'='1">" OR '1'='1</option>
+                                <option value="'; DROP TABLE users_accounts; --">"; DROP TABLE users_accounts; --</option>
+                                <option value="1' UNION SELECT * FROM users_accounts--">1' UNION SELECT * FROM users_accounts--</option>
+                                <option value="custom">Personalizado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Payload Personalizado</label>
+                            <input type="text" id="sqlPayloadInput" class="form-control" value="' OR 1=1 --">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-danger w-100" onclick="testSqlInjection()"><i class="bi bi-database-exclamation"></i> Testar</button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold">Resposta</label>
+                        <pre id="sqlResult" class="response-body" style="display:none;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- XSS -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">XSS (Cross-Site Scripting)</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">Testa se o backend filtra ou escapa scripts maliciosos em inputs.</p>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-6">
+                            <label class="form-label">Payload XSS</label>
+                            <select id="xssPayload" class="form-select" onchange="document.getElementById('xssPayloadInput').value=this.value">
+                                <option value="<script>alert('XSS')</script>">&lt;script&gt;alert('XSS')&lt;/script&gt;</option>
+                                <option value="<img src=x onerror=alert(1)>">&lt;img src=x onerror=alert(1)&gt;</option>
+                                <option value="javascript:alert(1)">javascript:alert(1)</option>
+                                <option value="<svg/onload=alert(1)>">&lt;svg/onload=alert(1)&gt;</option>
+                                <option value="custom">Personalizado</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Payload Personalizado</label>
+                            <input type="text" id="xssPayloadInput" class="form-control" value="<script>alert('XSS')</script>">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-warning w-100" onclick="testXss()"><i class="bi bi-code-square"></i> Testar</button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold">Resposta</label>
+                        <pre id="xssResult" class="response-body" style="display:none;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Validation -->
+            <div class="card">
+                <div class="card-header">Validação de Entrada</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">Testa campos obrigatórios ausentes, formatos inválidos e tamanhos excedentes.</p>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-warning btn-sm-custom w-100" onclick="testValidationMissingFields()">
+                                Campos Obrigatórios Ausentes
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-warning btn-sm-custom w-100" onclick="testValidationBadFormat()">
+                                Formato Inválido
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-warning btn-sm-custom w-100" onclick="testValidationLongField()">
+                                Tamanho Excedente
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold">Resposta</label>
+                        <pre id="validationResult" class="response-body" style="display:none;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Authorization -->
+            <div class="card">
+                <div class="card-header">Testes de Autorização</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">Testa acesso a endpoints restritos com tokens de diferentes papéis.</p>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-info btn-sm-custom w-100" onclick="testAuthWithPartnerToken()">
+                                Produto com Token PARTNER
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-info btn-sm-custom w-100" onclick="testAuthWithEmployeeToken()">
+                                Produto com Token EMPLOYEE
+                            </button>
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-info btn-sm-custom w-100" onclick="testAuthNoToken()">
+                                Produto sem Token
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold">Resposta</label>
+                        <pre id="authzResult" class="response-body" style="display:none;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CORS -->
+            <div class="card">
+                <div class="card-header">Testes de CORS</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">O navegador bloqueia requisições cross-origin. Este teste mostra os headers de resposta para análise.</p>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <button class="btn btn-outline-dark btn-sm-custom w-100" onclick="testCors()">
+                                <i class="bi bi-globe"></i> Testar CORS
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold">Resposta</label>
+                        <pre id="corsResult" class="response-body" style="display:none;"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rate Limiting -->
+            <div class="card">
+                <div class="card-header bg-purple text-white" style="background:#6f42c1;">Rate Limiting</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">Envia múltiplas requisições rápidas para verificar se o rate limiting funciona.</p>
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Endpoint</label>
+                            <select id="rateLimitEndpoint" class="form-select">
+                                <option value="/api/auth/login">/api/auth/login (5/min)</option>
+                                <option value="/api/auth/refresh">/api/auth/refresh (10/min)</option>
+                                <option value="/register">/register (3/h)</option>
+                                <option value="/employees">/employees (100/min)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Requisições</label>
+                            <input type="number" id="rateLimitCount" class="form-control" value="10" min="2" max="20">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-purple text-white w-100" style="background:#6f42c1;" onclick="testRateLimit()">
+                                <i class="bi bi-lightning"></i> Testar
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold">Resultado</label>
+                        <div id="rateLimitResult" class="mt-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: PERFORMANCE ==================== -->
+        <div class="tab-pane" id="tab-performance">
+            <h4 class="section-title"><i class="bi bi-speedometer2"></i> Testes de Performance</h4>
+
+            <!-- Single Endpoint Timing -->
+            <div class="card">
+                <div class="card-header">Tempo de Resposta Individual</div>
+                <div class="card-body">
+                    <div class="row g-2 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Endpoint</label>
+                            <select id="perfSingleEndpoint" class="form-select">
+                                <option value="GET /api/auth/login">POST /api/auth/login</option>
+                                <option value="GET /employees">GET /employees</option>
+                                <option value="POST /register">POST /register</option>
+                                <option value="POST /products/register">POST /products/register</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Repetições</label>
+                            <input type="number" id="perfSingleReps" class="form-control" value="5" min="1" max="20">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" onclick="testSinglePerformance()"><i class="bi bi-play"></i> Medir</button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold">Resultados</label>
+                        <div id="perfSingleResult"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Load Test -->
+            <div class="card">
+                <div class="card-header bg-success text-white">Teste de Carga</div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Endpoint</label>
+                            <select id="perfLoadEndpoint" class="form-select">
+                                <option value="GET /employees">GET /employees</option>
+                                <option value="POST /api/auth/login">POST /api/auth/login</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Concorrência</label>
+                            <input type="number" id="perfLoadConcurrent" class="form-control" value="10" min="2" max="100">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Reps por Thread</label>
+                            <input type="number" id="perfLoadReps" class="form-control" value="1" min="1" max="10">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-success w-100" onclick="testLoad()"><i class="bi bi-bar-chart"></i> Iniciar</button>
+                        </div>
+                    </div>
+                    <div class="mt-3" id="perfLoadResult" style="display:none;">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="perf-chart-container">
+                                    <canvas id="perfChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <h6>Estatísticas</h6>
+                                <table class="table table-sm" style="font-size:0.82rem;">
+                                    <tbody id="perfStatsTable"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: FLOWS ==================== -->
+        <div class="tab-pane" id="tab-flows">
+            <h4 class="section-title"><i class="bi bi-diagram-3"></i> Fluxos Funcionais</h4>
+
+            <!-- Flow 1: Auth Flow -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">Fluxo 1: Autenticação Completa</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">Login → Decodificar token → Acessar endpoint protegido → Refresh → Logout</p>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" id="flow1User" class="form-control" placeholder="test">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" id="flow1Pass" class="form-control" placeholder="Test123456">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100" onclick="runAuthFlow()"><i class="bi bi-play"></i> Executar</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-danger w-100" onclick="stopFlow('flow1')"><i class="bi bi-stop"></i> Parar</button>
+                        </div>
+                    </div>
+                    <div class="mt-3" id="flow1Steps"></div>
+                </div>
+            </div>
+
+            <!-- Flow 2: Product CRUD -->
+            <div class="card">
+                <div class="card-header bg-success text-white">Fluxo 2: Gestão de Produtos</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">Login → Criar produto → Listar produtos → (atualizar/excluir se implementado)</p>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-3">
+                            <label class="form-label">Username</label>
+                            <input type="text" id="flow2User" class="form-control" placeholder="test">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Password</label>
+                            <input type="password" id="flow2Pass" class="form-control" placeholder="Test123456">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-success w-100" onclick="runProductFlow()"><i class="bi bi-play"></i> Executar</button>
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-danger w-100" onclick="stopFlow('flow2')"><i class="bi bi-stop"></i> Parar</button>
+                        </div>
+                    </div>
+                    <div class="mt-3" id="flow2Steps"></div>
+                </div>
+            </div>
+
+            <!-- Flow 3: Tenant Registration -->
+            <div class="card">
+                <div class="card-header bg-warning text-dark">Fluxo 3: Cadastro de Empresa + Login</div>
+                <div class="card-body">
+                    <p class="text-muted" style="font-size:0.82rem;">Cadastrar tenant com sócio → Fazer login como sócio → Acessar endpoint protegido</p>
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-2">
+                            <label class="form-label">CNPJ</label>
+                            <input type="text" id="flow3Cnpj" class="form-control" value="12345678000195">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Email</label>
+                            <input type="text" id="flow3Email" class="form-control" value="empresa_teste@test.com">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Razão Social</label>
+                            <input type="text" id="flow3Razao" class="form-control" value="Teste LTDA">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">User Sócio</label>
+                            <input type="text" id="flow3PartnerUser" class="form-control" value="socio_test">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Senha</label>
+                            <input type="password" id="flow3Pass" class="form-control" value="Test123456">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-warning w-100" onclick="runTenantFlow()"><i class="bi bi-play"></i> Executar</button>
+                        </div>
+                    </div>
+                    <div class="mt-3" id="flow3Steps"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== TAB: HISTORY ==================== -->
+        <div class="tab-pane" id="tab-history">
+            <h4 class="section-title"><i class="bi bi-clock-history"></i> Histórico de Requisições</h4>
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Requisições Enviadas</span>
+                    <div>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="exportHistory('json')"><i class="bi bi-filetype-json"></i> Exportar JSON</button>
+                        <button class="btn btn-sm btn-outline-secondary" onclick="exportHistory('csv')"><i class="bi bi-filetype-csv"></i> Exportar CSV</button>
+                        <button class="btn btn-sm btn-outline-danger" onclick="clearHistory()"><i class="bi bi-trash"></i> Limpar</button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="p-2">
+                        <input type="text" id="historyFilter" class="form-control form-control-sm" placeholder="Filtrar por método, endpoint ou status..." oninput="renderHistory()">
+                    </div>
+                    <div style="max-height:500px;overflow-y:auto;">
+                        <table class="table table-sm table-striped history-table mb-0">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Timestamp</th>
+                                    <th>Método</th>
+                                    <th>Endpoint</th>
+                                    <th>Status</th>
+                                    <th>Tempo (ms)</th>
+                                    <th>Token</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Endpoint Modal -->
+    <div class="modal fade" id="addEndpointModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Adicionar Endpoint</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Método</label>
+                        <select id="newEndpointMethod" class="form-select">
+                            <option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option><option>PATCH</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Path</label>
+                        <input type="text" id="newEndpointPath" class="form-control" placeholder="/api/new-endpoint">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Descrição</label>
+                        <input type="text" id="newEndpointDesc" class="form-control" placeholder="Descrição do endpoint">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Body Padrão (JSON)</label>
+                        <textarea id="newEndpointBody" class="form-control" rows="3" placeholder='{}'></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" onclick="addEndpoint()">Adicionar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Request Detail Modal -->
+    <div class="modal fade" id="requestDetailModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes da Requisição</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <strong>Método:</strong> <span id="detailMethod"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <strong>Status:</strong> <span id="detailStatus"></span>
+                        </div>
+                    </div>
+                    <div class="mt-2"><strong>URL:</strong> <code id="detailUrl"></code></div>
+                    <div class="mt-2"><strong>Tempo:</strong> <span id="detailTime"></span></div>
+                    <div class="mt-2"><strong>Timestamp:</strong> <span id="detailTimestamp"></span></div>
+                    <div class="mt-2"><strong>Payload:</strong></div>
+                    <pre id="detailPayload" class="response-body" style="max-height:200px;"></pre>
+                    <div class="mt-2"><strong>Resposta:</strong></div>
+                    <pre id="detailResponse" class="response-body" style="max-height:300px;"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <script>
+    // ============================================================
+    // GLOBAL STATE
+    // ============================================================
+    const state = {
+        baseUrl: localStorage.getItem('gzerp_baseUrl') || 'http://localhost:8989',
+        token: localStorage.getItem('gzerp_token') || '',
+        refreshToken: '',
+        history: JSON.parse(localStorage.getItem('gzerp_history') || '[]'),
+        timeouts: {},
+        charts: {},
+        flowAborted: false
+    };
+
+    // ============================================================
+    // ENDPOINTS DEFINIDOS
+    // ============================================================
+    let endpoints = JSON.parse(localStorage.getItem('gzerp_endpoints') || 'null') || [
+        { method: 'POST', path: '/api/auth/login', desc: 'Login (identifier + password)', body: '{"identifier":"test","password":"Test123456"}', auth: false },
+        { method: 'POST', path: '/api/auth/refresh', desc: 'Refresh Token', body: '{"token":"REFRESH_TOKEN_HERE"}', auth: false },
+        { method: 'POST', path: '/api/auth/logout', desc: 'Logout (revoga refresh token)', body: '{"refreshToken":"REFRESH_TOKEN_HERE"}', auth: false },
+        { method: 'GET', path: '/employees', desc: 'Listar Employees', body: '', auth: true },
+        { method: 'DELETE', path: '/employees/{id}', desc: 'Deletar Employee', body: '', auth: true },
+        { method: 'POST', path: '/products/register', desc: 'Cadastrar Produto', body: '{"name":"Produto Teste","stock":10,"baseSellPrice":29.90,"costPrice":15.00,"imageUrl":"https://example.com/img.jpg","sku":"TEST-001"}', auth: true },
+        { method: 'POST', path: '/register', desc: 'Cadastrar Empresa + Sócio', body: '{"cnpj":"12345678000195","email":"empresa_teste@test.com","razaoSocial":"Teste LTDA","nomeFantasia":"Teste","phone":"11999999999","partners":[{"cpf":"12345678901","fullName":"Sócio Teste","username":"socio_test","email":"socio@test.com","phone":"11988888888","password":"Test123456"}]}', auth: false }
+    ];
+
+    // ============================================================
+    // INIT
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('baseUrl').value = state.baseUrl;
+        document.getElementById('configBaseUrl').value = state.baseUrl;
+        document.getElementById('jwtToken').value = state.token;
+        document.getElementById('configToken').value = state.token;
+        renderEndpointTable();
+        renderEndpointSelector();
+        renderHistory();
+        updateSidebarStatus();
+        setupNavListeners();
+    });
+
+    function setupNavListeners() {
+        document.querySelectorAll('.sidebar .nav-link').forEach(link => {
+            link.addEventListener('click', e => {
+                e.preventDefault();
+                const tabId = link.dataset.tab;
+                document.querySelectorAll('.sidebar .nav-link').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                document.getElementById('tab-' + tabId).classList.add('active');
+            });
+        });
+    }
+
+    // ============================================================
+    // CONFIG HELPERS
+    // ============================================================
+    function getBaseUrl() {
+        return document.getElementById('baseUrl').value.replace(/\/+$/, '');
+    }
+
+    function getToken() {
+        return document.getElementById('jwtToken').value.trim();
+    }
+
+    function saveToken() {
+        const t = document.getElementById('configToken').value.trim();
+        state.token = t;
+        localStorage.setItem('gzerp_token', t);
+        document.getElementById('jwtToken').value = t;
+        document.getElementById('tokenInfo').innerHTML = '<span class="badge bg-success">Token salvo!</span>';
+        updateSidebarStatus();
+    }
+
+    function clearToken() {
+        state.token = '';
+        state.refreshToken = '';
+        localStorage.removeItem('gzerp_token');
+        document.getElementById('jwtToken').value = '';
+        document.getElementById('configToken').value = '';
+        document.getElementById('tokenInfo').innerHTML = '<span class="badge bg-secondary">Token removido</span>';
+        updateSidebarStatus();
+    }
+
+    function saveTokenFromLogin() {
+        const token = document.getElementById('loginToken').textContent.trim();
+        state.token = token;
+        const rt = document.getElementById('loginRefreshToken').textContent.trim();
+        state.refreshToken = rt;
+        localStorage.setItem('gzerp_token', token);
+        document.getElementById('jwtToken').value = token;
+        document.getElementById('configToken').value = token;
+        updateSidebarStatus();
+    }
+
+    function updateSidebarStatus() {
+        const el = document.getElementById('sidebar-status');
+        if (state.token) {
+            el.innerHTML = '<span class="text-success"><i class="bi bi-circle-fill"></i> Autenticado</span>';
+        } else {
+            el.innerHTML = '<span class="text-danger"><i class="bi bi-circle-fill"></i> Desconectado</span>';
+        }
+    }
+
+    function saveConfig() {
+        const url = document.getElementById('configBaseUrl').value.replace(/\/+$/, '');
+        state.baseUrl = url;
+        localStorage.setItem('gzerp_baseUrl', url);
+        document.getElementById('baseUrl').value = url;
+    }
+
+    // ============================================================
+    // HTTP CLIENT
+    // ============================================================
+    async function httpFetch(method, path, body = null, token = null, customHeaders = {}) {
+        const url = getBaseUrl() + path;
+        const headers = { 'Content-Type': 'application/json', ...customHeaders };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        else if (state.token && !token) headers['Authorization'] = 'Bearer ' + state.token;
+
+        const startTime = performance.now();
+        let status, statusText, headersObj, bodyText, error = null;
+
+        try {
+            const opts = { method, headers };
+            if (body !== null && body !== undefined) opts.body = typeof body === 'string' ? body : JSON.stringify(body);
+
+            const resp = await fetch(url, opts);
+            status = resp.status;
+            statusText = resp.statusText;
+            headersObj = {};
+            resp.headers.forEach((v, k) => headersObj[k] = v);
+            const ct = resp.headers.get('content-type') || '';
+            if (ct.includes('json')) {
+                bodyText = JSON.stringify(await resp.json(), null, 2);
+            } else {
+                bodyText = await resp.text();
+            }
+        } catch (e) {
+            error = e.message;
+            status = 0;
+            statusText = 'Network Error';
+            bodyText = e.message;
+        }
+
+        const elapsed = performance.now() - startTime;
+
+        // Log to history
+        const entry = {
+            id: Date.now() + Math.random(),
+            timestamp: new Date().toISOString(),
+            method, path: url, status, statusText,
+            elapsed: Math.round(elapsed * 100) / 100,
+            tokenUsed: !!headers['Authorization'],
+            payload: body ? (typeof body === 'string' ? body : JSON.stringify(body)) : null,
+            response: bodyText,
+            headers: headersObj
+        };
+        state.history.unshift(entry);
+        if (state.history.length > 500) state.history.pop();
+        localStorage.setItem('gzerp_history', JSON.stringify(state.history));
+        renderHistory();
+
+        return { status, statusText, headers: headersObj, body: bodyText, elapsed, error, url };
+    }
+
+    // ============================================================
+    // NAVIGATION
+    // ============================================================
+    function toggleSidebar() {
+        document.getElementById('sidebar').classList.toggle('show');
+    }
+
+    // ============================================================
+    // RENDER FUNCTIONS
+    // ============================================================
+    function renderEndpointTable() {
+        const tbody = document.getElementById('endpointTable');
+        tbody.innerHTML = endpoints.map(e => `
+            <tr>
+                <td><span class="method-badge method-${e.method}">${e.method}</span></td>
+                <td><code>${e.path}</code></td>
+                <td>${e.auth ? '<span class="badge bg-danger">JWT</span>' : '<span class="badge bg-success">Público</span>'}</td>
+                <td>${e.desc}</td>
+            </tr>
+        `).join('');
+    }
+
+    function renderEndpointSelector() {
+        const sel = document.getElementById('expPath');
+        sel.innerHTML = endpoints.map(e => `<option value="${e.path}" data-method="${e.method}" data-body="${encodeURIComponent(e.body || '')}">${e.method} ${e.path} - ${e.desc}</option>`).join('');
+        if (sel.options.length > 0) updateExpBody();
+    }
+
+    function updateExpBody() {
+        const sel = document.getElementById('expPath');
+        const opt = sel.options[sel.selectedIndex];
+        if (opt) {
+            document.getElementById('expMethod').value = opt.dataset.method;
+            document.getElementById('expBody').value = decodeURIComponent(opt.dataset.body || '');
+        }
+    }
+
+    function renderHistory() {
+        const filter = (document.getElementById('historyFilter')?.value || '').toLowerCase();
+        const filtered = state.history.filter(h =>
+            !filter || h.method.toLowerCase().includes(filter) ||
+            h.path.toLowerCase().includes(filter) ||
+            String(h.status).includes(filter)
+        );
+        const tbody = document.getElementById('historyBody');
+        tbody.innerHTML = filtered.map((h, i) => {
+            const cls = h.status < 300 ? 'status-2xx' : h.status < 400 ? '' : h.status < 500 ? 'status-4xx' : 'status-5xx';
+            const icon = h.status === 0 ? 'bi-exclamation-triangle text-warning' :
+                         h.status < 300 ? 'bi-check-circle text-success' :
+                         h.status < 400 ? '' : h.status < 500 ? 'bi-x-circle text-danger' : 'bi-exclamation-circle text-warning';
+            return `<tr>
+                <td>${state.history.length - i}</td>
+                <td style="font-size:0.72rem;">${new Date(h.timestamp).toLocaleString('pt-BR')}</td>
+                <td><span class="method-badge method-${h.method}">${h.method}</span></td>
+                <td style="font-size:0.72rem;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${h.path}</td>
+                <td><span class="status-badge ${cls}">${h.status || 'ERR'}</span></td>
+                <td>${h.elapsed}ms</td>
+                <td>${h.tokenUsed ? '<i class="bi bi-shield-check text-success"></i>' : '<i class="bi bi-shield-x text-muted"></i>'}</td>
+                <td><button class="btn btn-sm btn-outline-primary btn-sm-custom" onclick="showRequestDetail(${h.id})"><i class="bi bi-eye"></i></button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    function showRequestDetail(id) {
+        const h = state.history.find(x => x.id === id);
+        if (!h) return;
+        document.getElementById('detailMethod').textContent = h.method;
+        document.getElementById('detailStatus').innerHTML = `<span class="status-badge ${h.status < 300 ? 'status-2xx' : 'status-4xx'}">${h.status}</span>`;
+        document.getElementById('detailUrl').textContent = h.path;
+        document.getElementById('detailTime').textContent = h.elapsed + 'ms';
+        document.getElementById('detailTimestamp').textContent = new Date(h.timestamp).toLocaleString('pt-BR');
+        document.getElementById('detailPayload').textContent = h.payload || '(nenhum)';
+        document.getElementById('detailResponse').textContent = h.response || '(vazio)';
+        new bootstrap.Modal(document.getElementById('requestDetailModal')).show();
+    }
+
+    function clearHistory() {
+        state.history = [];
+        localStorage.removeItem('gzerp_history');
+        renderHistory();
+    }
+
+    function exportHistory(format) {
+        const data = JSON.stringify(state.history, null, 2);
+        if (format === 'json') {
+            downloadFile(data, 'gzerp_history.json', 'application/json');
+        } else if (format === 'csv') {
+            const csv = 'ID,Timestamp,Método,URL,Status,Tempo(ms),Token,Payload,Resposta\n' +
+                state.history.map((h, i) => `${i+1},"${h.timestamp}",${h.method},"${h.path}",${h.status},${h.elapsed},${h.tokenUsed},"${(h.payload||'').replace(/"/g,'""')}","${(h.response||'').replace(/"/g,'""')}"`).join('\n');
+            downloadFile(csv, 'gzerp_history.csv', 'text/csv');
+        }
+    }
+
+    function downloadFile(content, filename, type) {
+        const blob = new Blob([content], { type });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = filename; a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // ============================================================
+    // CONNECTION TEST
+    // ============================================================
+    async function testConnection() {
+        saveConfig();
+        const status = document.getElementById('connectionStatus');
+        status.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Testando...';
+        try {
+            const resp = await fetch(getBaseUrl() + '/employees', { method: 'GET' });
+            status.innerHTML = resp.ok ? '<span class="text-success"><i class="bi bi-check-circle"></i> Conectado!</span>' :
+                '<span class="text-warning"><i class="bi bi-exclamation-circle"></i> Servidor responde (status ' + resp.status + ')</span>';
+        } catch (e) {
+            status.innerHTML = '<span class="text-danger"><i class="bi bi-x-circle"></i> Não conectado: ' + e.message + '</span>';
+        }
+    }
+
+    // ============================================================
+    // AUTH: LOGIN
+    // ============================================================
+    async function doLogin() {
+        const identifier = document.getElementById('loginIdentifier').value.trim();
+        const password = document.getElementById('loginPassword').value.trim();
+        if (!identifier || !password) { alert('Preencha identifier e senha.'); return; }
+
+        const card = document.getElementById('loginResponseCard');
+        card.style.display = 'block';
+        document.getElementById('loginStatus').textContent = 'Enviando...';
+        document.getElementById('loginTime').textContent = '-';
+
+        const start = performance.now();
+        const resp = await httpFetch('POST', '/api/auth/login', { identifier, password });
+
+        const elapsed = Math.round((performance.now() - start) * 100) / 100;
+        const statusEl = document.getElementById('loginStatus');
+        const timeEl = document.getElementById('loginTime');
+        const tokenEl = document.getElementById('loginToken');
+        const rtEl = document.getElementById('loginRefreshToken');
+
+        timeEl.textContent = elapsed + 'ms';
+
+        if (resp.error) {
+            statusEl.className = 'status-badge status-5xx';
+            statusEl.textContent = 'Erro de Rede: ' + resp.status;
+            tokenEl.textContent = resp.body;
+            rtEl.textContent = '(nenhum)';
+        } else if (resp.status === 200) {
+            statusEl.className = 'status-badge status-2xx';
+            statusEl.textContent = resp.status + ' OK';
+            try {
+                const data = JSON.parse(resp.body);
+                tokenEl.textContent = data.token || '(não encontrado)';
+                rtEl.textContent = data.refreshToken || '(não encontrado)';
+                state.refreshToken = data.refreshToken || '';
+            } catch {
+                tokenEl.textContent = resp.body;
+                rtEl.textContent = '(parse error)';
+            }
+        } else {
+            statusEl.className = 'status-badge status-4xx';
+            statusEl.textContent = resp.status + ' ' + resp.statusText;
+            tokenEl.textContent = resp.body;
+            rtEl.textContent = '(nenhum)';
+        }
+    }
+
+    function fillLoginSample(user, pass) {
+        document.getElementById('loginIdentifier').value = user;
+        document.getElementById('loginPassword').value = pass;
+    }
+
+    // ============================================================
+    // AUTH: JWT DECODE
+    // ============================================================
+    function decodeJwt() {
+        const token = document.getElementById('jwtDecodeInput').value.trim();
+        if (!token) { alert('Cole um token JWT.'); return; }
+        const output = document.getElementById('jwtDecodeOutput');
+        output.style.display = 'block';
+
+        try {
+            const parts = token.split('.');
+            if (parts.length !== 3) throw new Error('Token JWT inválido (deve ter 3 partes separadas por ".")');
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const header = JSON.parse(atob(parts[0].replace(/-/g, '+').replace(/_/g, '/')));
+
+            let decoded = `HEADER:\n${JSON.stringify(header, null, 2)}\n\n`;
+            decoded += `PAYLOAD:\n${JSON.stringify(payload, null, 2)}\n\n`;
+
+            // Decode claims
+            decoded += `CLASSES:\n`;
+            decoded += `  subject (sub): ${payload.sub || '(não encontrado)'}\n`;
+            decoded += `  id: ${payload.id || '(não encontrado)'}\n`;
+            decoded += `  tenantId: ${payload.tenantId || '(não encontrado)'}\n`;
+            decoded += `  userType: ${payload.userType || '(não encontrado)'}\n`;
+            decoded += `  email: ${payload.email || '(não encontrado)'}\n`;
+            decoded += `  roles: ${JSON.stringify(payload.roles || [])}\n`;
+
+            if (payload.exp) {
+                const expDate = new Date(payload.exp * 1000);
+                const now = new Date();
+                const diff = Math.round((expDate - now) / 1000);
+                decoded += `\nEXPIRAÇÃO:\n`;
+                decoded += `  exp: ${expDate.toISOString()}\n`;
+                decoded += `  Agora: ${now.toISOString()}\n`;
+                decoded += `  Restante: ${diff}s (${Math.round(diff / 60)}min)\n`;
+                decoded += `  Status: ${diff > 0 ? '✅ Válido' : '❌ Expirado'}\n`;
+            }
+            if (payload.iat) {
+                decoded += `  iat: ${new Date(payload.iat * 1000).toISOString()}\n`;
+            }
+
+            output.textContent = decoded;
+        } catch (e) {
+            output.textContent = 'Erro ao decodificar: ' + e.message;
+        }
+    }
+
+    // ============================================================
+    // AUTH: TEST SCENARIOS
+    // ============================================================
+    function showAuthResult(resp) {
+        const card = document.getElementById('authResultCard');
+        card.style.display = 'block';
+        const statusEl = document.getElementById('authResultStatus');
+        statusEl.textContent = resp.status + ' ' + resp.statusText;
+        statusEl.className = 'status-badge ' + (resp.status < 300 ? 'status-2xx' : resp.status < 400 ? '' : resp.status < 500 ? 'status-4xx' : 'status-5xx');
+        document.getElementById('authResultTime').textContent = resp.elapsed + 'ms';
+        document.getElementById('authResultMethod').textContent = resp.method || 'GET';
+        document.getElementById('authResultMethod').className = 'badge method-' + (resp.method || 'GET');
+        document.getElementById('authResultEndpoint').textContent = resp.url;
+
+        const headersObj = {};
+        if (resp.headers) Object.entries(resp.headers).forEach(([k, v]) => headersObj[k] = v);
+        document.getElementById('authResultHeaders').textContent = JSON.stringify(headersObj, null, 2);
+        document.getElementById('authResultBody').textContent = resp.body || '(vazio)';
+    }
+
+    async function testProtectedEndpoint() {
+        if (!state.token) { alert('Faça login primeiro para obter um token.'); return; }
+        const resp = await httpFetch('GET', '/employees');
+        resp.method = 'GET';
+        showAuthResult(resp);
+    }
+
+    async function testUnprotectedNoAuth() {
+        const resp = await httpFetch('GET', '/employees', null, 'FAKE_TOKEN');
+        resp.method = 'GET';
+        showAuthResult(resp);
+    }
+
+    async function testInvalidToken() {
+        const resp = await httpFetch('GET', '/employees', null, 'invalid.token.here');
+        resp.method = 'GET';
+        showAuthResult(resp);
+    }
+
+    async function testExpiredToken() {
+        // Create a token with exp=0 (already expired)
+        const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+        const payload = btoa(JSON.stringify({ sub: 'test', id: 1, tenantId: 1, userType: 'EMPLOYEE', roles: [], email: 'test@test.com', iat: Math.floor(Date.now()/1000), exp: 0 }));
+        const fakeToken = header + '.' + payload + '.fakesignature';
+        const resp = await httpFetch('GET', '/employees', null, fakeToken);
+        resp.method = 'GET';
+        showAuthResult(resp);
+    }
+
+    async function testRefreshToken() {
+        if (!state.refreshToken) { alert('Faça login primeiro para obter um refresh token.'); return; }
+        const resp = await httpFetch('POST', '/api/auth/refresh', { token: state.refreshToken });
+        resp.method = 'POST';
+        showAuthResult(resp);
+        if (resp.status === 200) {
+            try {
+                const data = JSON.parse(resp.body);
+                state.token = data.token || state.token;
+                state.refreshToken = data.refreshedToken || state.refreshToken;
+                localStorage.setItem('gzerp_token', state.token);
+                document.getElementById('jwtToken').value = state.token;
+                alert('Token atualizado com sucesso!');
+            } catch {}
+        }
+    }
+
+    async function testLogout() {
+        if (!state.refreshToken) { alert('Faça login primeiro para obter um refresh token.'); return; }
+        const resp = await httpFetch('POST', '/api/auth/logout', { refreshToken: state.refreshToken });
+        resp.method = 'POST';
+        showAuthResult(resp);
+        if (resp.status === 204) {
+            state.token = '';
+            state.refreshToken = '';
+            localStorage.removeItem('gzerp_token');
+            document.getElementById('jwtToken').value = '';
+            alert('Logout realizado com sucesso!');
+        }
+    }
+
+    async function testRegister() {
+        const body = {
+            cnpj: '12345678000195',
+            email: 'empresa_' + Date.now() + '@test.com',
+            razaoSocial: 'Empresa Teste ' + Date.now() + ' LTDA',
+            nomeFantasia: 'Empresa Teste',
+            phone: '11999999999',
+            partners: [{
+                cpf: '12345678901',
+                fullName: 'Sócio Teste',
+                username: 'socio_' + Date.now(),
+                email: 'socio_' + Date.now() + '@test.com',
+                phone: '11988888888',
+                password: 'Test123456'
+            }]
+        };
+        const resp = await httpFetch('POST', '/register', body);
+        resp.method = 'POST';
+        showAuthResult(resp);
+    }
+
+    async function testProductRegister() {
+        if (!state.token) { alert('Faça login com um token PARTNER ou ADMIN primeiro.'); return; }
+        const body = {
+            name: 'Produto Teste ' + Date.now(),
+            stock: 10,
+            baseSellPrice: 29.90,
+            costPrice: 15.00,
+            imageUrl: 'https://example.com/img.jpg',
+            sku: 'TEST-' + Date.now()
+        };
+        const resp = await httpFetch('POST', '/products/register', body);
+        resp.method = 'POST';
+        showAuthResult(resp);
+    }
+
+    // ============================================================
+    // EXPLORER: SEND REQUEST
+    // ============================================================
+    async function sendRequest() {
+        const method = document.getElementById('expMethod').value;
+        let path = document.getElementById('expPath').value;
+        const pathParams = document.getElementById('expPathParams').value.trim();
+        const queryParams = document.getElementById('expQueryParams').value.trim();
+        const headersRaw = document.getElementById('expHeaders').value.trim();
+        const bodyRaw = document.getElementById('expBody').value.trim();
+
+        // Apply path params
+        if (pathParams) path += pathParams;
+        if (queryParams && !queryParams.startsWith('?')) path += '?';
+        path += queryParams;
+
+        // Parse custom headers
+        let customHeaders = {};
+        if (headersRaw) {
+            try { customHeaders = JSON.parse(headersRaw); } catch { alert('Headers JSON inválido'); return; }
+        }
+
+        // Parse body
+        let body = null;
+        if (bodyRaw && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+            try { body = JSON.parse(bodyRaw); } catch { alert('Body JSON inválido'); return; }
+        }
+
+        const card = document.getElementById('explorerResultCard');
+        card.style.display = 'block';
+        document.getElementById('expResultStatus').textContent = 'Enviando...';
+
+        const start = performance.now();
+        const resp = await httpFetch(method, path, body, null, customHeaders);
+        const elapsed = Math.round((performance.now() - start) * 100) / 100;
+
+        const statusEl = document.getElementById('expResultStatus');
+        statusEl.textContent = resp.status + ' ' + resp.statusText;
+        statusEl.className = 'status-badge ' + (resp.status < 300 ? 'status-2xx' : resp.status < 400 ? '' : resp.status < 500 ? 'status-4xx' : 'status-5xx');
+        document.getElementById('expResultTime').textContent = elapsed + 'ms';
+        document.getElementById('expResultUrl').textContent = resp.url;
+        document.getElementById('expResultHeaders').textContent = JSON.stringify(resp.headers, null, 2);
+        document.getElementById('expResultBody').textContent = resp.body || '(vazio)';
+    }
+
+    async function sendRequestRaw() {
+        let path = document.getElementById('expPath').value;
+        const pathParams = document.getElementById('expPathParams').value.trim();
+        const queryParams = document.getElementById('expQueryParams').value.trim();
+        if (pathParams) path += pathParams;
+        if (queryParams && !queryParams.startsWith('?')) path += '?';
+        path += queryParams;
+
+        const card = document.getElementById('explorerResultCard');
+        card.style.display = 'block';
+        document.getElementById('expResultStatus').textContent = 'Enviando...';
+
+        const start = performance.now();
+        const resp = await httpFetch('GET', path);
+        const elapsed = Math.round((performance.now() - start) * 100) / 100;
+
+        const statusEl = document.getElementById('expResultStatus');
+        statusEl.textContent = resp.status + ' ' + resp.statusText;
+        statusEl.className = 'status-badge ' + (resp.status < 300 ? 'status-2xx' : resp.status < 400 ? '' : resp.status < 500 ? 'status-4xx' : 'status-5xx');
+        document.getElementById('expResultTime').textContent = elapsed + 'ms';
+        document.getElementById('expResultUrl').textContent = resp.url;
+        document.getElementById('expResultHeaders').textContent = JSON.stringify(resp.headers, null, 2);
+        document.getElementById('expResultBody').textContent = resp.body || '(vazio)';
+    }
+
+    function showAddEndpoint() {
+        new bootstrap.Modal(document.getElementById('addEndpointModal')).show();
+    }
+
+    function addEndpoint() {
+        const method = document.getElementById('newEndpointMethod').value;
+        const path = document.getElementById('newEndpointPath').value.trim();
+        const desc = document.getElementById('newEndpointDesc').value.trim();
+        const body = document.getElementById('newEndpointBody').value.trim();
+        if (!path) { alert('Informe o path.'); return; }
+        endpoints.push({ method, path, desc, body, auth: true });
+        localStorage.setItem('gzerp_endpoints', JSON.stringify(endpoints));
+        renderEndpointTable();
+        renderEndpointSelector();
+        bootstrap.Modal.getInstance(document.getElementById('addEndpointModal')).hide();
+    }
+
+    // ============================================================
+    // SECURITY TESTS
+    // ============================================================
+    function showSecurityResult(elId, resp) {
+        const el = document.getElementById(elId);
+        el.style.display = 'block';
+        el.textContent = `Status: ${resp.status} | Tempo: ${resp.elapsed}ms\n\n${resp.body || '(vazio)'}`;
+    }
+
+    async function testSqlInjection() {
+        const payload = document.getElementById('sqlPayloadInput').value.trim();
+        // Test on login endpoint
+        const resp = await httpFetch('POST', '/api/auth/login', { identifier: payload, password: 'anything' });
+        showSecurityResult('sqlResult', resp);
+    }
+
+    async function testXss() {
+        const payload = document.getElementById('xssPayloadInput').value.trim();
+        // Test on register endpoint (name field)
+        const body = {
+            cnpj: '12345678000196',
+            email: 'xss_' + Date.now() + '@test.com',
+            razaoSocial: payload,
+            nomeFantasia: 'Teste XSS',
+            phone: '11999999999',
+            partners: [{
+                cpf: '12345678902',
+                fullName: 'Sócio XSS',
+                username: 'socio_xss_' + Date.now(),
+                email: 'xss_socio@test.com',
+                phone: '11988888889',
+                password: 'Test123456'
+            }]
+        };
+        const resp = await httpFetch('POST', '/register', body);
+        showSecurityResult('xssResult', resp);
+    }
+
+    async function testValidationMissingFields() {
+        // Missing required fields in product registration
+        const resp = await httpFetch('POST', '/products/register', { name: '' }, 'FAKE');
+        showSecurityResult('validationResult', resp);
+    }
+
+    async function testValidationBadFormat() {
+        // Bad format in tenant registration
+        const body = {
+            cnpj: 'invalid-cnpj',
+            email: 'not-an-email',
+            razaoSocial: 'Test',
+            phone: '123',
+            partners: [{
+                cpf: 'invalid',
+                fullName: 'Test',
+                username: 'test',
+                email: 'not-email',
+                phone: '123',
+                password: 'Test123456'
+            }]
+        };
+        const resp = await httpFetch('POST', '/register', body);
+        showSecurityResult('validationResult', resp);
+    }
+
+    async function testValidationLongField() {
+        // Very long string
+        const longString = 'A'.repeat(5000);
+        const body = {
+            cnpj: longString,
+            email: longString + '@test.com',
+            razaoSocial: longString,
+            phone: longString,
+            partners: [{
+                cpf: longString,
+                fullName: longString,
+                username: longString,
+                email: longString + '@test.com',
+                phone: longString,
+                password: 'Test123456'
+            }]
+        };
+        const resp = await httpFetch('POST', '/register', body);
+        showSecurityResult('validationResult', resp);
+    }
+
+    async function testAuthWithPartnerToken() {
+        if (!state.token) { alert('Faça login como PARTNER primeiro.'); return; }
+        // Check if user is PARTNER
+        try {
+            const parts = state.token.split('.');
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            if (payload.userType !== 'PARTNER' && payload.userType !== 'ADMIN') {
+                alert('Este token não é de PARTNER ou ADMIN. Faça login como sócio.');
+                return;
+            }
+        } catch {}
+        const body = {
+            name: 'Produto Teste Autorização ' + Date.now(),
+            stock: 10,
+            baseSellPrice: 29.90,
+            costPrice: 15.00,
+            imageUrl: 'https://example.com/img.jpg',
+            sku: 'AUTH-TEST-' + Date.now()
+        };
+        const resp = await httpFetch('POST', '/products/register', body);
+        showSecurityResult('authzResult', resp);
+    }
+
+    async function testAuthWithEmployeeToken() {
+        if (!state.token) { alert('Faça login como EMPLOYEE primeiro.'); return; }
+        try {
+            const parts = state.token.split('.');
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            if (payload.userType !== 'EMPLOYEE') {
+                alert('Este token não é de EMPLOYEE. Faça login como funcionário.');
+                return;
+            }
+        } catch {}
+        const body = {
+            name: 'Produto Teste Autorização ' + Date.now(),
+            stock: 10,
+            baseSellPrice: 29.90,
+            costPrice: 15.00,
+            imageUrl: 'https://example.com/img.jpg',
+            sku: 'EMP-TEST-' + Date.now()
+        };
+        const resp = await httpFetch('POST', '/products/register', body);
+        showSecurityResult('authzResult', resp);
+    }
+
+    async function testAuthNoToken() {
+        const body = {
+            name: 'Produto Teste Sem Auth ' + Date.now(),
+            stock: 10,
+            baseSellPrice: 29.90,
+            costPrice: 15.00,
+            imageUrl: 'https://example.com/img.jpg',
+            sku: 'NOAUTH-TEST-' + Date.now()
+        };
+        const resp = await httpFetch('POST', '/products/register', body, null);
+        showSecurityResult('authzResult', resp);
+    }
+
+    async function testCors() {
+        // We can't truly test CORS from the browser (it blocks cross-origin by design),
+        // but we can show what the response headers would be
+        try {
+            const resp = await httpFetch('GET', '/employees');
+            const corsHeaders = {};
+            if (resp.headers) {
+                ['access-control-allow-origin', 'access-control-allow-credentials',
+                 'access-control-allow-methods', 'access-control-allow-headers',
+                 'access-control-max-age'].forEach(h => {
+                    if (resp.headers[h]) corsHeaders[h] = resp.headers[h];
+                });
+            }
+            const result = `CORS Headers detectados na resposta:\n${JSON.stringify(corsHeaders, null, 2)}\n\n`;
+            if (Object.keys(corsHeaders).length === 0) {
+                result += '⚠️ Nenhum header CORS encontrado. O servidor pode estar usando os defaults do Spring Boot.\n\n';
+                result += 'Headers completos da resposta:\n' + JSON.stringify(resp.headers, null, 2);
+            }
+            document.getElementById('corsResult').style.display = 'block';
+            document.getElementById('corsResult').textContent = result;
+        } catch (e) {
+            document.getElementById('corsResult').style.display = 'block';
+            document.getElementById('corsResult').textContent = 'Erro: ' + e.message + '\n\nNota: O navegador pode bloquear requisições cross-origin. Verifique o console do navegador (F12) para detalhes.';
+        }
+    }
+
+    async function testRateLimit() {
+        const endpoint = document.getElementById('rateLimitEndpoint').value;
+        const count = parseInt(document.getElementById('rateLimitCount').value) || 10;
+        const container = document.getElementById('rateLimitResult');
+        container.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Enviando ' + count + ' requisições...';
+
+        const results = [];
+        let blockedCount = 0;
+
+        for (let i = 0; i < count; i++) {
+            const start = performance.now();
+            let resp;
+            if (endpoint === '/api/auth/login') {
+                resp = await httpFetch('POST', endpoint, { identifier: 'test', password: 'Test123456' });
+            } else if (endpoint === '/api/auth/refresh') {
+                resp = await httpFetch('POST', endpoint, { token: state.refreshToken || 'fake' });
+            } else if (endpoint === '/register') {
+                resp = await httpFetch('POST', endpoint, {
+                    cnpj: '1234567800019' + i, email: 'rl_' + i + '@test.com',
+                    razaoSocial: 'Rate Limit Test ' + i, phone: '11999999999',
+                    partners: [{ cpf: '1234567890' + i, fullName: 'Sócio ' + i, username: 'rl_' + i, email: 'rl_' + i + '@test.com', phone: '11988888888', password: 'Test123456' }]
+                });
+            } else {
+                resp = await httpFetch('GET', endpoint, null, state.token || 'FAKE');
+            }
+
+            const elapsed = Math.round((performance.now() - start) * 100) / 100;
+            results.push({ index: i + 1, status: resp.status, elapsed });
+            if (resp.status === 429) blockedCount++;
+
+            container.innerHTML = results.map(r =>
+                `<span class="badge ${r.status === 429 ? 'bg-danger' : r.status < 300 ? 'bg-success' : 'bg-warning'} me-1" title="#${r.index}: ${r.status} (${r.elapsed}ms)">${r.index}</span>`
+            ).join('') + `<div class="mt-2"><strong>Total:</strong> ${results.length} | <strong>Bloqueados (429):</strong> ${blockedCount} | <strong>Permitidos:</strong> ${results.length - blockedCount}</div>`;
+        }
+
+        container.innerHTML += `<div class="mt-2 text-muted">Teste concluído. ${blockedCount > 0 ? 'Rate limiting está FUNCIONANDO!' : 'Nenhum request foi bloqueado.'}</div>`;
+    }
+
+    // ============================================================
+    // PERFORMANCE TESTS
+    // ============================================================
+    async function testSinglePerformance() {
+        const endpoint = document.getElementById('perfSingleEndpoint').value;
+        const reps = parseInt(document.getElementById('perfSingleReps').value) || 5;
+        const container = document.getElementById('perfSingleResult');
+        container.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Medindo ' + reps + ' iterações...';
+
+        const times = [];
+        for (let i = 0; i < reps; i++) {
+            const start = performance.now();
+            let resp;
+            if (endpoint.includes('login')) {
+                resp = await httpFetch('POST', '/api/auth/login', { identifier: 'test', password: 'Test123456' });
+            } else if (endpoint.includes('employees')) {
+                resp = await httpFetch('GET', '/employees', null, state.token || 'FAKE');
+            } else if (endpoint.includes('register')) {
+                resp = await httpFetch('POST', '/register', {
+                    cnpj: '1234567800019' + i, email: 'perf_' + i + '@test.com',
+                    razaoSocial: 'Perf Test ' + i, phone: '11999999999',
+                    partners: [{ cpf: '1234567890' + i, fullName: 'Sócio ' + i, username: 'perf_' + i, email: 'perf_' + i + '@test.com', phone: '11988888888', password: 'Test123456' }]
+                });
+            } else {
+                resp = await httpFetch('POST', '/products/register', {
+                    name: 'Perf ' + i, stock: 10, baseSellPrice: 29.90, costPrice: 15.00,
+                    imageUrl: 'https://example.com/img.jpg', sku: 'PERF-' + i
+                }, state.token || 'FAKE');
+            }
+            times.push(Math.round((performance.now() - start) * 100) / 100);
+            container.innerHTML = `<div class="progress mb-2" style="height:20px;"><div class="progress-bar" style="width:${(i+1)/reps*100}%">${i+1}/${reps}</div></div>`;
+        }
+
+        const sorted = [...times].sort((a, b) => a - b);
+        const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length * 100) / 100;
+        const median = sorted[Math.floor(sorted.length / 2)];
+        const p90 = sorted[Math.floor(sorted.length * 0.9)];
+        const min = sorted[0];
+        const max = sorted[sorted.length - 1];
+
+        container.innerHTML += `
+            <table class="table table-sm mt-3">
+                <thead><tr><th>#</th><th>Tempo (ms)</th></tr></thead>
+                <tbody>${times.map((t, i) => `<tr><td>${i + 1}</td><td>${t}</td></tr>`).join('')}</tbody>
+            </table>
+            <div class="card mt-2">
+                <div class="card-body p-2">
+                    <div class="row text-center">
+                        <div class="col"><strong>Média</strong><br>${avg}ms</div>
+                        <div class="col"><strong>Mediana</strong><br>${median}ms</div>
+                        <div class="col"><strong>P90</strong><br>${p90}ms</div>
+                        <div class="col"><strong>Mín</strong><br>${min}ms</div>
+                        <div class="col"><strong>Máx</strong><br>${max}ms</div>
+                    </div>
+                </div>
+            </div>`;
+    }
+
+    async function testLoad() {
+        const endpoint = document.getElementById('perfLoadEndpoint').value;
+        const concurrent = parseInt(document.getElementById('perfLoadConcurrent').value) || 10;
+        const reps = parseInt(document.getElementById('perfLoadReps').value) || 1;
+        const container = document.getElementById('perfLoadResult');
+        container.style.display = 'block';
+        document.getElementById('perfLoadResult').innerHTML = '<div class="spinner-border spinner-border-sm"></div> Executando teste de carga...';
+
+        const times = [];
+        const batchSize = Math.min(concurrent, 20); // Limit concurrent requests
+
+        for (let batch = 0; batch < Math.ceil(concurrent / batchSize); batch++) {
+            const promises = [];
+            for (let i = 0; i < batchSize && (batch * batchSize + i) < concurrent; i++) {
+                const idx = batch * batchSize + i;
+                const p = (async () => {
+                    const start = performance.now();
+                    let resp;
+                    if (endpoint.includes('login')) {
+                        resp = await httpFetch('POST', '/api/auth/login', { identifier: 'test', password: 'Test123456' });
+                    } else {
+                        resp = await httpFetch('GET', '/employees', null, state.token || 'FAKE');
+                    }
+                    return Math.round((performance.now() - start) * 100) / 100;
+                })();
+                promises.push(p);
+            }
+            const batchResults = await Promise.all(promises);
+            times.push(...batchResults);
+        }
+
+        const sorted = [...times].sort((a, b) => a - b);
+        const avg = Math.round(times.reduce((a, b) => a + b, 0) / times.length * 100) / 100;
+        const median = sorted[Math.floor(sorted.length / 2)];
+        const p90 = sorted[Math.floor(sorted.length * 0.9)];
+        const min = sorted[0];
+        const max = sorted[sorted.length - 1];
+
+        // Stats table
+        document.getElementById('perfStatsTable').innerHTML = `
+            <tr><td>Total de requisições</td><td><strong>${times.length}</strong></td></tr>
+            <tr><td>Média</td><td>${avg}ms</td></tr>
+            <tr><td>Mediana</td><td>${median}ms</td></tr>
+            <tr><td>Percentil 90</td><td>${p90}ms</td></tr>
+            <tr><td>Percentil 95</td><td>${sorted[Math.floor(sorted.length * 0.95)]}ms</td></tr>
+            <tr><td>Mínimo</td><td>${min}ms</td></tr>
+            <tr><td>Máximo</td><td>${max}ms</td></tr>
+            <tr><td>Desvio padrão</td><td>${Math.round(Math.sqrt(times.reduce((s, t) => s + Math.pow(t - avg, 2), 0) / times.length) * 100) / 100}ms</td></tr>
+        `;
+
+        // Chart
+        if (state.charts.perf) state.charts.perf.destroy();
+        const ctx = document.getElementById('perfChart').getContext('2d');
+        state.charts.perf = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: times.map((_, i) => `#${i + 1}`),
+                datasets: [{
+                    label: 'Tempo (ms)',
+                    data: times,
+                    backgroundColor: times.map(t => t > avg * 2 ? '#dc3545' : t > avg ? '#ffc107' : '#28a745'),
+                    borderColor: times.map(t => t > avg * 2 ? '#dc3545' : t > avg ? '#ffc107' : '#28a745'),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: { display: true, text: `Tempo de Resposta (${times.length} requisições)` },
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: 'Tempo (ms)' } },
+                    x: { ticks: { maxTicksLimit: 20 } }
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // FLOW EXECUTION
+    // ============================================================
+    async function stopFlow(flowId) {
+        state.flowAborted = true;
+        const container = document.getElementById(flowId + 'Steps');
+        container.innerHTML += '<div class="alert alert-warning">Fluxo interrompido pelo usuário.</div>';
+    }
+
+    async function addFlowStep(containerId, stepNum, title, status, detail) {
+        const container = document.getElementById(containerId);
+        const div = document.createElement('div');
+        div.className = 'flow-step ' + status;
+        div.innerHTML = `
+            <div class="d-flex justify-content-between align-items-center">
+                <strong>Passo ${stepNum}: ${title}</strong>
+                <span class="badge ${status === 'success' ? 'bg-success' : status === 'error' ? 'bg-danger' : 'bg-warning'}">${status === 'success' ? '✅' : status === 'error' ? '❌' : '⏳'}</span>
+            </div>
+            <pre class="response-body mt-1" style="max-height:150px;font-size:0.75rem;">${detail || ''}</pre>
+        `;
+        container.appendChild(div);
+        div.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    async function runAuthFlow() {
+        state.flowAborted = false;
+        const container = document.getElementById('flow1Steps');
+        container.innerHTML = '';
+        const user = document.getElementById('flow1User').value.trim();
+        const pass = document.getElementById('flow1Pass').value.trim();
+        let step = 0;
+
+        // Step 1: Login
+        step++;
+        await addFlowStep('flow1Steps', step, 'Login', 'pending');
+        try {
+            const resp = await httpFetch('POST', '/api/auth/login', { identifier: user, password: pass });
+            if (resp.status === 200) {
+                const data = JSON.parse(resp.body);
+                state.token = data.token;
+                state.refreshToken = data.refreshToken;
+                localStorage.setItem('gzerp_token', state.token);
+                document.getElementById('jwtToken').value = state.token;
+                await addFlowStep('flow1Steps', step, 'Login', 'success', `Status: ${resp.status}\nToken: ${data.token?.substring(0, 50)}...\nRefresh: ${data.refreshToken?.substring(0, 20)}...\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow1Steps', step, 'Login', 'error', `Status: ${resp.status}\n${resp.body}`);
+                return;
+            }
+        } catch (e) {
+            await addFlowStep('flow1Steps', step, 'Login', 'error', e.message);
+            return;
+        }
+
+        if (state.flowAborted) return;
+
+        // Step 2: Decode token
+        step++;
+        await addFlowStep('flow1Steps', step, 'Decodificar JWT', 'pending');
+        try {
+            const parts = state.token.split('.');
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+            await addFlowStep('flow1Steps', step, 'Decodificar JWT', 'success', JSON.stringify(payload, null, 2));
+        } catch (e) {
+            await addFlowStep('flow1Steps', step, 'Decodificar JWT', 'error', e.message);
+            return;
+        }
+
+        if (state.flowAborted) return;
+
+        // Step 3: Access protected endpoint
+        step++;
+        await addFlowStep('flow1Steps', step, 'Acessar /employees', 'pending');
+        try {
+            const resp = await httpFetch('GET', '/employees');
+            if (resp.status === 200 || resp.status === 204 || resp.status === 401) {
+                await addFlowStep('flow1Steps', step, 'Acessar /employees', 'success', `Status: ${resp.status}\nTempo: ${resp.elapsed}ms\n${resp.body?.substring(0, 500) || '(vazio)'}`);
+            } else {
+                await addFlowStep('flow1Steps', step, 'Acessar /employees', 'error', `Status: ${resp.status}\n${resp.body}`);
+            }
+        } catch (e) {
+            await addFlowStep('flow1Steps', step, 'Acessar /employees', 'error', e.message);
+        }
+
+        if (state.flowAborted) return;
+
+        // Step 4: Refresh token
+        step++;
+        await addFlowStep('flow1Steps', step, 'Refresh Token', 'pending');
+        try {
+            const resp = await httpFetch('POST', '/api/auth/refresh', { token: state.refreshToken });
+            if (resp.status === 200) {
+                const data = JSON.parse(resp.body);
+                state.token = data.token;
+                state.refreshToken = data.refreshedToken;
+                localStorage.setItem('gzerp_token', state.token);
+                document.getElementById('jwtToken').value = state.token;
+                await addFlowStep('flow1Steps', step, 'Refresh Token', 'success', `Status: ${resp.status}\nNovo token: ${data.token?.substring(0, 50)}...\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow1Steps', step, 'Refresh Token', 'error', `Status: ${resp.status}\n${resp.body}`);
+            }
+        } catch (e) {
+            await addFlowStep('flow1Steps', step, 'Refresh Token', 'error', e.message);
+        }
+
+        if (state.flowAborted) return;
+
+        // Step 5: Logout
+        step++;
+        await addFlowStep('flow1Steps', step, 'Logout', 'pending');
+        try {
+            const resp = await httpFetch('POST', '/api/auth/logout', { refreshToken: state.refreshToken });
+            if (resp.status === 204) {
+                state.token = '';
+                state.refreshToken = '';
+                localStorage.removeItem('gzerp_token');
+                document.getElementById('jwtToken').value = '';
+                await addFlowStep('flow1Steps', step, 'Logout', 'success', `Status: ${resp.status}\nToken revogado com sucesso!\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow1Steps', step, 'Logout', 'error', `Status: ${resp.status}\n${resp.body}`);
+            }
+        } catch (e) {
+            await addFlowStep('flow1Steps', step, 'Logout', 'error', e.message);
+        }
+
+        await addFlowStep('flow1Steps', step + 1, 'Fluxo Concluído', 'success', 'Todos os passos foram executados com sucesso!');
+    }
+
+    async function runProductFlow() {
+        state.flowAborted = false;
+        const container = document.getElementById('flow2Steps');
+        container.innerHTML = '';
+        const user = document.getElementById('flow2User').value.trim();
+        const pass = document.getElementById('flow2Pass').value.trim();
+        let step = 0;
+
+        // Step 1: Login
+        step++;
+        await addFlowStep('flow2Steps', step, 'Login', 'pending');
+        try {
+            const resp = await httpFetch('POST', '/api/auth/login', { identifier: user, password: pass });
+            if (resp.status === 200) {
+                const data = JSON.parse(resp.body);
+                state.token = data.token;
+                state.refreshToken = data.refreshToken;
+                localStorage.setItem('gzerp_token', state.token);
+                document.getElementById('jwtToken').value = state.token;
+                await addFlowStep('flow2Steps', step, 'Login', 'success', `Status: ${resp.status}\nToken: ${data.token?.substring(0, 50)}...\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow2Steps', step, 'Login', 'error', `Status: ${resp.status}\n${resp.body}`);
+                return;
+            }
+        } catch (e) {
+            await addFlowStep('flow2Steps', step, 'Login', 'error', e.message);
+            return;
+        }
+
+        if (state.flowAborted) return;
+
+        // Step 2: Create product
+        step++;
+        await addFlowStep('flow2Steps', step, 'Criar Produto', 'pending');
+        try {
+            const body = {
+                name: 'Produto Fluxo ' + Date.now(),
+                stock: 10,
+                baseSellPrice: 29.90,
+                costPrice: 15.00,
+                imageUrl: 'https://example.com/img.jpg',
+                sku: 'FLOW-' + Date.now()
+            };
+            const resp = await httpFetch('POST', '/products/register', body);
+            if (resp.status === 201) {
+                const data = JSON.parse(resp.body);
+                await addFlowStep('flow2Steps', step, 'Criar Produto', 'success', `Status: ${resp.status}\nCriado: ${JSON.stringify(data, null, 2)}\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow2Steps', step, 'Criar Produto', 'error', `Status: ${resp.status}\n${resp.body}`);
+            }
+        } catch (e) {
+            await addFlowStep('flow2Steps', step, 'Criar Produto', 'error', e.message);
+        }
+
+        if (state.flowAborted) return;
+
+        // Step 3: List employees (as proxy for listing)
+        step++;
+        await addFlowStep('flow2Steps', step, 'Listar Employees', 'pending');
+        try {
+            const resp = await httpFetch('GET', '/employees');
+            if (resp.status === 200) {
+                await addFlowStep('flow2Steps', step, 'Listar Employees', 'success', `Status: ${resp.status}\nItens: ${resp.body ? JSON.parse(resp.body).length : 0}\nTempo: ${resp.elapsed}ms`);
+            } else if (resp.status === 204) {
+                await addFlowStep('flow2Steps', step, 'Listar Employees', 'success', `Status: ${resp.status}\nNenhum employee encontrado\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow2Steps', step, 'Listar Employees', 'error', `Status: ${resp.status}\n${resp.body}`);
+            }
+        } catch (e) {
+            await addFlowStep('flow2Steps', step, 'Listar Employees', 'error', e.message);
+        }
+
+        await addFlowStep('flow2Steps', step + 1, 'Fluxo Concluído', 'success', 'Fluxo de produtos finalizado!');
+    }
+
+    async function runTenantFlow() {
+        state.flowAborted = false;
+        const container = document.getElementById('flow3Steps');
+        container.innerHTML = '';
+        const cnpj = document.getElementById('flow3Cnpj').value.trim();
+        const email = document.getElementById('flow3Email').value.trim();
+        const razao = document.getElementById('flow3Razao').value.trim();
+        const partnerUser = document.getElementById('flow3PartnerUser').value.trim();
+        const pass = document.getElementById('flow3Pass').value.trim();
+        let step = 0;
+
+        // Step 1: Register tenant
+        step++;
+        await addFlowStep('flow3Steps', step, 'Cadastrar Empresa', 'pending');
+        try {
+            const body = {
+                cnpj, email, razaoSocial: razao, nomeFantasia: razao, phone: '11999999999',
+                partners: [{
+                    cpf: '12345678901', fullName: 'Sócio Teste', username: partnerUser,
+                    email: partnerUser + '@test.com', phone: '11988888888', password: pass
+                }]
+            };
+            const resp = await httpFetch('POST', '/register', body);
+            if (resp.status === 201) {
+                await addFlowStep('flow3Steps', step, 'Cadastrar Empresa', 'success', `Status: ${resp.status}\n${resp.body}\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow3Steps', step, 'Cadastrar Empresa', 'error', `Status: ${resp.status}\n${resp.body}`);
+                return;
+            }
+        } catch (e) {
+            await addFlowStep('flow3Steps', step, 'Cadastrar Empresa', 'error', e.message);
+            return;
+        }
+
+        if (state.flowAborted) return;
+
+        // Step 2: Login as partner
+        step++;
+        await addFlowStep('flow3Steps', step, 'Login como Sócio', 'pending');
+        try {
+            const resp = await httpFetch('POST', '/api/auth/login', { identifier: partnerUser + '@test.com', password: pass });
+            if (resp.status === 200) {
+                const data = JSON.parse(resp.body);
+                state.token = data.token;
+                state.refreshToken = data.refreshToken;
+                localStorage.setItem('gzerp_token', state.token);
+                document.getElementById('jwtToken').value = state.token;
+                await addFlowStep('flow3Steps', step, 'Login como Sócio', 'success', `Status: ${resp.status}\nUserType: ${data.userType}\nTenantId: ${data.tenantId}\nToken: ${data.token?.substring(0, 50)}...\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow3Steps', step, 'Login como Sócio', 'error', `Status: ${resp.status}\n${resp.body}`);
+                return;
+            }
+        } catch (e) {
+            await addFlowStep('flow3Steps', step, 'Login como Sócio', 'error', e.message);
+            return;
+        }
+
+        if (state.flowAborted) return;
+
+        // Step 3: Access protected endpoint
+        step++;
+        await addFlowStep('flow3Steps', step, 'Acessar /employees', 'pending');
+        try {
+            const resp = await httpFetch('GET', '/employees');
+            await addFlowStep('flow3Steps', step, 'Acessar /employees', 'success', `Status: ${resp.status}\n${resp.body?.substring(0, 500) || '(vazio)'}\nTempo: ${resp.elapsed}ms`);
+        } catch (e) {
+            await addFlowStep('flow3Steps', step, 'Acessar /employees', 'error', e.message);
+        }
+
+        // Step 4: Register product
+        step++;
+        await addFlowStep('flow3Steps', step, 'Cadastrar Produto', 'pending');
+        try {
+            const body = {
+                name: 'Produto Tenant ' + Date.now(),
+                stock: 10,
+                baseSellPrice: 29.90,
+                costPrice: 15.00,
+                imageUrl: 'https://example.com/img.jpg',
+                sku: 'TENANT-' + Date.now()
+            };
+            const resp = await httpFetch('POST', '/products/register', body);
+            if (resp.status === 201) {
+                await addFlowStep('flow3Steps', step, 'Cadastrar Produto', 'success', `Status: ${resp.status}\n${resp.body}\nTempo: ${resp.elapsed}ms`);
+            } else {
+                await addFlowStep('flow3Steps', step, 'Cadastrar Produto', 'error', `Status: ${resp.status}\n${resp.body}`);
+            }
+        } catch (e) {
+            await addFlowStep('flow3Steps', step, 'Cadastrar Produto', 'error', e.message);
+        }
+
+        await addFlowStep('flow3Steps', step + 1, 'Fluxo Concluído', 'success', 'Fluxo de tenant finalizado com sucesso!');
+    }
+    </script>
+</body>
+</html>
