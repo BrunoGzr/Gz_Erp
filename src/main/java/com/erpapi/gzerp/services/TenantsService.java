@@ -64,7 +64,7 @@ public class TenantsService {
             Partners newPartner = partnersService.registerPartners(partnerDto,newUser, newTenant);
             newTenant.addPartner(newPartner);
         };
-
+        newTenant = tenantsRepo.save(newTenant);
         return new TenantResponseDto (newTenant);
     }
 

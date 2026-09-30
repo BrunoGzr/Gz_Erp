@@ -33,7 +33,7 @@ public class ProductsResources {
     @PreAuthorize("hasAuthority('PERM_CREATE_PROD')")
     public ResponseEntity<?> RegisterProducts(@RequestBody @Valid ProductRegisterDto dto
                                                                , @AuthenticationPrincipal CustomUserDetails user){
-        ProductResponseDto newProduct = service.registerProduct(dto);
+        ProductResponseDto newProduct = service.registerProduct(dto, user.getUser());
 
         URI location = URI.create("/products/" + newProduct.getPublicId());
         return  ResponseEntity.created(location).body(newProduct);

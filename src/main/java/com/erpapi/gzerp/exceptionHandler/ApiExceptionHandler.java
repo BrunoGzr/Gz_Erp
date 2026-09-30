@@ -4,6 +4,7 @@ import com.erpapi.gzerp.exceptions.InvalidCharactersException;
 import com.erpapi.gzerp.exceptions.InvalidCredentialsException;
 import com.erpapi.gzerp.exceptions.EmployeeAlreadyExistException;
 import com.erpapi.gzerp.exceptions.InvalidRefreshTokenException;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.apache.coyote.Response;
 import org.jspecify.annotations.Nullable;
@@ -62,7 +63,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
                                  HttpHeaders headers,
                                  HttpStatusCode status,
                                  WebRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "The request contains invalid / malformed values");
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "The request contains invalid / malformed values, please verify and try again");
         problemDetail.setTitle("Invalid Request");
         problemDetail.setType(URI.create("/Errors/Validation"));
         Throwable cause = ex.getCause();
@@ -71,7 +72,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         } else {
             problemDetail.setProperty("cause", ex.getMessage());
         }
-        return handleExceptionInternal(ex, problemDetail, headers, HttpStatus.BAD_REQUEST, request);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(problemDetail);
 
     }
 
@@ -115,10 +116,10 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<ProblemDetail> HandleAuth(AuthenticationException ex){
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,"Bad credentials");
-        problem.setTitle("Not authorized.");
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED,"Not authorized.");
+        problem.setDetail(ex.getMessage());
+        problem.setTitle("Bad credentials");
         return ResponseEntity.status(401).body(problem);
-
-
     }
+
 }

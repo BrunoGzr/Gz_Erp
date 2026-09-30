@@ -37,8 +37,9 @@ public class UsersAccounts {
     @Column(name = "password", nullable = false)
     private String password;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id", nullable = false)
+    @NotNull
     private Tenants tenant;
 
     @OneToOne(mappedBy = "usersAccounts",fetch = FetchType.LAZY  ,cascade = CascadeType.ALL, optional = true )

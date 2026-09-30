@@ -80,14 +80,6 @@ public class Employees {
         this.id = id;
     }
 
-    public Long getTenantid() {
-        return tenantId;
-    }
-
-    public void setTenantid(Long tenantid) {
-        this.tenantId = tenantid;
-    }
-
     public Long getTenantId() {
         return tenantId;
     }

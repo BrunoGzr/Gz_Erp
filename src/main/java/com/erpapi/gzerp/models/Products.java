@@ -31,6 +31,10 @@ public class Products {
     @JoinColumn(name = "tenant_id")
     private Tenants tenant;
 
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id")
+    private UsersAccounts user;
+
     @Column(name = "name",nullable = false)
     private String name;
 
@@ -152,5 +156,13 @@ public class Products {
 
     public void setSku(String sku) {
         this.sku = sku;
+    }
+
+    public UsersAccounts getUser() {
+        return user;
+    }
+
+    public void setUser(UsersAccounts user) {
+        this.user = user;
     }
 }

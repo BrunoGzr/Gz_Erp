@@ -5,7 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface ProductsRepo extends JpaRepository<Products, Long> {
 
-    boolean existsBySku(String sku);
-    boolean existsByName(String name);
+    boolean existsBySkuAndTenantId(String sku, Long tenantId);
+    boolean existsByNameAndTenantId(String name, Long tenantId);
 
 }

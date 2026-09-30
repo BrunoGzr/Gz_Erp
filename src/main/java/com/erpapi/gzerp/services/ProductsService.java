@@ -5,6 +5,7 @@ import com.erpapi.gzerp.dto.ProductResponseDto;
 import com.erpapi.gzerp.enums.Permissions;
 import com.erpapi.gzerp.exceptions.InvalidProductException;
 import com.erpapi.gzerp.models.Products;
+import com.erpapi.gzerp.models.UsersAccounts;
 import com.erpapi.gzerp.repositories.ProductsRepo;
 import com.erpapi.gzerp.repositories.TenantsRepo;
 import com.erpapi.gzerp.security.TenantContext;
@@ -27,11 +28,12 @@ public class ProductsService {
     }
 
 
-    public ProductResponseDto registerProduct(@Valid ProductRegisterDto dto) {
-        this.verifyUse(dto);
+    public ProductResponseDto registerProduct(@Valid ProductRegisterDto dto, UsersAccounts user) {
+        Long tenantId = TenantContext.required();
+        this.verifyUse(dto, tenantId);
         Products newProduct = new Products();
-        long tenantId = TenantContext.required();
         newProduct.setTenant(tenantsRepo.findById(tenantId).orElseThrow());
+        newProduct.setUser(user);
         newProduct.setBaseSellPrice(dto.getBaseSellPrice());
         newProduct.setImageUrl(dto.getImageUrl());
         newProduct.setPublicId(UUID.randomUUID());
@@ -47,11 +49,11 @@ public class ProductsService {
 
 
 
-    public void verifyUse(ProductRegisterDto dto){
-        if (productsRepo.existsBySku(dto.getSku())){
+    public void verifyUse(ProductRegisterDto dto, Long tenantId){
+        if (productsRepo.existsBySkuAndTenantId(dto.getSku(), tenantId)){
             throw new InvalidProductException("Product Sku already in use, please use another one.");
         }
-        if (productsRepo.existsByName(dto.getName())){
+        if (productsRepo.existsByNameAndTenantId(dto.getName(),tenantId)){
             throw  new InvalidProductException("Product Name already in use, please use another one.");
         }
     }

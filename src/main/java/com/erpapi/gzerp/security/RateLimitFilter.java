@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.hibernate.query.spi.Limit;
 import org.springframework.context.annotation.Bean;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -15,6 +16,7 @@ import java.io.IOException;
 import static com.erpapi.gzerp.config.LimitConfig.ruleFor;
 
 @Component
+@Order(1)
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private final RateLimitingBucket bucket;

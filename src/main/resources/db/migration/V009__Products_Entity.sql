@@ -2,8 +2,9 @@ CREATE TABLE products (
     id BIGINT UNSIGNED PRIMARY KEY NOT NULL AUTO_INCREMENT,
     public_id CHAR(36) NOT NULL UNIQUE,
     tenant_id BIGINT UNSIGNED NOT NULL,
+    user_id BIGINT UNSIGNED NOT NULL,
     sku VARCHAR(50) UNIQUE NOT NULL DEFAULT 'N/A',
-    name VARCHAR(255)NOT NULL UNIQUE,
+    name VARCHAR(255)NOT NULL,
     stock int UNSIGNED NOT NULL DEFAULT 0 ,
     image VARCHAR(500) NULL,
     cost DECIMAL(10,2) NOT NULL DEFAULT 0,
@@ -12,5 +13,6 @@ CREATE TABLE products (
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL ,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,
     INDEX idx_products_tenants (tenant_id),
-    CONSTRAINT fk_tenants_products foreign key (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE
+    CONSTRAINT fk_tenants_products FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    CONSTRAINT fk_users_products FOREIGN KEY (user_id) REFERENCES users_accounts(id)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

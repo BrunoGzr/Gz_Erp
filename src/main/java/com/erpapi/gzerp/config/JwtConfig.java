@@ -103,4 +103,9 @@ public class JwtConfig {
     public long getExpirationMs() {
         return jwtExpiration;
     }
+
+    public long getRefreshExpirationMs() {
+        return refreshExpirationMs;
+    }
+
 }

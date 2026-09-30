@@ -31,7 +31,7 @@ public class RefreshTokenService {
         rt.setUserAccount(user);
         rt.setCreatedAt(LocalDateTime.now());
         rt.setRevoked(false);
-        rt.setExpiresAt(LocalDateTime.now().plusSeconds(jwtConfig.getExpirationMs() / 1000 ));
+        rt.setExpiresAt(LocalDateTime.now().plusSeconds(jwtConfig.getRefreshExpirationMs() / 1000 ));
         return refreshTokenRepo.save(rt);
     }
 
@@ -52,10 +52,9 @@ public class RefreshTokenService {
     public RefreshToken rotate(RefreshToken current){
         if (current.getReplacedBy() != null){
             refreshTokenRepo.revokeAllByUser(current.getUserAccount());
-            throw new InvalidRefreshTokenException("Refresh token reuse detected. Fuck you bro");
+            throw new InvalidRefreshTokenException("Refresh token reuse detected.");
         }
         current.setRevoked(true);
-
         RefreshToken newToken = create(current.getUserAccount());
         current.setReplacedBy(newToken.getToken());
         refreshTokenRepo.save(current);
