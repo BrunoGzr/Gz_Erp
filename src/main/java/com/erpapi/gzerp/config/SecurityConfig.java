@@ -60,6 +60,8 @@ public class SecurityConfig {
                                         "/api/auth/logout",
                                         "/api/auth/refresh"
                                 ).permitAll()
+                                .requestMatchers(HttpMethod.OPTIONS, "/**"
+                                ).permitAll()
                                 .anyRequest().authenticated()
                                 );
         http.addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class);
