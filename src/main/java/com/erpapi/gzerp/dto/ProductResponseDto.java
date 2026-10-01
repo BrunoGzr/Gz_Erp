@@ -26,6 +26,9 @@ public class ProductResponseDto {
 
     private LocalDateTime createdAt;
 
+    private LocalDateTime updatedAt;
+
+
     public ProductResponseDto(Products product) {
         this.name = product.getName();
         this.publicId = product.getPublicId();
@@ -36,6 +39,7 @@ public class ProductResponseDto {
         this.imageUrl = product.getImageUrl();
         this.createdAt = product.getCreatedAt();
         this.sales = product.getSales();
+        this.updatedAt = product.getUpdatedAt();
     }
 
     public UUID getPublicId() {
@@ -108,5 +112,13 @@ public class ProductResponseDto {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

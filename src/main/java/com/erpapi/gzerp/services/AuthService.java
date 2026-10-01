@@ -35,6 +35,7 @@ public class AuthService {
     }
 
     public String cnpjFormater(String cnpj) throws InvalidCredentialsException{
+        cnpjValid(cnpj);
         String numberOnly = cnpj.replaceAll("[^0-9]","");
         String[] cnpjArray = numberOnly.split("");
         StringBuilder cnpjString = new StringBuilder();

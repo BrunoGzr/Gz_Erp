@@ -35,6 +35,9 @@ public class Products {
     @JoinColumn(name = "user_id")
     private UsersAccounts user;
 
+    @Column(name = "active")
+    private Boolean active;
+
     @Column(name = "name",nullable = false)
     private String name;
 
@@ -138,16 +141,8 @@ public class Products {
         return createdAt;
     }
 
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
     public LocalDateTime getUpdatedAt() {
         return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
     }
 
     public String getSku() {
@@ -164,5 +159,13 @@ public class Products {
 
     public void setUser(UsersAccounts user) {
         this.user = user;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 }

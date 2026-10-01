@@ -27,11 +27,13 @@ public class TenantsService {
     private final TenantsRepo tenantsRepo;
     private final PartnersService partnersService;
     private final UsersAccountsService usersAccountsService;
+    private final AuthService authService;
 
-    public TenantsService(TenantsRepo tenantsRepo, PartnersService partnersService, UsersAccountsService usersAccountsService) {
+    public TenantsService(TenantsRepo tenantsRepo, PartnersService partnersService, UsersAccountsService usersAccountsService, AuthService authService) {
         this.tenantsRepo = tenantsRepo;
         this.partnersService = partnersService;
         this.usersAccountsService = usersAccountsService;
+        this.authService = authService;
     }
 
 
@@ -47,7 +49,7 @@ public class TenantsService {
         if (!conflictedFields.isEmpty()){
            throw new EmployeeAlreadyExistException(conflictedFields);}
         Tenants newTenant = new Tenants();
-        newTenant.setCnpj(dto.getCnpj());
+        newTenant.setCnpj(authService.cnpjFormater(dto.getCnpj()));
         newTenant.setEmail(dto.getEmail());
         newTenant.setRazaoSocial(dto.getRazaoSocial());
         newTenant.setDemo(false);
@@ -59,7 +61,6 @@ public class TenantsService {
             newTenant.setNomeFantasia(dto.getNomeFantasia());}
         newTenant = tenantsRepo.save(newTenant);
         for (PartnersRegisterDto partnerDto : dto.getPartners()) {
-            String dtoUsername = partnerDto.getUsername();
             UsersAccounts newUser = usersAccountsService.userRegisterPartner(partnerDto, newTenant);
             Partners newPartner = partnersService.registerPartners(partnerDto,newUser, newTenant);
             newTenant.addPartner(newPartner);

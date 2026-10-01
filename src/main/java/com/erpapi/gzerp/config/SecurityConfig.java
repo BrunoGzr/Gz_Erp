@@ -5,6 +5,7 @@ import com.erpapi.gzerp.security.RateLimitFilter;
 import com.erpapi.gzerp.security.TenantContextFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -26,6 +27,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@Order
 public class SecurityConfig {
 
     private final JwtAuthEntryPoint jwtAuthEntryPoint;
