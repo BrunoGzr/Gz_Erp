@@ -1,6 +1,6 @@
 package com.erpapi.gzerp.config;
 
-import org.apache.tomcat.util.digester.Rule;
+
 
 import java.util.Map;
 
@@ -9,7 +9,7 @@ public class LimitConfig {
     private static final Map<String, customRule> Rules = Map.of(
             "/api/auth/login", new customRule(5,60_000),
             "/api/auth/refresh", new customRule(10,60_000),
-            "/register", new customRule(3,30_000)
+            "/register", new customRule(3,3_600_000)
     );
 
     public static customRule ruleFor(String endpoint){

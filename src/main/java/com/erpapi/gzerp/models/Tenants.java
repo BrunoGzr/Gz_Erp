@@ -43,6 +43,9 @@ public class Tenants {
     @Enumerated(EnumType.STRING)
     private Plans plan;
 
+    @OneToMany(mappedBy = "tenant", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MarketplaceTokens> credentials = new ArrayList<>();
+
     @NotNull
     @Enumerated(EnumType.STRING)
     private Status status;

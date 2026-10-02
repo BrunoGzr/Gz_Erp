@@ -35,7 +35,7 @@ public class ProductsResources {
     @PostMapping("/register")
     @PreAuthorize("hasAuthority('PERM_CREATE_PROD')")
     public ResponseEntity<?> registerProducts(@RequestBody @Valid ProductRegisterDto dto
-                                                               , @AuthenticationPrincipal CustomUserDetails user){
+                                             ,@AuthenticationPrincipal CustomUserDetails user){
         ProductResponseDto newProduct = service.registerProduct(dto, user.getUser());
 
         URI location = URI.create("/products/" + newProduct.getPublicId());

@@ -1,0 +1,14 @@
+CREATE TABLE marketplace_tokens(
+    id BIGINT NOT NULL UNIQUE PRIMARY KEY AUTO_INCREMENT,
+    tenant_id BIGINT NOT NULL UNIQUE,
+    marketplace ENUM('SHOPEE','MERCADOLIVRE') NOT NULL UNIQUE,
+    shop_id BIGINT UNIQUE NULL,
+    access_token VARCHAR(500) NULL,
+    refresh_token VARCHAR(500) NULL,
+    access_token_expires_at DATETIME NULL,
+    refresh_token_expires_at DATETIME NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_marketplace_tokens_tenants FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
+    INDEX idx_access_expires_at (access_token_expires_at)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
