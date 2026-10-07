@@ -88,7 +88,8 @@ public class SecurityConfig {
 
         config.setAllowedOrigins(List.of(
                 "http://localhost:5173",
-                "http://localhost:3000"
+                "http://localhost:3000",
+                "http://127.0.0.1:8989"
         ));
 
         config.setAllowedMethods(List.of(

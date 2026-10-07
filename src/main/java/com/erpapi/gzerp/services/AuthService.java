@@ -66,9 +66,8 @@ public class AuthService {
         }
 
         String numberOnly = cpf.replaceAll("[^0-9]","");
-
         if (numberOnly.length() != 11 || numberOnly.matches("(\\d)\\1{10}")) {
-            throw new InvalidCredentialsException("Invalid CPF, please enter a valid one");
+            throw new InvalidCredentialsException("Invalid CPF, please enter a valid one, sexo gluglugluglug");
         }
 
         String[] cpfArray = numberOnly.split("");
@@ -140,7 +139,6 @@ public class AuthService {
 
         return Integer.parseInt(numbersCnpj[digitToValidate]) == cnpjDigit;
     }
-
 
 }
 

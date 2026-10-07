@@ -4,6 +4,7 @@ import com.erpapi.gzerp.enums.Marketplace;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Entity
@@ -20,10 +21,12 @@ public class MarketplaceTokens {
     @Enumerated(EnumType.STRING)
     private Marketplace marketplace;
 
-
     private Long ShopId;
+
     private String AccessToken;
+
     private String RefreshToken;
+
     private LocalDateTime AccesDateExpiresAt;
 
     public MarketplaceTokens() {

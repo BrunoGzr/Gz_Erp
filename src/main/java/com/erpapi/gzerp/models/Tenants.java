@@ -165,4 +165,13 @@ public class Tenants {
     public List<Partners> getPartners(){
         return this.partners;
     }
+
+    public List<MarketplaceTokens> getCredentials() {
+        return credentials;
+    }
+
+    public void setCredentials(List<MarketplaceTokens> credentials) {
+        this.credentials = credentials;
+    }
+
 }

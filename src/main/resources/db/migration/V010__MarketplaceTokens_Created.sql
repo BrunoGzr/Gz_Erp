@@ -12,3 +12,11 @@ CREATE TABLE marketplace_tokens(
     CONSTRAINT fk_marketplace_tokens_tenants FOREIGN KEY (tenant_id) REFERENCES tenants(id) ON DELETE CASCADE,
     INDEX idx_access_expires_at (access_token_expires_at)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE oauth_identifier(
+    id VARCHAR(36) NOT NULL UNIQUE AUTO_INCREMENT PRIMARY KEY,
+    tenant_id BIGINT NOT NULL UNIQUE,
+    marketplace ENUM('SHOPEE', 'MERCADOLIVRE') NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
