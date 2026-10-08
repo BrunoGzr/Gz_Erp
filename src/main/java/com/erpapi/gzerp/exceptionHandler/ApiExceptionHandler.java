@@ -1,14 +1,8 @@
 package com.erpapi.gzerp.exceptionHandler;
 
-import com.erpapi.gzerp.exceptions.InvalidCharactersException;
-import com.erpapi.gzerp.exceptions.InvalidCredentialsException;
-import com.erpapi.gzerp.exceptions.EmployeeAlreadyExistException;
-import com.erpapi.gzerp.exceptions.InvalidRefreshTokenException;
-import io.jsonwebtoken.ExpiredJwtException;
+import com.erpapi.gzerp.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
-import org.apache.coyote.Response;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.parsing.Problem;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.*;
@@ -120,6 +114,30 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setDetail(ex.getMessage());
         problem.setTitle("Bad credentials");
         return ResponseEntity.status(401).body(problem);
+    }
+
+    @ExceptionHandler(HmacSHA265GenerationException.class)
+    public ResponseEntity<ProblemDetail> HandleHmacSHA256GenerationException(HmacSHA265GenerationException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Error in HmacSHA256 for Sign generation");
+        problem.setDetail(ex.getMessage());
+        problem.setTitle("Hmac for Sigh Generation for a shopee Request failed.");
+        return ResponseEntity.status(500).body(problem);
+    }
+
+    @ExceptionHandler(ExchangeCodeForTokensShopeeException.class)
+    public ResponseEntity<ProblemDetail> HandleExchangeCodeForTokensShopeeException(ExchangeCodeForTokensShopeeException ex){
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY,"Error in the exchange of code for Tokens in the shopee sincronization");
+        problem.setTitle("Error in the Exchange Code For Tokens in the shopee Process");
+        problem.setDetail(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(problem);
+    }
+
+
+    @ExceptionHandler(ShopeeAuthResponseException.class)
+    public ResponseEntity<ProblemDetail> HandleShopeeAuthResponseException(ShopeeAuthResponseException ex){
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Error in get the access Tokens");
+        problem.setDetail(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(problem);
     }
 
 }
