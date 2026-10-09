@@ -4,7 +4,6 @@ import com.erpapi.gzerp.enums.Marketplace;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 
 @Entity
@@ -21,13 +20,15 @@ public class MarketplaceTokens {
     @Enumerated(EnumType.STRING)
     private Marketplace marketplace;
 
-    private Long ShopId;
+    private Long shopId;
 
-    private String AccessToken;
+    private String accessToken;
 
-    private String RefreshToken;
+    private String refreshToken;
 
-    private LocalDateTime AccesDateExpiresAt;
+    private LocalDateTime accessTokenExpiresAt;
+
+    private LocalDateTime refreshTokenExpiresAt;
 
     public MarketplaceTokens() {
     }
@@ -57,34 +58,42 @@ public class MarketplaceTokens {
     }
 
     public Long getShopId() {
-        return ShopId;
+        return shopId;
     }
 
     public void setShopId(Long shopId) {
-        ShopId = shopId;
+        this.shopId = shopId;
     }
 
     public String getAccessToken() {
-        return AccessToken;
+        return accessToken;
     }
 
     public void setAccessToken(String accessToken) {
-        AccessToken = accessToken;
+        this.accessToken = accessToken;
     }
 
     public String getRefreshToken() {
-        return RefreshToken;
+        return refreshToken;
     }
 
     public void setRefreshToken(String refreshToken) {
-        RefreshToken = refreshToken;
+        this.refreshToken = refreshToken;
     }
 
-    public LocalDateTime getAccesDateExpiresAt() {
-        return AccesDateExpiresAt;
+    public LocalDateTime getAccessTokenExpiresAt() {
+        return accessTokenExpiresAt;
     }
 
-    public void setAccesDateExpiresAt(LocalDateTime accesDateExpiresAt) {
-        AccesDateExpiresAt = accesDateExpiresAt;
+    public void setAccessTokenExpiresAt(LocalDateTime accesDateExpiresAt) {
+        this.accessTokenExpiresAt = accesDateExpiresAt;
+    }
+
+    public LocalDateTime getRefreshTokenExpiresAt() {
+        return refreshTokenExpiresAt;
+    }
+
+    public void setRefreshTokenExpiresAt(LocalDateTime refreshTokenExpiresAt) {
+        this.refreshTokenExpiresAt = refreshTokenExpiresAt;
     }
 }

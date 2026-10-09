@@ -116,8 +116,8 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(401).body(problem);
     }
 
-    @ExceptionHandler(HmacSHA265GenerationException.class)
-    public ResponseEntity<ProblemDetail> HandleHmacSHA256GenerationException(HmacSHA265GenerationException ex) {
+    @ExceptionHandler(HmacSHA256GenerationException.class)
+    public ResponseEntity<ProblemDetail> HandleHmacSHA256GenerationException(HmacSHA256GenerationException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Error in HmacSHA256 for Sign generation");
         problem.setDetail(ex.getMessage());
         problem.setTitle("Hmac for Sigh Generation for a shopee Request failed.");
@@ -138,6 +138,13 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Error in get the access Tokens");
         problem.setDetail(ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(problem);
+    }
+
+    @ExceptionHandler(InvalidShopeeStateException.class)
+    public ResponseEntity<ProblemDetail> HandleInvalidShopeeStateException(InvalidShopeeStateException ex){
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.REQUEST_TIMEOUT,"Invalid state");
+        problem.setDetail(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body(problem);
     }
 
 }

@@ -2,29 +2,31 @@ package com.erpapi.gzerp.services;
 
 import com.erpapi.gzerp.enums.Marketplace;
 import com.erpapi.gzerp.exceptions.ExchangeCodeForTokensShopeeException;
-import com.erpapi.gzerp.exceptions.HmacSHA265GenerationException;
+import com.erpapi.gzerp.exceptions.HmacSHA256GenerationException;
+import com.erpapi.gzerp.exceptions.InvalidShopeeStateException;
 import com.erpapi.gzerp.exceptions.ShopeeAuthResponseException;
 import com.erpapi.gzerp.integrations.shopee.RequestAuthBody;
 import com.erpapi.gzerp.integrations.shopee.RequestResponseAuthBody;
 import com.erpapi.gzerp.models.MarketplaceTokens;
 import com.erpapi.gzerp.models.OauthIdentifier;
+import com.erpapi.gzerp.repositories.MarketplacesTokensRepo;
 import com.erpapi.gzerp.repositories.OauthIdentifierRepo;
+import com.erpapi.gzerp.repositories.TenantsRepo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.util.UriBuilder;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.security.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -35,6 +37,8 @@ public class ShopeeService {
     private static final Logger log = LoggerFactory.getLogger(ShopeeService.class);
     private final OauthIdentifierRepo identifierRepo;
     private final RestClient restClient;
+    private final TenantsRepo tenantsRepo;
+    private final MarketplacesTokensRepo marketplacesTokensRepo;
 
     @Value("${SHOPEE_URL}")
     private String url;
@@ -54,9 +58,14 @@ public class ShopeeService {
     @Value("${API_SIGN_PATH}")
     private String apiSignPath;
 
-    public ShopeeService(OauthIdentifierRepo identifierRepo, RestClient restClient) {
+    @Value("${SHOPEE_API_HOST}")
+    private String apiHost;
+
+    public ShopeeService(OauthIdentifierRepo identifierRepo, RestClient restClient, TenantsRepo tenantsRepo, MarketplacesTokensRepo marketplacesTokensRepo) {
         this.identifierRepo = identifierRepo;
         this.restClient = restClient;
+        this.tenantsRepo = tenantsRepo;
+        this.marketplacesTokensRepo = marketplacesTokensRepo;
     }
 
     public String authShopeeUriGen(Long tenantId){
@@ -87,21 +96,39 @@ public class ShopeeService {
 
     }
 
-    public Boolean handleCallback(String code, Long shop_id, String state){
-
-        OauthIdentifier identifier = identifierRepo.findByState(UUID.fromString(state)).orElseThrow();;
-        RequestResponseAuthBody response = exchangeCode(new RequestAuthBody(code,shop_id,partnerId),getSign());
-
-        if (response.error() == null ||response.error().isBlank() ){
-            throw new ShopeeAuthResponseException(response.error());
+    @Transactional
+    public void handleCallback(String code, Long shopId, String state){
+        UUID stateUuid;
+        try {
+            stateUuid = UUID.fromString(state);
+        }catch (IllegalArgumentException e){
+            throw new InvalidShopeeStateException("State malformed");
         }
 
+        OauthIdentifier identifier = identifierRepo.findByState(stateUuid).orElseThrow(
+                () -> new InvalidShopeeStateException("State not found"));
+
+        if (identifier.getExpiresAt().isBefore(LocalDateTime.now())){
+            throw new InvalidShopeeStateException("State invalid reason: Expired.");
+        }
+
+        RequestResponseAuthBody response = exchangeCode(new RequestAuthBody(code,shopId,partnerId),getSign());
+        if (response.error() != null && !response.error().isBlank()) {
+            throw new ShopeeAuthResponseException(response.error());
+        }
         MarketplaceTokens marketplace = new MarketplaceTokens();
-
-
-
-
-
+        marketplace.setMarketplace(Marketplace.SHOPEE);
+        LocalDateTime now = LocalDateTime.now();
+        marketplace.setAccessTokenExpiresAt(now.plusSeconds(response.expireIn()));
+        marketplace.setRefreshTokenExpiresAt(now.plusDays(30));
+        marketplace.setAccessToken(response.accessToken());
+        marketplace.setShopId(shopId);
+        marketplace.setRefreshToken(response.refreshToken());
+        marketplace.setTenant(tenantsRepo.findById(identifier.getTenantId()).orElseThrow(
+                () -> new InvalidShopeeStateException("Tenant no longer Exists")
+        ));
+        marketplacesTokensRepo.save(marketplace);
+        identifierRepo.delete(identifier);
 
     }
 
@@ -133,7 +160,7 @@ public class ShopeeService {
             return HexFormat.of().formatHex(rawHmac);
 
         } catch (NoSuchAlgorithmException | InvalidKeyException e) {
-            throw new HmacSHA265GenerationException("Error in generate the Shopee Hmac : " + e.getMessage());
+            throw new HmacSHA256GenerationException("Error in generate the Shopee Hmac : " + e.getMessage());
         }
 
     }
@@ -143,14 +170,12 @@ public class ShopeeService {
         String value = data.sign;
         long timestamp = data.timestamp;
 
-
         try {
-
 
             return restClient.post()
                     .uri(uriBuilder -> uriBuilder
                             .scheme("https")
-                            .host("openplatform.sandbox.test-stable.shopee.sg")
+                            .host(apiHost)
                             .path("/api/v2/auth/token/get")
                             .queryParam("sign", value)
                             .queryParam("timestamp", timestamp)
@@ -163,9 +188,9 @@ public class ShopeeService {
         }catch (HttpClientErrorException | HttpServerErrorException e){
             log.error("Shopee reject the token exchange: status={}, body={}",
                     e.getStatusCode(),e.getResponseBodyAsString());
-            throw new ExchangeCodeForTokensShopeeException("Failed in exchange code for tokens" + e.getResponseBodyAsString());
+            throw new ExchangeCodeForTokensShopeeException("Failed in exchange code for tokens: " + e.getResponseBodyAsString());
         } catch (ResourceAccessException e){
-            throw new ExchangeCodeForTokensShopeeException("Connection Failed with the shopee server" + e.getMessage());
+            throw new ExchangeCodeForTokensShopeeException("Connection Failed with the shopee server: " + e.getMessage());
         }
     }
 

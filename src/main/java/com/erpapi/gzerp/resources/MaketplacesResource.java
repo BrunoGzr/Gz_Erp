@@ -2,7 +2,9 @@ package com.erpapi.gzerp.resources;
 
 import com.erpapi.gzerp.services.ShopeeService;
 import org.apache.coyote.Response;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,20 +20,14 @@ public class MaketplacesResource {
     }
 
 
-    @RequestMapping("/callback/shopee")
+    @GetMapping("/callback/shopee")
     public ResponseEntity<Void> shopeeCallback(
             @RequestParam String code,
-            @RequestParam Long shop_id,
+            @RequestParam(name = "shop_id") Long shopId,
             @RequestParam String state){
 
-       Boolean status =  shopeeService.handleCallback(code, shop_id, state);
-
-
-
-
-
-
-
+       shopeeService.handleCallback(code, shopId, state);
+       return ResponseEntity.status(HttpStatus.OK).build();
     }
 
 }
