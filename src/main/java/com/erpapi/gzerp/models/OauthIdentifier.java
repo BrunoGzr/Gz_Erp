@@ -22,6 +22,9 @@ public class OauthIdentifier {
     @Enumerated(EnumType.STRING)
     private Marketplace marketplace;
 
+    @Column(name = "account_name", nullable = true)
+    private String accountName;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -69,5 +72,13 @@ public class OauthIdentifier {
 
     public void setExpiresAt(LocalDateTime expiresAt) {
         this.expiresAt = expiresAt;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 }

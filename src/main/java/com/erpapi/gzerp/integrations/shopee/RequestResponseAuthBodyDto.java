@@ -2,7 +2,7 @@ package com.erpapi.gzerp.integrations.shopee;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public record RequestResponseAuthBody(
+public record RequestResponseAuthBodyDto(
         @JsonProperty("request_id") String requestId,
         @JsonProperty("error") String error,
         @JsonProperty("refresh_token") String refreshToken,

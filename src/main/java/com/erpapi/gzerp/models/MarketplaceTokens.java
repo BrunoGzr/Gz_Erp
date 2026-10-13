@@ -13,21 +13,30 @@ public class MarketplaceTokens {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "tenant_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "tenant_id", nullable = false)
     private Tenants tenant;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "marketplace", nullable = false)
     private Marketplace marketplace;
 
+    @Column(name = "account_name")
+    private String accountName;
+
+    @Column(name = "shop_id", nullable = false)
     private Long shopId;
 
+    @Column(name = "access_token")
     private String accessToken;
 
+    @Column(name = "refresh_token")
     private String refreshToken;
 
+    @Column(name = "access_token_expires_at")
     private LocalDateTime accessTokenExpiresAt;
 
+    @Column(name = "refresh_token_expires_at")
     private LocalDateTime refreshTokenExpiresAt;
 
     public MarketplaceTokens() {
@@ -85,8 +94,8 @@ public class MarketplaceTokens {
         return accessTokenExpiresAt;
     }
 
-    public void setAccessTokenExpiresAt(LocalDateTime accesDateExpiresAt) {
-        this.accessTokenExpiresAt = accesDateExpiresAt;
+    public void setAccessTokenExpiresAt(LocalDateTime accessDateExpiresAt) {
+        this.accessTokenExpiresAt = accessDateExpiresAt;
     }
 
     public LocalDateTime getRefreshTokenExpiresAt() {
@@ -95,5 +104,13 @@ public class MarketplaceTokens {
 
     public void setRefreshTokenExpiresAt(LocalDateTime refreshTokenExpiresAt) {
         this.refreshTokenExpiresAt = refreshTokenExpiresAt;
+    }
+
+    public String getAccountName() {
+        return accountName;
+    }
+
+    public void setAccountName(String accountName) {
+        this.accountName = accountName;
     }
 }

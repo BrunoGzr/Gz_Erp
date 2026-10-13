@@ -2,17 +2,20 @@ package com.erpapi.gzerp.services;
 
 import com.erpapi.gzerp.enums.Marketplace;
 import com.erpapi.gzerp.exceptions.*;
-import com.erpapi.gzerp.integrations.shopee.RequestAuthBody;
-import com.erpapi.gzerp.integrations.shopee.RequestResponseAuthBody;
+import com.erpapi.gzerp.integrations.shopee.RenewTokenRequestDto;
+import com.erpapi.gzerp.integrations.shopee.RequestAuthBodyDto;
+import com.erpapi.gzerp.integrations.shopee.RequestResponseAuthBodyDto;
 import com.erpapi.gzerp.models.MarketplaceTokens;
 import com.erpapi.gzerp.models.OauthIdentifier;
 import com.erpapi.gzerp.repositories.MarketplacesTokensRepo;
 import com.erpapi.gzerp.repositories.OauthIdentifierRepo;
 import com.erpapi.gzerp.repositories.TenantsRepo;
+import com.erpapi.gzerp.security.LocksPerKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -27,6 +30,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.locks.Lock;
 
 @Service
 public class ShopeeService {
@@ -36,6 +40,7 @@ public class ShopeeService {
     private final RestClient restClient;
     private final TenantsRepo tenantsRepo;
     private final MarketplacesTokensRepo marketplacesTokensRepo;
+    private final LocksPerKey lock;
 
     @Value("${SHOPEE_URL}")
     private String url;
@@ -52,8 +57,7 @@ public class ShopeeService {
     @Value("${EXPIRE_SEC}")
     private Long expireSec;
 
-    @Value("${API_SIGN_PATH}")
-    private String apiSignPath;
+    private final String apiSignPathFirstTime ="/api/v2/auth/token/get";
 
     @Value("${SHOPEE_API_HOST}")
     private String apiHost;
@@ -61,14 +65,17 @@ public class ShopeeService {
     @Value("${TEST_TENANT_ID_SHOPEE}")
     private Long testTenantId;
 
-    public ShopeeService(OauthIdentifierRepo identifierRepo, RestClient restClient, TenantsRepo tenantsRepo, MarketplacesTokensRepo marketplacesTokensRepo) {
+    private final String renewTokensPath = "/api/v2/auth/access_token/get";
+
+    public ShopeeService(OauthIdentifierRepo identifierRepo, RestClient restClient, TenantsRepo tenantsRepo, MarketplacesTokensRepo marketplacesTokensRepo, LocksPerKey lock) {
         this.identifierRepo = identifierRepo;
         this.restClient = restClient;
         this.tenantsRepo = tenantsRepo;
         this.marketplacesTokensRepo = marketplacesTokensRepo;
+        this.lock = lock;
     }
 
-    public String authShopeeUriGen(Long tenantId){
+    public String authShopeeUriGen(Long tenantId) {
 
         OauthIdentifier identifier = new OauthIdentifier();
 
@@ -97,44 +104,45 @@ public class ShopeeService {
     }
 
     @Transactional
-    public void handleCallback(String code, Long shopId, String state){
+    public void handleCallback(String code, Long shopId, String state) {
 
         Long tenantId;
         OauthIdentifier identifier = null;
 
-        if (code == null){
+        if (code == null) {
             throw new InvalidShopeeStateException("Invalid Null Code.");
         }
 
-        if (shopId == null){
+        if (shopId == null) {
             throw new InvalidShopeeStateException("Invalid Null shopId");
         }
 
-        if (state != null && !state.isBlank()){
+        if (state != null && !state.isBlank()) {
 //            Normal flux
             UUID stateUuid;
             try {
                 stateUuid = UUID.fromString(state);
-            }catch (IllegalArgumentException e){
+            } catch (IllegalArgumentException e) {
                 throw new InvalidShopeeStateException("State malformed");
             }
             identifier = identifierRepo.findByState(stateUuid).orElseThrow(
                     () -> new InvalidShopeeStateException("State not found"));
 
-            if (identifier.getExpiresAt().isBefore(LocalDateTime.now())){
+            if (identifier.getExpiresAt().isBefore(LocalDateTime.now())) {
                 throw new InvalidShopeeStateException("State invalid reason: Expired.");
             }
             tenantId = identifier.getTenantId();
-        }else {
+        } else {
             log.warn("Callback without state, using fix tenantId for tests: {}", testTenantId);
             tenantId = testTenantId;
         }
 
-        RequestResponseAuthBody response = exchangeCode(new RequestAuthBody(code,shopId,partnerId),getSign());
+        RequestResponseAuthBodyDto response = exchangeCodeRequest(new RequestAuthBodyDto(code, shopId, partnerId), getSign(apiSignPathFirstTime));
         if (response.error() != null && !response.error().isBlank()) {
             throw new ShopeeAuthResponseException(response.error());
         }
-        MarketplaceTokens marketplace = new MarketplaceTokens();
+        MarketplaceTokens marketplace = marketplacesTokensRepo.findByMarketplaceAndShopId(Marketplace.SHOPEE, shopId)
+                        .orElseGet(MarketplaceTokens::new);
         marketplace.setMarketplace(Marketplace.SHOPEE);
         LocalDateTime now = LocalDateTime.now();
         marketplace.setAccessTokenExpiresAt(now.plusSeconds(response.expireIn()));
@@ -143,36 +151,40 @@ public class ShopeeService {
         marketplace.setShopId(shopId);
         marketplace.setRefreshToken(response.refreshToken());
         marketplace.setTenant(tenantsRepo.findById(tenantId).orElseThrow(
-                () -> new InvalidCredentialsException("Tenant with this tenantId not found")
+                () -> new InvalidCredentialsException("Tenant with this Id not found")
         ));
-        marketplacesTokensRepo.save(marketplace);
-        if (identifier != null){
-            identifierRepo.delete(identifier);
-        }else{
-            log.warn("Tests flux, no identifier to delete.");
+        if (identifier != null
+                && marketplace.getAccountName() == null
+                && identifier.getAccountName() != null) {
+            marketplace.setAccountName(identifier.getAccountName());
         }
+        marketplacesTokensRepo.save(marketplace);
+        if (identifier != null) {
+            identifierRepo.delete(identifier);
+        } else {
+            log.warn("Test flow, no identifier to delete.");
+        }
+
     }
 
-    private SignData getSign(){
+    private SignData getSign(String path) {
 
         long timestamp = Instant.now().getEpochSecond();
-        String baseString = partnerId + apiSignPath + timestamp ;
+        String baseString = partnerId + path + timestamp;
 
-        return new SignData(hmacSha256(baseString),timestamp);
-
-
+        return new SignData(hmacSha256(baseString), timestamp);
 
     }
 
+    public record SignData(String sign, long timestamp) {
+    }
 
-    public record SignData(String sign, long timestamp) {}
-
-    private String hmacSha256(String baseString){
+    private String hmacSha256(String baseString) {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
 
             SecretKeySpec keySpec = new SecretKeySpec(
-                    partnerKey.getBytes(StandardCharsets.UTF_8),"HmacSHA256");
+                    partnerKey.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
 
             mac.init(keySpec);
 
@@ -186,7 +198,7 @@ public class ShopeeService {
 
     }
 
-    private RequestResponseAuthBody exchangeCode(RequestAuthBody request, SignData data) {
+    private RequestResponseAuthBodyDto exchangeCodeRequest(RequestAuthBodyDto request, SignData data) {
 
         String value = data.sign;
         long timestamp = data.timestamp;
@@ -197,28 +209,73 @@ public class ShopeeService {
                     .uri(uriBuilder -> uriBuilder
                             .scheme("https")
                             .host(apiHost)
-                            .path("/api/v2/auth/token/get")
+                            .path(apiSignPathFirstTime)
                             .queryParam("sign", value)
                             .queryParam("timestamp", timestamp)
                             .queryParam("partner_id", partnerId)
                             .build())
                     .body(request)
                     .retrieve()
-                    .body(RequestResponseAuthBody.class);
+                    .body(RequestResponseAuthBodyDto.class);
 
-        }catch (HttpClientErrorException | HttpServerErrorException e){
-            log.error("Shopee reject the token exchange: status={}, body={}",
-                    e.getStatusCode(),e.getResponseBodyAsString());
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Shopee reject the first token exchange: status={}, body={}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
             throw new ExchangeCodeForTokensShopeeException("Failed in exchange code for tokens: " + e.getResponseBodyAsString());
-        } catch (ResourceAccessException e){
+        } catch (ResourceAccessException e) {
             throw new ExchangeCodeForTokensShopeeException("Connection Failed with the shopee server: " + e.getMessage());
         }
     }
 
+    private RequestResponseAuthBodyDto renewTokensRequest(RenewTokenRequestDto request, SignData data) {
+        String sign = data.sign;
+        long timestamp = data.timestamp;
+
+        try {
+            return restClient.post()
+                    .uri(uriBuilder -> uriBuilder
+                            .scheme("https")
+                            .host(apiHost)
+                            .path(renewTokensPath)
+                            .queryParam("sign", sign)
+                            .queryParam("partner_id", partnerId)
+                            .queryParam("timestamp", timestamp)
+                            .build())
+                    .body(request)
+                    .retrieve()
+                    .body(RequestResponseAuthBodyDto.class);
+
+        } catch (HttpClientErrorException | HttpServerErrorException e) {
+            log.error("Shopee reject token exchange: status={}, body{}",
+                    e.getStatusCode(), e.getResponseBodyAsString());
+            throw new ExchangeCodeForTokensShopeeException("Failed in renew access / refresh tokens : " + e.getResponseBodyAsString());
+
+        } catch (ResourceAccessException e) {
+            throw new ExchangeCodeForTokensShopeeException("Connection Failed with the shopee server: " + e.getMessage());
+        }
+
+    }
 
 
-
-
-
-
+//    @Transactional(propagation = Propagation.REQUIRES_NEW)
+//    public MarketplaceTokens resolveValidToken (MarketplaceTokens token){
+//        if (token.getAccessTokenExpiresAt().isAfter(LocalDateTime.now())){
+//            return token;
+//        }
+//        Lock padLock = lock.getLock(token.getId());
+//        padLock.lock();
+//
+//        try {
+//            MarketplaceTokens atualToken = marketplacesTokensRepo.findByTenantId()
+//
+//        }
+//
+//
+//
+//
+//
+//
+//    }
+    
+    
 }
