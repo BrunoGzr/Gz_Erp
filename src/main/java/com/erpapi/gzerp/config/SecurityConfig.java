@@ -62,6 +62,11 @@ public class SecurityConfig {
                                         "/api/auth/logout",
                                         "/api/auth/refresh"
                                 ).permitAll()
+                                .requestMatchers(HttpMethod.GET,"/",
+                                        "/errors",
+                                        "/favicon.ico",
+                                        "/api/marketplaces/callback/shopee")
+                                .permitAll()
                                 .requestMatchers(HttpMethod.OPTIONS, "/**"
                                 ).permitAll()
                                 .anyRequest().authenticated()

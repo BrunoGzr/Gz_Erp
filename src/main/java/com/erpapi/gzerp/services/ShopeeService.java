@@ -1,10 +1,7 @@
 package com.erpapi.gzerp.services;
 
 import com.erpapi.gzerp.enums.Marketplace;
-import com.erpapi.gzerp.exceptions.ExchangeCodeForTokensShopeeException;
-import com.erpapi.gzerp.exceptions.HmacSHA256GenerationException;
-import com.erpapi.gzerp.exceptions.InvalidShopeeStateException;
-import com.erpapi.gzerp.exceptions.ShopeeAuthResponseException;
+import com.erpapi.gzerp.exceptions.*;
 import com.erpapi.gzerp.integrations.shopee.RequestAuthBody;
 import com.erpapi.gzerp.integrations.shopee.RequestResponseAuthBody;
 import com.erpapi.gzerp.models.MarketplaceTokens;
@@ -61,6 +58,9 @@ public class ShopeeService {
     @Value("${SHOPEE_API_HOST}")
     private String apiHost;
 
+    @Value("${TEST_TENANT_ID_SHOPEE}")
+    private Long testTenantId;
+
     public ShopeeService(OauthIdentifierRepo identifierRepo, RestClient restClient, TenantsRepo tenantsRepo, MarketplacesTokensRepo marketplacesTokensRepo) {
         this.identifierRepo = identifierRepo;
         this.restClient = restClient;
@@ -98,18 +98,36 @@ public class ShopeeService {
 
     @Transactional
     public void handleCallback(String code, Long shopId, String state){
-        UUID stateUuid;
-        try {
-            stateUuid = UUID.fromString(state);
-        }catch (IllegalArgumentException e){
-            throw new InvalidShopeeStateException("State malformed");
+
+        Long tenantId;
+        OauthIdentifier identifier = null;
+
+        if (code == null){
+            throw new InvalidShopeeStateException("Invalid Null Code.");
         }
 
-        OauthIdentifier identifier = identifierRepo.findByState(stateUuid).orElseThrow(
-                () -> new InvalidShopeeStateException("State not found"));
+        if (shopId == null){
+            throw new InvalidShopeeStateException("Invalid Null shopId");
+        }
 
-        if (identifier.getExpiresAt().isBefore(LocalDateTime.now())){
-            throw new InvalidShopeeStateException("State invalid reason: Expired.");
+        if (state != null && !state.isBlank()){
+//            Normal flux
+            UUID stateUuid;
+            try {
+                stateUuid = UUID.fromString(state);
+            }catch (IllegalArgumentException e){
+                throw new InvalidShopeeStateException("State malformed");
+            }
+            identifier = identifierRepo.findByState(stateUuid).orElseThrow(
+                    () -> new InvalidShopeeStateException("State not found"));
+
+            if (identifier.getExpiresAt().isBefore(LocalDateTime.now())){
+                throw new InvalidShopeeStateException("State invalid reason: Expired.");
+            }
+            tenantId = identifier.getTenantId();
+        }else {
+            log.warn("Callback without state, using fix tenantId for tests: {}", testTenantId);
+            tenantId = testTenantId;
         }
 
         RequestResponseAuthBody response = exchangeCode(new RequestAuthBody(code,shopId,partnerId),getSign());
@@ -124,12 +142,15 @@ public class ShopeeService {
         marketplace.setAccessToken(response.accessToken());
         marketplace.setShopId(shopId);
         marketplace.setRefreshToken(response.refreshToken());
-        marketplace.setTenant(tenantsRepo.findById(identifier.getTenantId()).orElseThrow(
-                () -> new InvalidShopeeStateException("Tenant no longer Exists")
+        marketplace.setTenant(tenantsRepo.findById(tenantId).orElseThrow(
+                () -> new InvalidCredentialsException("Tenant with this tenantId not found")
         ));
         marketplacesTokensRepo.save(marketplace);
-        identifierRepo.delete(identifier);
-
+        if (identifier != null){
+            identifierRepo.delete(identifier);
+        }else{
+            log.warn("Tests flux, no identifier to delete.");
+        }
     }
 
     private SignData getSign(){

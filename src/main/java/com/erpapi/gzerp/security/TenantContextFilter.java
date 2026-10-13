@@ -35,9 +35,9 @@ public class TenantContextFilter extends OncePerRequestFilter {
                     filterChain.doFilter(request,response);
             return null;
             });
-        }catch (ServletException | IOException e){
+        }catch (ServletException | IOException | RuntimeException e) {
             throw e;
-        }catch (Exception e){
+        } catch (Exception e){
             throw new ServletException(e);
         }};
 
