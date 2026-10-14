@@ -2,8 +2,11 @@ package com.erpapi.gzerp.models;
 
 import com.erpapi.gzerp.enums.Marketplace;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 
 @Entity
@@ -12,6 +15,10 @@ public class MarketplaceTokens {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "public_id", nullable = false, unique = true, length = 36)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    private UUID publicId;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id", nullable = false)
@@ -48,6 +55,14 @@ public class MarketplaceTokens {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UUID getPublicId() {
+        return publicId;
+    }
+
+    public void setPublicId(UUID public_id) {
+        this.publicId = public_id;
     }
 
     public Tenants getTenant() {

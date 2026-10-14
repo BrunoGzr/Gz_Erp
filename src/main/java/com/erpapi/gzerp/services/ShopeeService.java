@@ -107,7 +107,7 @@ public class ShopeeService {
     public void handleCallback(String code, Long shopId, String state) {
 
         Long tenantId;
-        OauthIdentifier identifier = null;
+        OauthIdentifier identifier;
 
         if (code == null) {
             throw new InvalidShopeeStateException("Invalid Null Code.");
@@ -133,6 +133,7 @@ public class ShopeeService {
             }
             tenantId = identifier.getTenantId();
         } else {
+            identifier = null;
             log.warn("Callback without state, using fix tenantId for tests: {}", testTenantId);
             tenantId = testTenantId;
         }
@@ -142,8 +143,16 @@ public class ShopeeService {
             throw new ShopeeAuthResponseException(response.error());
         }
         MarketplaceTokens marketplace = marketplacesTokensRepo.findByMarketplaceAndShopId(Marketplace.SHOPEE, shopId)
-                        .orElseGet(MarketplaceTokens::new);
-        marketplace.setMarketplace(Marketplace.SHOPEE);
+                        .orElseGet(() -> {
+                                MarketplaceTokens newToken = new MarketplaceTokens();
+                                newToken.setMarketplace(Marketplace.SHOPEE);
+                                newToken.setPublicId(UUID.randomUUID());
+                            if (identifier != null && identifier.getAccountName() != null){
+                                newToken.setAccountName(identifier.getAccountName());
+                            }
+                            return newToken;
+                        });
+
         LocalDateTime now = LocalDateTime.now();
         marketplace.setAccessTokenExpiresAt(now.plusSeconds(response.expireIn()));
         marketplace.setRefreshTokenExpiresAt(now.plusDays(30));
@@ -266,15 +275,11 @@ public class ShopeeService {
 //        padLock.lock();
 //
 //        try {
-//            MarketplaceTokens atualToken = marketplacesTokensRepo.findByTenantId()
+//            MarketplaceTokens atualToken = marketplacesTokensRepo.findByMarketplaceAndShopId(token.getMarketplace(), token.getShopId())
+//                    .orElseThrow(() -> new ShopeeAuthResponseException("Invalid Token to refresh"));
+//
 //
 //        }
-//
-//
-//
-//
-//
-//
 //    }
     
     

@@ -15,6 +15,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
+
 @Service
 @Transactional
 public class UsersAccountsService {
@@ -54,9 +56,8 @@ public class UsersAccountsService {
         newUser.setRole(role);
         newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
         newUser.setTenant(tenant);
-        String usernameBefore = newUser.getUsername();
+        newUser.setPublic_id(UUID.randomUUID());
         newUser = usersRepo.save(newUser);
-        String usernameAfter = newUser.getUsername();
         return newUser;
     }
 

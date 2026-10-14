@@ -7,6 +7,10 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
+
+import java.util.UUID;
 
 @Entity
 public class UsersAccounts {
@@ -15,6 +19,10 @@ public class UsersAccounts {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
+
+    @Column(name = "public_id", nullable = false, unique = true, length = 36)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    private UUID public_id;
 
     @Size(max = 256)
     @NotBlank
@@ -127,5 +135,11 @@ public class UsersAccounts {
         return id;
     }
 
+    public UUID getPublic_id() {
+        return public_id;
+    }
 
+    public void setPublic_id(UUID public_id) {
+        this.public_id = public_id;
+    }
 }

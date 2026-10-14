@@ -14,15 +14,15 @@
 
 -- Products
 -Model / migration ✅
--List
+-List ✅
 -Archives server configuration
--Service
--Repo and cruds
+-Service ✅
+-Repo and cruds ✅
 -Controllers
 -Python fastApi integration
 -RabbitMq integration.
 -ProductAlreadyExistException || RoleNotAllowedException ||
--
+
 
 
 -- Orders

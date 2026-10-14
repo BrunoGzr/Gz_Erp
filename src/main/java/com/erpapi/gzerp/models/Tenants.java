@@ -4,11 +4,14 @@ import com.erpapi.gzerp.enums.Plans;
 import com.erpapi.gzerp.enums.Status;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 public class Tenants {
@@ -20,6 +23,10 @@ public class Tenants {
     @NotNull
     @Size(min = 10 , max = 20)
     private String cnpj;
+
+    @Column(name = "public_id", nullable = false, unique = true, length = 36)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    private UUID public_id;
 
     @NotNull
     @Email
@@ -83,6 +90,14 @@ public class Tenants {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public UUID getPublic_id() {
+        return public_id;
+    }
+
+    public void setPublic_id(UUID public_id) {
+        this.public_id = public_id;
     }
 
     public String getCnpj() {

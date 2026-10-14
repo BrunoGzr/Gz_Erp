@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @Transactional
@@ -57,6 +58,7 @@ public class TenantsService {
         newTenant.setStatus(Status.ACTIVE);
         newTenant.setIsAdmin(false);
         newTenant.setPhone(dto.getPhone());
+        newTenant.setPublic_id(UUID.randomUUID());
         if (dto.getNomeFantasia() != null) {
             newTenant.setNomeFantasia(dto.getNomeFantasia());}
         newTenant = tenantsRepo.save(newTenant);
@@ -68,8 +70,4 @@ public class TenantsService {
         newTenant = tenantsRepo.save(newTenant);
         return new TenantResponseDto (newTenant);
     }
-
-
-
-
 }
