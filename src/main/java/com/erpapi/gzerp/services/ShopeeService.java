@@ -11,9 +11,11 @@ import com.erpapi.gzerp.repositories.MarketplacesTokensRepo;
 import com.erpapi.gzerp.repositories.OauthIdentifierRepo;
 import com.erpapi.gzerp.repositories.TenantsRepo;
 import com.erpapi.gzerp.security.LocksPerKey;
+import com.erpapi.gzerp.security.TenantContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,7 +59,7 @@ public class ShopeeService {
     @Value("${EXPIRE_SEC}")
     private Long expireSec;
 
-    private final String apiSignPathFirstTime ="/api/v2/auth/token/get";
+    private final String apiSignPathFirstTime = "/api/v2/auth/token/get";
 
     @Value("${SHOPEE_API_HOST}")
     private String apiHost;
@@ -142,16 +144,20 @@ public class ShopeeService {
         if (response.error() != null && !response.error().isBlank()) {
             throw new ShopeeAuthResponseException(response.error());
         }
-        MarketplaceTokens marketplace = marketplacesTokensRepo.findByMarketplaceAndShopId(Marketplace.SHOPEE, shopId)
-                        .orElseGet(() -> {
-                                MarketplaceTokens newToken = new MarketplaceTokens();
-                                newToken.setMarketplace(Marketplace.SHOPEE);
-                                newToken.setPublicId(UUID.randomUUID());
-                            if (identifier != null && identifier.getAccountName() != null){
-                                newToken.setAccountName(identifier.getAccountName());
-                            }
-                            return newToken;
-                        });
+        Optional<MarketplaceTokens> exists = marketplacesTokensRepo.findByMarketplaceAndShopId(Marketplace.SHOPEE, shopId);
+
+        if (exists.isPresent() && !exists.get().getTenant().getId().equals(tenantId)) {
+            throw new MarketplaceTokensAlreadyConnectedException("Store already connected to another account, please enter in contact with support if you are the legit owner.");
+        }
+
+        MarketplaceTokens marketplace;
+
+        marketplace = exists.orElseGet(() -> {
+            MarketplaceTokens novo = new MarketplaceTokens();
+            novo.setMarketplace(Marketplace.SHOPEE);
+            novo.setPublicId(UUID.randomUUID());
+            return novo;
+        });
 
         LocalDateTime now = LocalDateTime.now();
         marketplace.setAccessTokenExpiresAt(now.plusSeconds(response.expireIn()));
@@ -167,7 +173,16 @@ public class ShopeeService {
                 && identifier.getAccountName() != null) {
             marketplace.setAccountName(identifier.getAccountName());
         }
-        marketplacesTokensRepo.save(marketplace);
+
+        try {
+            marketplacesTokensRepo.save(marketplace);
+        } catch (DataIntegrityViolationException e) {
+            if (e.getMessage() != null && e.getMessage().contains("uk_marketplace_tokens_marketplace_shop")) {
+                throw new MarketplaceTokensAlreadyConnectedException("Account Already connected.");
+            }
+            throw e;
+        }
+
         if (identifier != null) {
             identifierRepo.delete(identifier);
         } else {
@@ -265,22 +280,55 @@ public class ShopeeService {
 
     }
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    protected MarketplaceTokens resolveValidToken(MarketplaceTokens token) {
+        if (token.getAccessTokenExpiresAt().isAfter(LocalDateTime.now())) {
+            return token;
+        }
+        Lock padLock = lock.getLock(token.getId());
+        padLock.lock();
 
-//    @Transactional(propagation = Propagation.REQUIRES_NEW)
-//    public MarketplaceTokens resolveValidToken (MarketplaceTokens token){
-//        if (token.getAccessTokenExpiresAt().isAfter(LocalDateTime.now())){
-//            return token;
-//        }
-//        Lock padLock = lock.getLock(token.getId());
-//        padLock.lock();
-//
-//        try {
-//            MarketplaceTokens atualToken = marketplacesTokensRepo.findByMarketplaceAndShopId(token.getMarketplace(), token.getShopId())
-//                    .orElseThrow(() -> new ShopeeAuthResponseException("Invalid Token to refresh"));
-//
-//
-//        }
-//    }
-    
-    
+        MarketplaceTokens actualToken;
+        try {
+            actualToken = marketplacesTokensRepo.findByMarketplaceAndShopId(token.getMarketplace(), token.getShopId())
+                    .orElseThrow(() -> new ShopeeAuthResponseException("Invalid Token to refresh"));
+            if (actualToken.getAccessTokenExpiresAt().isAfter(LocalDateTime.now())) {
+                return actualToken;
+            }
+            RequestResponseAuthBodyDto renewedTokens = renewTokensRequest(new RenewTokenRequestDto(actualToken.getRefreshToken(), partnerId, actualToken.getShopId()), getSign(renewTokensPath));
+
+            if (renewedTokens.error() != null && !renewedTokens.error().isBlank()){
+                throw new ShopeeAuthResponseException("Failed to renew tokens: " + renewedTokens.error());
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            actualToken.setRefreshTokenExpiresAt(now.plusDays(30));
+            actualToken.setRefreshToken(renewedTokens.refreshToken());
+            actualToken.setAccessTokenExpiresAt(now.plusSeconds(renewedTokens.expireIn()));
+            actualToken.setAccessToken(renewedTokens.accessToken());
+
+            actualToken = marketplacesTokensRepo.save(actualToken);
+        } finally {
+            padLock.unlock();
+        }
+        return actualToken;
+    }
+
+
+    public void handleRenewToken(UUID publicId){
+        Long tenantId = TenantContext.required();
+
+        if (publicId == null ){
+            throw new ShopeeAuthResponseException("Invalid shop to renew tokens.");
+        }
+
+
+        MarketplaceTokens token = marketplacesTokensRepo.findByPublicIdAndTenant_Id(publicId,tenantId).orElseThrow(
+                () -> new InvalidShopeeStateException("Invalid shop to renew tokens.")
+        );
+        this.resolveValidToken(token);
+
+    }
+
+
 }

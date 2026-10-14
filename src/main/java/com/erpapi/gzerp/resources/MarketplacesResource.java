@@ -1,11 +1,13 @@
 package com.erpapi.gzerp.resources;
 
+import com.erpapi.gzerp.security.TenantContext;
 import com.erpapi.gzerp.services.ShopeeService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/marketplaces")
@@ -26,6 +28,14 @@ public class MarketplacesResource {
 
        shopeeService.handleCallback(code, shopId, state);
        return ResponseEntity.ok("Autorização deu certo");
+    }
+
+    @PreAuthorize("hasAuthority('PERM_SHOPEE_OVERVIEW')")
+    @PostMapping("/account/{publicId}/renew")
+    public ResponseEntity<?> testeRenovaçaoToken(@PathVariable UUID publicId){
+        shopeeService.handleRenewToken(publicId);
+
+        return ResponseEntity.ok("Deu certo.");
     }
 
 }

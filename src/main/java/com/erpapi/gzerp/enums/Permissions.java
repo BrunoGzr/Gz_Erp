@@ -3,6 +3,7 @@ package com.erpapi.gzerp.enums;
 public enum Permissions {
     // Products Permissions
 
+    SHOPEE_OVERVIEW,
     CREATE_PROD,
     DELETE_PROD,
     ALTER_PRICE_PROD,

@@ -116,6 +116,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(401).body(problem);
     }
 
+
     @ExceptionHandler(HmacSHA256GenerationException.class)
     public ResponseEntity<ProblemDetail> HandleHmacSHA256GenerationException(HmacSHA256GenerationException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Error in HmacSHA256 for Sign generation");
@@ -123,6 +124,7 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setTitle("Hmac for Sigh Generation for a shopee Request failed.");
         return ResponseEntity.status(500).body(problem);
     }
+
 
     @ExceptionHandler(ExchangeCodeForTokensShopeeException.class)
     public ResponseEntity<ProblemDetail> HandleExchangeCodeForTokensShopeeException(ExchangeCodeForTokensShopeeException ex){
@@ -140,11 +142,20 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(problem);
     }
 
+
     @ExceptionHandler(InvalidShopeeStateException.class)
     public ResponseEntity<ProblemDetail> HandleInvalidShopeeStateException(InvalidShopeeStateException ex){
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.REQUEST_TIMEOUT,"Invalid state");
         problem.setDetail(ex.getMessage());
         return ResponseEntity.status(HttpStatus.REQUEST_TIMEOUT).body(problem);
+    }
+
+    @ExceptionHandler(MarketplaceTokensAlreadyConnectedException.class)
+    public ResponseEntity<ProblemDetail> HandleMarketplaceTokensAlreadyConnectedException(MarketplaceTokensAlreadyConnectedException ex){
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Shopee loggin Denied");
+        problem.setTitle("Shopee Account already connected to another account.");
+        problem.setDetail(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
     }
 
 }
