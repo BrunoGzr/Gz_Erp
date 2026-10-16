@@ -3,6 +3,7 @@ package com.erpapi.gzerp.dto;
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 import java.math.BigDecimal;
@@ -22,7 +23,7 @@ public class UsersAccountRegisterDto {
     @Size(max = 256)
     private String password;
 
-    @NotBlank
+    @NotNull
     private Long tenantId;
 
     @NotBlank

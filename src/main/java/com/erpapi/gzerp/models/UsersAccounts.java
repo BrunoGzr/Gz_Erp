@@ -1,6 +1,7 @@
 package com.erpapi.gzerp.models;
 
 import com.erpapi.gzerp.dto.UsersAccountRegisterDto;
+import com.erpapi.gzerp.enums.AccountStatus;
 import com.erpapi.gzerp.enums.UserType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
@@ -56,9 +57,27 @@ public class UsersAccounts {
     @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true )
     private Employees employee;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "account_status")
+    private AccountStatus status;
+
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
     private Roles role;
+
+
+
+    public UsersAccounts() {
+    }
+
+    public AccountStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(AccountStatus status) {
+        this.status = status;
+    }
 
     public Roles getRole() {
         return role;
@@ -66,9 +85,6 @@ public class UsersAccounts {
 
     public void setRole(Roles role) {
         this.role = role;
-    }
-
-    public UsersAccounts() {
     }
 
     public Partners getPartner() {

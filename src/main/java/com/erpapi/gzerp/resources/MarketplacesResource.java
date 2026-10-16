@@ -32,7 +32,7 @@ public class MarketplacesResource {
 
     @PreAuthorize("hasAuthority('PERM_SHOPEE_OVERVIEW')")
     @PostMapping("/account/{publicId}/renew")
-    public ResponseEntity<?> testeRenovaçaoToken(@PathVariable UUID publicId){
+    public ResponseEntity<?> renewTokens(@PathVariable UUID publicId){
         shopeeService.handleRenewToken(publicId);
 
         return ResponseEntity.ok("Deu certo.");

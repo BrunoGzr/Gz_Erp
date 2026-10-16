@@ -48,6 +48,9 @@ public class ProductsService {
     }
 
     public void verifyUse(ProductRegisterDto dto, Long tenantId){
+        if (dto.getSku() == null || dto.getSku().isBlank()){
+            throw new InvalidProductException("Invalid / blank Sku, please use another one");
+        }
         if (productsRepo.existsBySkuAndTenantId(dto.getSku(), tenantId)){
             throw new InvalidProductException("Product Sku already in use, please use another one.");
         }

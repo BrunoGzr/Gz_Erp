@@ -1,6 +1,7 @@
 package com.erpapi.gzerp.config;
 
 
+import com.erpapi.gzerp.enums.AccountStatus;
 import com.erpapi.gzerp.enums.UserType;
 import com.erpapi.gzerp.models.UsersAccounts;
 import org.springframework.security.core.GrantedAuthority;
@@ -63,12 +64,19 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public boolean isAccountNonLocked(){
-        return true;
+        if (this.user.getStatus() != AccountStatus.BANNED || this.user.getStatus() != AccountStatus.BLOCKED){
+            return true;
+        }
+        return false;
     }
 
     @Override
     public boolean isEnabled(){
-        return true;
+
+        if (this.user.getStatus() == AccountStatus.ACTIVE || this.user.getStatus() == AccountStatus.PENDING_CONFIRMATION){
+            return true;
+        }
+        return false;
     }
 
 

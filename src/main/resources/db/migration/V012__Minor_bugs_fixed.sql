@@ -1,0 +1,2 @@
+ALTER TABLE users_accounts
+    ADD account_status ENUM('ACTIVE', 'INACTIVE', 'PENDING_CONFIRMATION', 'BLOCKED', 'BANNED');

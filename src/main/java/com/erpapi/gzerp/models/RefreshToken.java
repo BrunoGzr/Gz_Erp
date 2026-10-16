@@ -24,7 +24,7 @@ public class RefreshToken {
     @Column(name = "revoked", nullable = false)
     private boolean revoked ;
 
-    @Column(name = "replaced_by",nullable = false,length = 36)
+    @Column(name = "replaced_by",nullable = true,length = 36)
     private String replacedBy;
 
     @Column(name = "created_at", updatable = false)

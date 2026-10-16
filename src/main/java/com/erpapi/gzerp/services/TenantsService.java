@@ -9,10 +9,7 @@ import com.erpapi.gzerp.enums.Status;
 import com.erpapi.gzerp.models.Partners;
 import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.models.UsersAccounts;
-import com.erpapi.gzerp.repositories.EmployeesRepo;
 import com.erpapi.gzerp.repositories.TenantsRepo;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -43,7 +40,7 @@ public class TenantsService {
         List<String> conflictedFields = new ArrayList<>();
         if (tenantsRepo.existsByEmail(dto.getEmail())){
             conflictedFields.add("The Email already exists, please make the login");}
-        if (tenantsRepo.existsByCnpj(dto.getCnpj())){
+        if (tenantsRepo.existsByCnpj(authService.cnpjFormater(dto.getCnpj()))){
             conflictedFields.add("The cnpj already exists, please make the login");}
         if (tenantsRepo.existsByRazaoSocial(dto.getRazaoSocial())){
             conflictedFields.add("The razao social already exists");}

@@ -4,31 +4,13 @@
 
 -- Security
 
--HTTPS Implementation and configuration
--Cors Configure
--TenantContext Implementation. ✅
--Jwt Exceptions handler
-
-
----- Features ----
-
--- Products
--Model / migration ✅
--List ✅
--Archives server configuration
--Service ✅
--Repo and cruds ✅
--Controllers
--Python fastApi integration
--RabbitMq integration.
--ProductAlreadyExistException || RoleNotAllowedException ||
-
-
-
--- Orders
--model / migration
--List
--Repo and Cruds
+- HTTPS Implementation and configuration
+- Implementar criptografia AES-256 em tokens da shopee.
+- Validar valores arbitrarios nas listagens
+- Configurar Timeout no HttpClientConfig.
+- Implementar health check endpoint.
+- Melhorar DockerFile
+- Incluir versionamento da API
 
 -- Readme.md --
 
