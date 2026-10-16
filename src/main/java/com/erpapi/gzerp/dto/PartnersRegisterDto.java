@@ -31,6 +31,8 @@ public class PartnersRegisterDto {
     @Nullable
     private BigDecimal salary;
 
+    @NotBlank
+    @Size(min = 8 , max = 20)
     private String password;
 
     public PartnersRegisterDto() {};

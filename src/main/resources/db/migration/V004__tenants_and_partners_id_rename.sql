@@ -20,3 +20,4 @@ RENAME COLUMN id TO user_account_id;
 ALTER TABLE partners ADD FOREIGN KEY (user_account_id)
     REFERENCES users_accounts(id);
 
+

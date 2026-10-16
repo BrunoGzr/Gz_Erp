@@ -28,12 +28,12 @@ public class UsersAccounts {
     @Size(max = 256)
     @NotBlank
     @Email
-    @Column(name = "email", nullable = false, length = 256)
+    @Column(name = "email", nullable = false, length = 256, unique = true)
     private String email;
 
     @Size(max = 50)
     @NotBlank
-    @Column(name = "username", nullable = false, length = 50)
+    @Column(name = "username", nullable = false, length = 50, unique = true)
     private String username;
 
     @Enumerated(EnumType.STRING)

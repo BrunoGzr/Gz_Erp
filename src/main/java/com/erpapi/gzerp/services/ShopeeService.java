@@ -310,6 +310,7 @@ public class ShopeeService {
             actualToken = marketplacesTokensRepo.save(actualToken);
         } finally {
             padLock.unlock();
+            lock.freeLock(token.getId());
         }
         return actualToken;
     }

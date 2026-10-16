@@ -11,6 +11,9 @@
 - Implementar health check endpoint.
 - Melhorar DockerFile
 - Incluir versionamento da API
+- Adicionar SS ao mysql
+- Adicionar o Lock no refresh Token do sistema, igua ao refresh Token da shopee.
+- Adicionar testes automatizados.
 
 -- Readme.md --
 
