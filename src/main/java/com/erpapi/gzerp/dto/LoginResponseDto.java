@@ -2,13 +2,15 @@ package com.erpapi.gzerp.dto;
 
 import com.erpapi.gzerp.enums.UserType;
 
+import java.util.UUID;
+
 public class LoginResponseDto {
 
     private String token;
     private String type;
     private Long expirationInSec;
     private String refreshToken;
-    private Long userId;
+    private UUID userPublicId;
     private Long tenantId;
     private String userType;
 
@@ -16,12 +18,12 @@ public class LoginResponseDto {
         this.type = "Bearer";
     }
 
-    public LoginResponseDto(String token, Long expirationInSec, String refreshToken, Long userId, Long tenantId, UserType userType) {
+    public LoginResponseDto(String token, Long expirationInSec, String refreshToken, UUID userId, Long tenantId, UserType userType) {
         this.token = token;
         this.type = "Bearer";
         this.expirationInSec = expirationInSec;
         this.refreshToken = refreshToken;
-        this.userId = userId;
+        this.userPublicId = userId;
         this.tenantId = tenantId;
         this.userType = userType.name();
     }
@@ -58,12 +60,12 @@ public class LoginResponseDto {
         this.refreshToken = refreshToken;
     }
 
-    public Long getUserId() {
-        return userId;
+    public UUID getUserPublicId() {
+        return userPublicId;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUserPublicId(UUID userPublicId) {
+        this.userPublicId = userPublicId;
     }
 
     public Long getTenantId() {

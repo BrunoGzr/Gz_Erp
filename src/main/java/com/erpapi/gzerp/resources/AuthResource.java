@@ -52,7 +52,7 @@ public class AuthResource {
 
         RefreshToken refreshToken = refreshTokenService.create(user);
 
-        LoginResponseDto response = new LoginResponseDto(accessToken,jwtConfig.getExpirationMs() / 1000 ,refreshToken.getToken(),user.getId(),user.getTenant().getId(),user.getUserType());
+        LoginResponseDto response = new LoginResponseDto(accessToken,jwtConfig.getExpirationMs() / 1000 ,refreshToken.getToken(),user.getPublic_id(),user.getTenant().getId(),user.getUserType());
 
         return ResponseEntity.ok(response);
     }
