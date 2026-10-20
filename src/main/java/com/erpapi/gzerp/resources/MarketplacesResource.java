@@ -1,8 +1,6 @@
 package com.erpapi.gzerp.resources;
 
-import com.erpapi.gzerp.security.TenantContext;
-import com.erpapi.gzerp.services.ShopeeService;
-import jakarta.validation.Valid;
+import com.erpapi.gzerp.integrations.shopee.services.ShopeeService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;

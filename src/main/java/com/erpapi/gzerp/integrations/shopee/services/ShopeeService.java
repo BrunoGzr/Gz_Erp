@@ -1,10 +1,10 @@
-package com.erpapi.gzerp.services;
+package com.erpapi.gzerp.integrations.shopee.services;
 
 import com.erpapi.gzerp.enums.Marketplace;
 import com.erpapi.gzerp.exceptions.*;
-import com.erpapi.gzerp.integrations.shopee.RenewTokenRequestDto;
-import com.erpapi.gzerp.integrations.shopee.RequestAuthBodyDto;
-import com.erpapi.gzerp.integrations.shopee.RequestResponseAuthBodyDto;
+import com.erpapi.gzerp.integrations.shopee.dto.RenewTokenRequestDto;
+import com.erpapi.gzerp.integrations.shopee.dto.RequestAuthBodyDto;
+import com.erpapi.gzerp.integrations.shopee.dto.RequestResponseAuthBodyDto;
 import com.erpapi.gzerp.models.MarketplaceTokens;
 import com.erpapi.gzerp.models.OauthIdentifier;
 import com.erpapi.gzerp.repositories.MarketplacesTokensRepo;
@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
@@ -29,6 +28,7 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
+import java.security.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
@@ -43,6 +43,8 @@ public class ShopeeService {
     private final TenantsRepo tenantsRepo;
     private final MarketplacesTokensRepo marketplacesTokensRepo;
     private final LocksPerKey lock;
+    private final TokenService tokenService;
+    private final HttpServiceShopee httpServiceShopee;
 
     @Value("${SHOPEE_URL}")
     private String url;
@@ -69,12 +71,14 @@ public class ShopeeService {
 
     private final String renewTokensPath = "/api/v2/auth/access_token/get";
 
-    public ShopeeService(OauthIdentifierRepo identifierRepo, RestClient restClient, TenantsRepo tenantsRepo, MarketplacesTokensRepo marketplacesTokensRepo, LocksPerKey lock) {
+    public ShopeeService(OauthIdentifierRepo identifierRepo, RestClient restClient, TenantsRepo tenantsRepo, MarketplacesTokensRepo marketplacesTokensRepo, LocksPerKey lock, HttpServiceShopee httpService, TokenService tokenService) {
         this.identifierRepo = identifierRepo;
         this.restClient = restClient;
         this.tenantsRepo = tenantsRepo;
         this.marketplacesTokensRepo = marketplacesTokensRepo;
         this.lock = lock;
+        this.httpServiceShopee = httpService;
+        this.tokenService = tokenService;
     }
 
     public String authShopeeUriGen(Long tenantId) {
@@ -191,7 +195,7 @@ public class ShopeeService {
 
     }
 
-    private SignData getSign(String path) {
+    public SignData getSign(String path) {
 
         long timestamp = Instant.now().getEpochSecond();
         String baseString = partnerId + path + timestamp;
@@ -251,70 +255,42 @@ public class ShopeeService {
         }
     }
 
-    private RequestResponseAuthBodyDto renewTokensRequest(RenewTokenRequestDto request, SignData data) {
-        String sign = data.sign;
-        long timestamp = data.timestamp;
 
-        try {
-            return restClient.post()
-                    .uri(uriBuilder -> uriBuilder
-                            .scheme("https")
-                            .host(apiHost)
-                            .path(renewTokensPath)
-                            .queryParam("sign", sign)
-                            .queryParam("partner_id", partnerId)
-                            .queryParam("timestamp", timestamp)
-                            .build())
-                    .body(request)
-                    .retrieve()
-                    .body(RequestResponseAuthBodyDto.class);
 
-        } catch (HttpClientErrorException | HttpServerErrorException e) {
-            log.error("Shopee reject token exchange: status={}, body{}",
-                    e.getStatusCode(), e.getResponseBodyAsString());
-            throw new ExchangeCodeForTokensShopeeException("Failed in renew access / refresh tokens : " + e.getResponseBodyAsString());
 
-        } catch (ResourceAccessException e) {
-            throw new ExchangeCodeForTokensShopeeException("Connection Failed with the shopee server: " + e.getMessage());
-        }
 
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    protected MarketplaceTokens resolveValidToken(MarketplaceTokens token) {
+    public MarketplaceTokens resolveValidTokenShopee(MarketplaceTokens token) {
         if (token.getAccessTokenExpiresAt().isAfter(LocalDateTime.now())) {
             return token;
         }
         Lock padLock = lock.getLock(token.getId());
         padLock.lock();
 
-        MarketplaceTokens actualToken;
         try {
-            actualToken = marketplacesTokensRepo.findByMarketplaceAndShopId(token.getMarketplace(), token.getShopId())
-                    .orElseThrow(() -> new ShopeeAuthResponseException("Invalid Token to refresh"));
-            if (actualToken.getAccessTokenExpiresAt().isAfter(LocalDateTime.now())) {
-                return actualToken;
-            }
-            RequestResponseAuthBodyDto renewedTokens = renewTokensRequest(new RenewTokenRequestDto(actualToken.getRefreshToken(), partnerId, actualToken.getShopId()), getSign(renewTokensPath));
+            token = tokenService.reValidateToken(token.getShopId());
 
-            if (renewedTokens.error() != null && !renewedTokens.error().isBlank()){
-                throw new ShopeeAuthResponseException("Failed to renew tokens: " + renewedTokens.error());
+            if (token.getAccessTokenExpiresAt().isAfter(LocalDateTime.now())){
+                return token;
             }
 
-            LocalDateTime now = LocalDateTime.now();
-            actualToken.setRefreshTokenExpiresAt(now.plusDays(30));
-            actualToken.setRefreshToken(renewedTokens.refreshToken());
-            actualToken.setAccessTokenExpiresAt(now.plusSeconds(renewedTokens.expireIn()));
-            actualToken.setAccessToken(renewedTokens.accessToken());
+            RequestResponseAuthBodyDto renewedToken = httpServiceShopee.renewTokensRequest(
+                            new RenewTokenRequestDto(token.getRefreshToken(), partnerId, token.getShopId())
+                            ,getSign(renewTokensPath)
+                            , apiHost
+                            , renewTokensPath
+                            , partnerId );
 
-            actualToken = marketplacesTokensRepo.save(actualToken);
+            if (renewedToken.error() != null && !renewedToken.error().isBlank()){
+                throw new ShopeeAuthResponseException("Failed to renew tokens: " + renewedToken.error());
+            }
+
+            token = tokenService.saveToken(renewedToken, token.getShopId());
+
         } finally {
             padLock.unlock();
-            lock.freeLock(token.getId());
         }
-        return actualToken;
+        return token;
     }
-
 
     public void handleRenewToken(UUID publicId){
         Long tenantId = TenantContext.required();
@@ -323,11 +299,11 @@ public class ShopeeService {
             throw new ShopeeAuthResponseException("Invalid shop to renew tokens.");
         }
 
-
         MarketplaceTokens token = marketplacesTokensRepo.findByPublicIdAndTenant_Id(publicId,tenantId).orElseThrow(
                 () -> new InvalidShopeeStateException("Invalid shop to renew tokens.")
         );
-        this.resolveValidToken(token);
+
+        this.resolveValidTokenShopee(token);
 
     }
 

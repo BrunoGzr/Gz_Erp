@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.integrations.shopee;
+package com.erpapi.gzerp.integrations.shopee.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
