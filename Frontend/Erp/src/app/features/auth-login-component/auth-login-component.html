@@ -1,0 +1,22 @@
+<p>auth-login-component works!</p>
+
+<div class="login-container">
+  <h2>Entrar no GzErp</h2>
+
+  <!-- O (ngSubmit) diz que ao enviar o form, ele chama o fazerLogin() -->
+  <form (ngSubmit)="doLogin()">
+    
+    <div>
+      <label>Usuário</label>
+      <!-- O [(ngModel)] amarra o input à variável 'username' do TS -->
+      <input type="text" [(ngModel)]="username" name="username" required>
+    </div>
+
+    <div>
+      <label>Senha</label>
+      <input type="password" [(ngModel)]="password" name="password" required>
+    </div>
+
+    <button type="submit">Entrar</button>
+  </form>
+</div>
