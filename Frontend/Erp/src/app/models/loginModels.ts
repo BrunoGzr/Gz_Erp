@@ -13,7 +13,6 @@ export interface LoginResponse {
   readonly publicUserId: string;
   userType: UserType;
   readonly publicTenantId: string;
-  refreshToken: string;
 }
 
 type UserType = "PARTNER" | "EMPLOYEE" | "ADMIN"

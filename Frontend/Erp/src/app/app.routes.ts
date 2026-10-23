@@ -6,7 +6,7 @@ import { DashboardComponent } from './features/dashboard-component/dashboard-com
 
 export const routes: Routes = [
     { path: 'login', component: AuthLoginComponent},
-    { path: '', redirectTo: 'dashboard', pathMatch: 'full'},
+    { path: '', redirectTo: 'login', pathMatch: 'full'},
     { path: "dashboard", component: DashboardComponent}
 
 ];

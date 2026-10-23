@@ -2,7 +2,7 @@ import { Component, inject, signal} from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { identity } from 'rxjs';
 import { Router } from '@angular/router';
-import { AuthLoginService } from '../../service/auth-login-service';
+import { AuthService } from '../../service/auth-login-service';
 
 @Component({
   imports: [FormsModule],
@@ -18,7 +18,7 @@ export class AuthLoginComponent {
   isLoading = signal<boolean>(false);
 
 
-  private authService = inject(AuthLoginService)
+  private authService = inject(AuthService)
   private router = inject(Router)
 
   doLogin(){
