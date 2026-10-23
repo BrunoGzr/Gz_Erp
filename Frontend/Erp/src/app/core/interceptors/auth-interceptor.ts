@@ -19,7 +19,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   if(token && !req.url.includes("/login") && !req.url.includes("/refresh")){
     authReq = authReq.clone({
-      setHeaders: {Autorization: `Bearer ${token}` }
+      setHeaders: {Authorization: `Bearer ${token}` }
     });
   }
 
@@ -30,7 +30,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           switchMap((newResponse) => {
             const newReq = req.clone({
               withCredentials: true,
-              setHeaders: {Autorization: `Bearer ${newResponse.token}`}
+              setHeaders: {Authorization: `Bearer ${newResponse.token}`}
             });
             return next(newReq);
           }),

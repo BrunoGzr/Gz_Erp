@@ -1,8 +1,80 @@
-<p>dashboard-component works!</p>
-<h1>Redirecionou zézim</h1>
+<div class="form-container">
+  <h2>Cadastrar Produto</h2>
 
-<div>
-    clique aqui para testar o import
+  <!-- O #productForm captura o estado do formulário e o (ngSubmit) chama a função -->
+  <form #productForm="ngForm" (ngSubmit)="registerProduct(product)">
+    
+    <div class="form-group">
+      <label>Nome do Produto</label>
+      <input 
+        type="text" 
+        name="name" 
+        [(ngModel)]="product.name" 
+        required 
+        placeholder="Ex: Notebook Dell"
+      >
+    </div>
 
-    <button ></button>
+    <div class="form-group">
+      <label>SKU</label>
+      <input 
+        type="text" 
+        name="sku" 
+        [(ngModel)]="product.sku" 
+        placeholder="Ex: NOT-DELL-123"
+      >
+    </div>
+
+    <div class="form-group">
+      <label>Estoque</label>
+      <input 
+        type="number" 
+        name="stock" 
+        [(ngModel)]="product.stock" 
+        required 
+        min="0"
+      >
+    </div>
+
+    <div class="form-group">
+      <label>Preço de Venda (Base)</label>
+      <!-- O step="0.01" permite casas decimais -->
+      <input 
+        type="number" 
+        name="baseSellPrice" 
+        [(ngModel)]="product.baseSellPrice" 
+        required 
+        step="0.01"
+        min="0"
+      >
+    </div>
+
+    <div class="form-group">
+      <label>Preço de Custo</label>
+      <input 
+        type="number" 
+        name="costPrice" 
+        [(ngModel)]="product.costPrice" 
+        required 
+        step="0.01"
+        min="0"
+      >
+    </div>
+
+    <div class="form-group">
+      <label>URL da Imagem</label>
+      <input 
+        type="url" 
+        name="imageUrl" 
+        [(ngModel)]="product.imageUrl" 
+        placeholder="https://..."
+      >
+    </div>
+
+    <!-- O botão fica desabilitado se o formulário for inválido -->
+    <button type="submit" [disabled]="productForm.invalid">
+      Salvar Produto
+    </button>
+
+  </form>
 </div>

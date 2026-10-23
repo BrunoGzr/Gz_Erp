@@ -1,8 +1,8 @@
 export interface registerProductRequest {
     name: string,
     stock: number,
-    baseSellPrice: bigint,
-    costPrice: bigint,
+    baseSellPrice: number,
+    costPrice: number,
     imageUrl: string,
     sku: string
 }
@@ -13,8 +13,8 @@ export interface receivedProduct{
     sku: string,
     name: string,
     stock: number,
-    baseSellPrice: bigint,
-    costPrice: bigint,
+    baseSellPrice: number,
+    costPrice: number,
     imageUrl: string,
     sales: number,
     createdAt: string,
