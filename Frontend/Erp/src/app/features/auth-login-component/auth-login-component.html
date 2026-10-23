@@ -3,8 +3,16 @@
 <div class="login-container">
   <h2>Entrar no GzErp</h2>
 
-  <!-- O (ngSubmit) diz que ao enviar o form, ele chama o fazerLogin() -->
+  
+
+
   <form (ngSubmit)="doLogin()">
+
+    @if ( errorMessage() ) {
+    <div class="alert-error">
+    {{ errorMessage() }}
+    </div>
+  }
     
     <div>
       <label>Usuário</label>
@@ -17,6 +25,6 @@
       <input type="password" [(ngModel)]="password" name="password" required>
     </div>
 
-    <button type="submit">Entrar</button>
+    <button type="submit" [disabled]="isLoading()">Entrar</button>
   </form>
 </div>

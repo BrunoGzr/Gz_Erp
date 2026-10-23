@@ -1,6 +1,6 @@
 import { readonly } from "@angular/forms/signals";
 
-export type loginRequest = {
+export type LoginRequest = {
 
     identifier: string,
     password: string
