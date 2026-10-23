@@ -9,6 +9,7 @@ import jakarta.validation.constraints.Size;
 public class LoginRequestDto {
 
     @NotBlank
+    @Size(min = 3, max = 256)
     private String identifier;
 
     @NotBlank
