@@ -2,6 +2,7 @@ package com.erpapi.gzerp.services;
 
 
 import com.erpapi.gzerp.dto.PartnersRegisterDto;
+import com.erpapi.gzerp.enums.AccountStatus;
 import com.erpapi.gzerp.enums.UserType;
 import com.erpapi.gzerp.exceptions.InvalidCharactersException;
 import com.erpapi.gzerp.models.Roles;
@@ -57,6 +58,7 @@ public class UsersAccountsService {
         newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
         newUser.setTenant(tenant);
         newUser.setPublic_id(UUID.randomUUID());
+        newUser.setStatus(AccountStatus.ACTIVE);
         newUser = usersRepo.save(newUser);
         return newUser;
     }
