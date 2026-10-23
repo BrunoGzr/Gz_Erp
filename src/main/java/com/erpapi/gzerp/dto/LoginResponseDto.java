@@ -18,11 +18,10 @@ public class LoginResponseDto {
         this.type = "Bearer";
     }
 
-    public LoginResponseDto(String token, Long expirationInSec, String refreshToken, UUID userId, Long tenantId, UserType userType) {
+    public LoginResponseDto(String token, Long expirationInSec, UUID userId, Long tenantId, UserType userType) {
         this.token = token;
         this.type = "Bearer";
         this.expirationInSec = expirationInSec;
-        this.refreshToken = refreshToken;
         this.userPublicId = userId;
         this.tenantId = tenantId;
         this.userType = userType.name();

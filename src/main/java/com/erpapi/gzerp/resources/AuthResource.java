@@ -9,6 +9,9 @@ import com.erpapi.gzerp.repositories.RolesRepo;
 import com.erpapi.gzerp.repositories.UsersAccountsRepo;
 import com.erpapi.gzerp.services.CustomUserDetailService;
 import com.erpapi.gzerp.services.RefreshTokenService;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.boot.webmvc.autoconfigure.WebMvcProperties;
 import org.springframework.http.HttpStatus;
@@ -39,7 +42,8 @@ public class AuthResource {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto){
+    public ResponseEntity<LoginResponseDto> login(@RequestBody LoginRequestDto loginRequestDto,
+                                                  HttpServletResponse response){
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequestDto.getIdentifier(),loginRequestDto.getPassword()));
@@ -48,13 +52,22 @@ public class AuthResource {
 
         CustomUserDetails customUserDetails = (CustomUserDetails) authentication.getPrincipal();
         UsersAccounts user = customUserDetails.getUser();
+
+
         String accessToken = jwtConfig.generateToken(authentication);
+        String refreshToken = refreshTokenService.create(user).getToken();
 
-        RefreshToken refreshToken = refreshTokenService.create(user);
+        Cookie cookie = new Cookie("refresh_token", refreshToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // mudar para true em prod.
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 60 * 60);
 
-        LoginResponseDto response = new LoginResponseDto(accessToken,jwtConfig.getExpirationMs() / 1000 ,refreshToken.getToken(),user.getPublic_id(),user.getTenant().getId(),user.getUserType());
+        LoginResponseDto responseDto = new LoginResponseDto(accessToken,jwtConfig.getExpirationMs() / 1000 ,user.getPublic_id(),user.getTenant().getId(),user.getUserType());
 
-        return ResponseEntity.ok(response);
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(responseDto);
     }
 
     @PostMapping("/refresh")
