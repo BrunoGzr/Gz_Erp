@@ -15,6 +15,15 @@ export interface LoginResponse {
   readonly publicTenantId: string;
 }
 
+export interface User {
+
+  id: number;
+  email: string;
+  tenantId: number;
+  userType: string;
+}
+
+
 type UserType = "PARTNER" | "EMPLOYEE" | "ADMIN"
 
 

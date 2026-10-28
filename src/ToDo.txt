@@ -2,6 +2,12 @@
 -RoleNotFoundException
 
 
+
+--frontend
+
+- adicionar nome pros claims do jwt
+- adicionar nome da empresa.
+
 -- Security
 
 - HTTPS Implementation and configuration
