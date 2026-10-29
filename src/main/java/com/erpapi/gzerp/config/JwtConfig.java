@@ -42,7 +42,7 @@ public class JwtConfig {
                 .subject(user.getUsername())
                 .claim("id", user.getId())
                 .claim("name", user.getName())
-                .claim("name", user.getRazaoSocial())
+                .claim("companyName", user.getRazaoSocial())
                 .claim("tenantId", user.getTenantId())
                 .claim("userType", user.getUserType().name())
                 .claim("roles", roles )

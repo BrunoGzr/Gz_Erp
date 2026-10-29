@@ -36,15 +36,22 @@ public class CustomUserDetails implements UserDetails {
         return user.getEmail();
     }
 
-    public String getName(){
-        if (user.getUserType() == UserType.PARTNER){
-            return user.getPartner().getFullName().split("//s+")[0];
-        }
-        if (user.getUserType() == UserType.EMPLOYEE){
-            return "Lembrar de mudar isso no CustomUserDetails";
+    public String getName() {
+        if (user.getUserType() == UserType.PARTNER && user.getPartner() != null) {
+            String fullName = user.getPartner().getFullName();
+            if (fullName != null && !fullName.isBlank()) {
+                return fullName.split("\\s+")[0];
+            }
         }
 
-        return "Bruno";
+        if (user.getUserType() == UserType.EMPLOYEE && user.getEmployee() != null) {
+            String fullName = user.getEmployee().getFullName();
+            if (fullName != null && !fullName.isBlank()) {
+                return fullName.split("\\s+")[0];
+            }
+        }
+
+        return user.getUsername();
     }
 
     public String getRazaoSocial(){
