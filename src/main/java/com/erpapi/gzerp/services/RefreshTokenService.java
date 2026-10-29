@@ -44,6 +44,7 @@ public class RefreshTokenService {
         if (rt.getExpiresAt().isBefore(LocalDateTime.now())){
             throw new InvalidRefreshTokenException("Refresh token expired.");
         }
+
         return rt;
 
     }
@@ -77,5 +78,7 @@ public class RefreshTokenService {
     }
 
     public record RefreshResult(RefreshToken rotated, UsersAccounts user) {}
+
+
 
 }

@@ -9,7 +9,6 @@ import com.erpapi.gzerp.models.Roles;
 import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.models.UsersAccounts;
 import com.erpapi.gzerp.repositories.EmployeesRepo;
-import com.erpapi.gzerp.repositories.PartnersRepo;
 import com.erpapi.gzerp.repositories.RolesRepo;
 import com.erpapi.gzerp.repositories.UsersAccountsRepo;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -57,7 +56,7 @@ public class UsersAccountsService {
         newUser.setRole(role);
         newUser.setPassword(passwordEncoder.encode(dto.getPassword()));
         newUser.setTenant(tenant);
-        newUser.setPublic_id(UUID.randomUUID());
+        newUser.setPublicId(UUID.randomUUID());
         newUser.setStatus(AccountStatus.ACTIVE);
         newUser = usersRepo.save(newUser);
         return newUser;

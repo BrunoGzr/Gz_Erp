@@ -1,6 +1,5 @@
 package com.erpapi.gzerp.models;
 
-import com.erpapi.gzerp.dto.UsersAccountRegisterDto;
 import com.erpapi.gzerp.enums.AccountStatus;
 import com.erpapi.gzerp.enums.UserType;
 import jakarta.persistence.*;
@@ -23,7 +22,7 @@ public class UsersAccounts {
 
     @Column(name = "public_id", nullable = false, unique = true, length = 36)
     @JdbcTypeCode(SqlTypes.VARCHAR)
-    private UUID public_id;
+    private UUID publicId;
 
     @Size(max = 256)
     @NotBlank
@@ -151,11 +150,11 @@ public class UsersAccounts {
         return id;
     }
 
-    public UUID getPublic_id() {
-        return public_id;
+    public UUID getPublicId() {
+        return publicId;
     }
 
-    public void setPublic_id(UUID public_id) {
-        this.public_id = public_id;
+    public void setPublicId(UUID public_id) {
+        this.publicId = public_id;
     }
 }

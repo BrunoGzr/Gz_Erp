@@ -36,6 +36,21 @@ public class CustomUserDetails implements UserDetails {
         return user.getEmail();
     }
 
+    public String getName(){
+        if (user.getUserType() == UserType.PARTNER){
+            return user.getPartner().getFullName().split("//s+")[0];
+        }
+        if (user.getUserType() == UserType.EMPLOYEE){
+            return "Lembrar de mudar isso no CustomUserDetails";
+        }
+
+        return "Bruno";
+    }
+
+    public String getRazaoSocial(){
+        return user.getTenant().getRazaoSocial();
+    }
+
     public UsersAccounts getUser(){
         return user;
     }

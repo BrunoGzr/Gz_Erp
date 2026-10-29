@@ -34,8 +34,7 @@ public class CustomUserDetailService implements UserDetailsService {
     @Override
     @Transactional(readOnly = true)
     public CustomUserDetails loadUserByUsername(@NonNull String identifier) throws UsernameNotFoundException {
-        UsersAccounts user = usersAccountsRepo.findByUsernameOrEmail(identifier,identifier).orElseThrow(()-> new UsernameNotFoundException("User not found"));
-
+        UsersAccounts user = usersAccountsRepo.findByIdentifierWithTenant(identifier).orElseThrow(()-> new UsernameNotFoundException("User not found"));
         return new CustomUserDetails(user, buildAuthorities(user));
     }
 

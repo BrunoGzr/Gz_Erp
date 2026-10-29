@@ -1,34 +1,22 @@
 package com.erpapi.gzerp.dto;
 
-import com.erpapi.gzerp.models.RefreshToken;
-
 public class RefreshTokenResponseDto {
 
-    private final String refreshedToken;
-    private final String token;
-    private final String tokenType;
-    private final long expiresIn;
+    private final String accessToken;
+    private final long expiresInSec;
 
-    public RefreshTokenResponseDto(String refreshedToken, String token, String tokenType, long expiresIn) {
-        this.refreshedToken = refreshedToken;
-        this.token = token;
-        this.tokenType = tokenType;
-        this.expiresIn = expiresIn;
+    public RefreshTokenResponseDto( String token, long expiresInDays) {
+
+        this.accessToken = token;
+        this.expiresInSec = expiresInDays;
     }
 
-    public String getRefreshedToken() {
-        return refreshedToken;
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    public String getToken() {
-        return token;
-    }
 
-    public String getTokenType() {
-        return tokenType;
-    }
-
-    public long getExpiresIn() {
-        return expiresIn;
+    public long getExpiresInSec() {
+        return expiresInSec;
     }
 }
