@@ -10,17 +10,18 @@
   <div class="User">
     <div class="profile">
       <img [src]="this.profilePicture">
-      <h1>{{authservice.currentUser()?.email}}</h1>
-      <h2>{{authservice.currentUser()?.id}}</h2>
+      <h1>{{authservice.currentUser()?.name}}</h1>
+      <h2>{{authservice.currentUser()?.companyName}}</h2>
     </div>
 
   </div>
 
   <nav>
     <ul>
-      <li><a href="/dashboard">Inicio</a></li>
-      <li><a routerLink="/dashboard">Pedidos</a></li>
-      <li><a routerLink="/estoque">Estoque</a></li>
+      <li><a routerLink="/dashboard">Inicio</a></li>
+      <li><a routerLink="/dashboard">Produtos</a></li>
+      <li><a routerLink="/estoque">Pedidos</a></li>
+      <li><a routerLink="/equipe">Marketplaces</a></li>
       <li><a routerLink="/equipe">Equipe</a></li>
     </ul>
   </nav>
@@ -28,7 +29,7 @@
   <div>
       <button (click)="doLogout()">
         <i class="loggout-Button"></i>
-        <span>Sexo</span>
+        <img src="assets/Icone-Sair.svg" alt="Descrição da imagem" width="200" height="200">
       </button>
   </div>
 

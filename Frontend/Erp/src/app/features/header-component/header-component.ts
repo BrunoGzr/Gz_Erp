@@ -1,9 +1,10 @@
 import { Component, inject } from '@angular/core';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../service/auth-login-service';
+import { NgOptimizedImage } from '@angular/common';
 
 @Component({
-  imports: [RouterLink, RouterOutlet],
+  imports: [RouterLink, RouterOutlet, NgOptimizedImage],
   selector: 'app-header-component',
   styleUrl: './header-component.css',
   templateUrl: './header-component.html',

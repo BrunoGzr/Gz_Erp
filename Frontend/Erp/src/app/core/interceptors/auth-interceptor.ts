@@ -13,9 +13,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const token = authService.getAccesToken();
 
-  let authReq = req.clone({
-    withCredentials: true
-  });
+  let authReq = req.clone({ withCredentials: true });
 
   if(token && !req.url.includes("/login") && !req.url.includes("/refresh")){
     authReq = authReq.clone({
@@ -28,9 +26,10 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401 && !req.url.includes("/login") && !req.url.includes("/refresh")){
         return authService.refreshToken().pipe(
           switchMap((newResponse) => {
+            console.log('O que o refresh retornou:', newResponse);
             const newReq = req.clone({
               withCredentials: true,
-              setHeaders: {Authorization: `Bearer ${newResponse.token}`}
+              setHeaders: { Authorization: `Bearer ${newResponse.accessToken}` },
             });
             return next(newReq);
           }),
@@ -38,7 +37,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             authService.logout();
             router.navigate(['/login']);
             return throwError(() => refreshError);
-          })
+          }),
         );
       }
 
@@ -48,5 +47,5 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
 
 
-    
+
 };

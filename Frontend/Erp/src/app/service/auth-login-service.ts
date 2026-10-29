@@ -15,7 +15,7 @@ export class AuthService {
 
 
 
-    private apiUrl = "http://192.168.15.23:8989/api/auth"
+    private apiUrl = "/api/auth";
 
 
 
@@ -25,7 +25,7 @@ export class AuthService {
 
     requestLogin(credentials: LoginRequest): Observable<any>{
 
-        return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials).pipe(
+        return this.http.post<LoginResponse>(`${this.apiUrl}/login`, credentials, {withCredentials: true}).pipe(
             tap(Response => {
                 localStorage.setItem('access_token', Response.token);
                 this.loadUserFromToken();
@@ -37,7 +37,9 @@ export class AuthService {
 
         return this.http.post<any>(`${this.apiUrl}/refresh`, {}, {withCredentials: true}).pipe(
             tap(Response => {
-                localStorage.setItem('access_token', Response.token);
+                console.log('Token a ser salvo:', Response.accessToken);
+                localStorage.setItem('access_token', Response.accessToken);
+
             })
         )
     }
@@ -49,7 +51,6 @@ export class AuthService {
     logout(){
         localStorage.removeItem('access_token');
         this.currentUser.set(null);
-        routes
     }
 
     private loadUserFromToken() {
@@ -60,6 +61,8 @@ export class AuthService {
           const decoded: any = jwtDecode(token);
 
           this.currentUser.set({
+            companyName: decoded.companyName,
+            name: decoded.name,
             id: decoded.id,
             email: decoded.email,
             tenantId: decoded.tenantId,
@@ -81,7 +84,7 @@ export class AuthService {
 
       try {
         const decoded: any = jwtDecode(token);
-        const expiryDate = decoded['expiry_date'] * 1000;
+        const expiryDate = decoded['exp'] * 1000;
         const now = Date.now();
 
         return expiryDate > (now + 10000);

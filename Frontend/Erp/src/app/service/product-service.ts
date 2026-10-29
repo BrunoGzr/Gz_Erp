@@ -12,11 +12,11 @@ export class ProductService {
 
     private router = inject(Router)
 
-    private urlApi = "http://192.168.15.23:8989/products"
+    private urlApi = "/products"
 
 
     registerProduct(productInfo: registerProductRequest): Observable<any> {
-         
+
         return this.http.post<receivedProduct>(`${this.urlApi}/register`, productInfo)
     }
 

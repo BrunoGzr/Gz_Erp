@@ -17,6 +17,8 @@ export interface LoginResponse {
 
 export interface User {
 
+  companyName: string,
+  name: string;
   id: number;
   email: string;
   tenantId: number;
