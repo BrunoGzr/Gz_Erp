@@ -1,80 +1,21 @@
-<div class="form-container">
-  <h2>Cadastrar Produto</h2>
+<header class="myHeader">
+<!--  <div class="userProfile">-->
 
-  <!-- O #productForm captura o estado do formulário e o (ngSubmit) chama a função -->
-  <form #productForm="ngForm" (ngSubmit)="registerProduct(product)">
-    
-    <div class="form-group">
-      <label>Nome do Produto</label>
-      <input 
-        type="text" 
-        name="name" 
-        [(ngModel)]="product.name" 
-        required 
-        placeholder="Ex: Notebook Dell"
-      >
-    </div>
 
-    <div class="form-group">
-      <label>SKU</label>
-      <input 
-        type="text" 
-        name="sku" 
-        [(ngModel)]="product.sku" 
-        placeholder="Ex: NOT-DELL-123"
-      >
-    </div>
 
-    <div class="form-group">
-      <label>Estoque</label>
-      <input 
-        type="number" 
-        name="stock" 
-        [(ngModel)]="product.stock" 
-        required 
-        min="0"
-      >
-    </div>
+<!--  </div>-->
 
-    <div class="form-group">
-      <label>Preço de Venda (Base)</label>
-      <!-- O step="0.01" permite casas decimais -->
-      <input 
-        type="number" 
-        name="baseSellPrice" 
-        [(ngModel)]="product.baseSellPrice" 
-        required 
-        step="0.01"
-        min="0"
-      >
-    </div>
+<!--  <nav class="nav-list">-->
+<!--    <ul>-->
+<!--      <li class="inicio"><a routerLink="/dashboard"> <img src="Icone-home.svg" alt="icone home">Inicio</a></li>-->
+<!--      <li class="produtos"><a routerLink="/dashboard"> <img src="produtos-icon.svg" alt="icone Produtos">Produtos</a></li>-->
+<!--      <li class="pedidos"><a routerLink="/estoque"> <img src="pedidos-icon.svg" alt="icone pedidos"> Pedidos</a></li>-->
+<!--      <li><a routerLink="/Marketplaces"> <img src="marketplace-icon.svg" alt="icone Marketplaces">Marketplaces</a></li>-->
+<!--      <li><a routerLink="/equipe"> <img src="equipe-icon.svg" alt="icone Equipe" id="equip-icon"> Equipe</a></li>-->
+<!--    </ul>-->
+<!--  </nav>-->
 
-    <div class="form-group">
-      <label>Preço de Custo</label>
-      <input 
-        type="number" 
-        name="costPrice" 
-        [(ngModel)]="product.costPrice" 
-        required 
-        step="0.01"
-        min="0"
-      >
-    </div>
 
-    <div class="form-group">
-      <label>URL da Imagem</label>
-      <input 
-        type="url" 
-        name="imageUrl" 
-        [(ngModel)]="product.imageUrl" 
-        placeholder="https://..."
-      >
-    </div>
+</header>
 
-    <!-- O botão fica desabilitado se o formulário for inválido -->
-    <button type="submit" [disabled]="productForm.invalid">
-      Salvar Produto
-    </button>
 
-  </form>
-</div>

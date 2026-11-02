@@ -37,9 +37,8 @@ export class AuthService {
 
         return this.http.post<any>(`${this.apiUrl}/refresh`, {}, {withCredentials: true}).pipe(
             tap(Response => {
-                console.log('Token a ser salvo:', Response.accessToken);
                 localStorage.setItem('access_token', Response.accessToken);
-
+                this.loadUserFromToken();
             })
         )
     }

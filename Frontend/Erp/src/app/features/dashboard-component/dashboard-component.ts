@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../service/product-service';
-import { registerProductRequest } from '../../models/productModels'
+import { registerProductRequest } from '../../models/productModels';
+import { RouterLink, RouterOutlet } from '@angular/router';
 
 @Component({
   imports: [FormsModule],
@@ -15,7 +16,7 @@ export class DashboardComponent {
    product: registerProductRequest = {
     name: '',
     stock: 0,
-    baseSellPrice: 0, 
+    baseSellPrice: 0,
     costPrice: 0,
     imageUrl: '',
     sku: ''
@@ -29,7 +30,7 @@ registerProduct(productInfo: registerProductRequest) {
       next: (response) => {
         console.log('Produto cadastrado com sucesso!', response);
         alert('Produto salvo com sucesso!');
-        
+
         // Limpa o formulário após salvar (opcional)
         this.product = { name: '', stock: 0, baseSellPrice: 0, costPrice: 0, imageUrl: '', sku: '' };
       },

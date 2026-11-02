@@ -4,7 +4,7 @@ import { AuthService } from '../../service/auth-login-service';
 import { NgOptimizedImage } from '@angular/common';
 
 @Component({
-  imports: [RouterLink, RouterOutlet, NgOptimizedImage],
+  imports: [RouterLink, RouterOutlet],
   selector: 'app-header-component',
   styleUrl: './header-component.css',
   templateUrl: './header-component.html',
@@ -22,6 +22,6 @@ export class HeaderComponent {
 
   doLogout() {
     this.authservice.logout();
-    this.router.navigate(['/']);
+    this.router.navigate(['/login']);
   }
 }

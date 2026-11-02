@@ -1,41 +1,35 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Meu Site</title>
-</head>
-<body>
-
 <header>
-  <div class="User">
-    <div class="profile">
-      <img [src]="this.profilePicture">
-      <h1>{{authservice.currentUser()?.name}}</h1>
-      <h2>{{authservice.currentUser()?.companyName}}</h2>
+  <!-- PERFIL -->
+  <div class="user-profile">
+
+    <img class="avatar-img" [src]="profilePicture" alt="Foto de Perfil">
+
+    <div class="user-info">
+      <h1 class="user-name">{{ authservice.currentUser()?.name }}</h1>
+      <h2 class="company-name">{{ authservice.currentUser()?.companyName }}</h2>
     </div>
-
   </div>
 
-  <nav>
-    <ul>
-      <li><a routerLink="/dashboard">Inicio</a></li>
-      <li><a routerLink="/dashboard">Produtos</a></li>
-      <li><a routerLink="/estoque">Pedidos</a></li>
-      <li><a routerLink="/equipe">Marketplaces</a></li>
-      <li><a routerLink="/equipe">Equipe</a></li>
-    </ul>
+  <!-- MENU -->
+  <nav class="nav-list">
+    <a class="nav-btn" routerLink="/dashboard" routerLinkActive="active-link">
+      <img src="Icone-home.svg" alt="icone home"> Inicio
+    </a>
+
+    <a class="nav-btn" routerLink="/dashboard" routerLinkActive="active-link">
+      <img src="produtos-icon.svg" alt="icone Produtos"> Produtos
+    </a>
+
+    <a class="nav-btn" routerLink="/estoque" routerLinkActive="active-link">
+      <img src="pedidos-icon.svg" alt="icone pedidos"> Pedidos
+    </a>
+
+    <a class="nav-btn" routerLink="/Marketplaces" routerLinkActive="active-link">
+      <img src="marketplace-icon.svg" alt="icone Marketplaces"> Marketplaces
+    </a>
+
+    <a class="nav-btn" routerLink="/equipe" routerLinkActive="active-link">
+      <img src="equipe-icon.svg" alt="icone Equipe"> Equipe
+    </a>
   </nav>
-
-  <div>
-      <button (click)="doLogout()">
-        <i class="loggout-Button"></i>
-        <img src="assets/Icone-Sair.svg" alt="Descrição da imagem" width="200" height="200">
-      </button>
-  </div>
-
 </header>
-
-<router-outlet></router-outlet>
-
-</body>
-</html>
