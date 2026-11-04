@@ -1,7 +1,7 @@
 main {
-  margin-left: 0; /* Empurra o conteúdo para a direita, na mesma largura do menu */
-  padding: 0; /* Dá um respiro nas bordas do conteúdo */
+  margin: 0;
+  padding: 0;
   width: 100%;
-  min-height: 100vh;  /* Garante que a área de fundo ocupe a tela toda */
-  background-color: #12121E; /* Um cinza claro para o fundo do dashboard */
+  min-height: 100vh;
+  background-color: #12121e;
 }

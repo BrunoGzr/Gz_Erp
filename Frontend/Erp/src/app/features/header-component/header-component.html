@@ -1,35 +1,137 @@
-<header>
-  <!-- PERFIL -->
-  <div class="user-profile">
+<!--
+  =====================================================================
+  SHELL PRINCIPAL
+  - app-shell: área que contém a sidebar e o conteúdo das rotas.
+  - A classe "collapsed" já começa aplicada para a sidebar nascer fechada.
+  - [class.collapsed]="!isExpanded()" faz o Angular adicionar/remover
+    a classe conforme o estado controlado pelo header-component.ts.
+  =====================================================================
+-->
+<div class="app-shell collapsed" [class.collapsed]="!isExpanded()">
+  <!--
+    sidebar-shell: invólucro que anima a largura da sidebar.
+    mouseenter/mouseleave chamam os métodos que controlam a expansão por hover.
+  -->
+  <div
+    class="sidebar-shell"
+    (mouseenter)="onSidebarMouseEnter()"
+    (mouseleave)="onSidebarMouseLeave()"
+  >
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <!-- =============================================================
+           TOPO: PERFIL DO USUÁRIO
+           ============================================================= -->
+      <div class="sidebar-header">
+        <div class="profile-section">
+          <!-- Foto do usuário. Se não houver foto, mostra o ícone padrão. -->
+          <div class="avatar-circle" [attr.title]="userName()">
+            @if (userProfilePicture(); as picture) {
+              <img [src]="picture" [alt]="userName()" />
+            } @else {
+              <app-header-icon name="user" [size]="32" />
+            }
+          </div>
 
-    <img class="avatar-img" [src]="profilePicture" alt="Foto de Perfil">
+          <!--
+            Nome do usuário. O texto permanece no DOM mesmo com a sidebar
+            fechada; o CSS usa opacity para animar o desaparecimento.
+            aria-hidden evita que leitores de tela leiam texto invisível.
+          -->
+          <span class="profile-name" [attr.aria-hidden]="!isExpanded()">{{ userName() }}</span>
+        </div>
 
-    <div class="user-info">
-      <h1 class="user-name">{{ authservice.currentUser()?.name }}</h1>
-      <h2 class="company-name">{{ authservice.currentUser()?.companyName }}</h2>
-    </div>
+        <!-- Nome da empresa, alinhado abaixo do nome do usuário. -->
+        <span class="profile-company" [attr.aria-hidden]="!isExpanded()">{{ companyName() }}</span>
+
+        <!--
+          Botão de PIN:
+          - [class.visible] controla quando ele aparece.
+          - [class.active] marca que ele está fixado.
+          - Quando fixado, o hover deixa de abrir/fechar a sidebar.
+        -->
+        <button
+          class="pin-btn"
+          type="button"
+          [class.visible]="isExpanded() || isPinned()"
+          [class.active]="isPinned()"
+          (click)="togglePin()"
+          [attr.title]="isPinned() ? 'Desafixar sidebar' : 'Fixar sidebar'"
+          [attr.aria-label]="isPinned() ? 'Desafixar sidebar' : 'Fixar sidebar'"
+          [attr.aria-pressed]="isPinned()"
+        >
+          <app-header-icon [name]="isPinned() ? 'pin' : 'pin-off'" [size]="16" />
+        </button>
+      </div>
+
+      <!-- =============================================================
+           MEIO: MENU DE NAVEGAÇÃO
+           @for percorre a lista menuItems definida no TypeScript.
+           ============================================================= -->
+      <nav class="sidebar-nav" aria-label="Navegação principal">
+        @for (item of menuItems; track item.route) {
+          <a
+            class="nav-item"
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: true }"
+            ariaCurrentWhenActive="page"
+            [attr.title]="item.label"
+            [attr.aria-label]="item.label"
+          >
+            <!-- Ícone do menu. -->
+            <span class="nav-icon">
+              <app-header-icon [name]="item.icon" [size]="24" />
+            </span>
+
+            <!--
+              Texto do menu. Também permanece no DOM quando a sidebar fecha;
+              o CSS anima a opacidade e o deslocamento.
+            -->
+            <span class="nav-label" [attr.aria-hidden]="!isExpanded()">{{ item.label }}</span>
+          </a>
+        }
+      </nav>
+
+      <!-- =============================================================
+           BASE: BOTÃO DE LOGOUT
+           ============================================================= -->
+      <div class="sidebar-footer">
+        <button
+          class="logout-btn"
+          type="button"
+          (click)="doLogout()"
+          title="Sair"
+          aria-label="Sair"
+        >
+          <app-header-icon name="log-out" [size]="24" />
+        </button>
+      </div>
+    </aside>
+
+    <!--
+      Botão central de expandir/recolher.
+      Ele só aparece quando o PIN está ativo; sem PIN, a expansão é por hover.
+      [class.visible] controla essa aparição.
+    -->
+    <button
+      class="toggle-btn"
+      type="button"
+      [class.visible]="isPinned()"
+      (click)="toggleExpanded()"
+      [attr.title]="isExpanded() ? 'Recolher sidebar' : 'Expandir sidebar'"
+      [attr.aria-label]="isExpanded() ? 'Recolher sidebar' : 'Expandir sidebar'"
+      [attr.aria-expanded]="isExpanded()"
+    >
+      <app-header-icon [name]="isExpanded() ? 'arrow-left' : 'arrow-right'" [size]="18" />
+    </button>
   </div>
 
-  <!-- MENU -->
-  <nav class="nav-list">
-    <a class="nav-btn" routerLink="/dashboard" routerLinkActive="active-link">
-      <img src="Icone-home.svg" alt="icone home"> Inicio
-    </a>
-
-    <a class="nav-btn" routerLink="/dashboard" routerLinkActive="active-link">
-      <img src="produtos-icon.svg" alt="icone Produtos"> Produtos
-    </a>
-
-    <a class="nav-btn" routerLink="/estoque" routerLinkActive="active-link">
-      <img src="pedidos-icon.svg" alt="icone pedidos"> Pedidos
-    </a>
-
-    <a class="nav-btn" routerLink="/Marketplaces" routerLinkActive="active-link">
-      <img src="marketplace-icon.svg" alt="icone Marketplaces"> Marketplaces
-    </a>
-
-    <a class="nav-btn" routerLink="/equipe" routerLinkActive="active-link">
-      <img src="equipe-icon.svg" alt="icone Equipe"> Equipe
-    </a>
-  </nav>
-</header>
+  <!-- ===============================================================
+       CONTEÚDO DAS ROTAS FILHAS
+       O router-outlet é onde as páginas (dashboard, produtos etc.) aparecem.
+       =============================================================== -->
+  <main class="app-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>

@@ -2,5 +2,6 @@ body {
   margin: 0;
   padding: 0;
   width: 100%;
-  background-color: #12121E;
+  min-height: 100vh;
+  background-color: #12121e;
 }

@@ -1,27 +1,93 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink, RouterOutlet } from '@angular/router';
+import { Component, computed, inject, signal } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../service/auth-login-service';
-import { NgOptimizedImage } from '@angular/common';
+import { HeaderIconComponent } from './header-icon-component';
+
+export interface MenuItem {
+  label: string;
+  icon: string;
+  route: string;
+}
 
 @Component({
-  imports: [RouterLink, RouterOutlet],
   selector: 'app-header-component',
-  styleUrl: './header-component.css',
+  standalone: true,
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, HeaderIconComponent],
   templateUrl: './header-component.html',
+  styleUrl: './header-component.css',
 })
 export class HeaderComponent {
-  public authservice = inject(AuthService);
+  private authService = inject(AuthService);
   private router = inject(Router);
 
-  profilePicture =
-    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS67I-cDIedQO7iBV4XjX8T22NC7hNznLv0JhRNbzToURaR5vZna42TO_w&s=10';
+  // --- Estado da sidebar ---
+  isExpanded = signal(false);
+  isPinned = signal(false);
+  isHovered = signal(false);
 
-  firstName = 'algo';
+  // --- Dados do usuário (populados pelo AuthService a partir do JWT) ---
+  userName = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.name || user?.username || 'Usuário';
+  });
 
-  companyName = 'Algo da silva zé';
+  companyName = computed(() => {
+    const user = this.authService.currentUser();
+    return user?.companyName || 'Empresa';
+  });
 
-  doLogout() {
-    this.authservice.logout();
+  userProfilePicture = computed(() => {
+    return this.authService.currentUser()?.profilePicture || null;
+  });
+
+  // --- Menu de navegação ---
+  readonly menuItems: MenuItem[] = [
+    { label: 'Início', icon: 'home', route: '/dashboard' },
+    { label: 'Produtos', icon: 'shopping-bag', route: '/produtos' },
+    { label: 'Pedidos', icon: 'shopping-cart', route: '/pedidos' },
+    { label: 'Marketplaces', icon: 'store', route: '/marketplaces' },
+    { label: 'Equipe', icon: 'users', route: '/equipe' },
+  ];
+
+  // --- Expansão por hover (quando não está fixada) ---
+  onSidebarMouseEnter(): void {
+    this.isHovered.set(true);
+
+    if (!this.isPinned()) {
+      this.isExpanded.set(true);
+    }
+  }
+
+  onSidebarMouseLeave(): void {
+    this.isHovered.set(false);
+
+    if (!this.isPinned()) {
+      this.isExpanded.set(false);
+    }
+  }
+
+  // --- Expandir / recolher manualmente (botão central) ---
+  toggleExpanded(): void {
+    this.isExpanded.update((expanded) => !expanded);
+  }
+
+  // --- Fixar / desafixar o comportamento de hover ---
+  togglePin(): void {
+    if (this.isPinned()) {
+      this.isPinned.set(false);
+
+      // Ao desafixar, volta a respeitar o hover atual.
+      this.isExpanded.set(this.isHovered());
+      return;
+    }
+
+    this.isPinned.set(true);
+    this.isExpanded.set(true);
+  }
+
+  // --- Logout ---
+  doLogout(): void {
+    this.authService.logout();
     this.router.navigate(['/login']);
   }
 }

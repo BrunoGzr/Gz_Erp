@@ -1,70 +1,582 @@
-:host{
+/* ==========================================================================
+   VARIÁVEIS DO COMPONENTE
+   As medidas principais ficam centralizadas aqui. Se precisar mudar o tamanho
+   da sidebar, da foto ou a velocidade da animação, altere estes valores.
+   ========================================================================== */
+
+:host {
+  /* Largura da sidebar aberta e fechada. */
+  --sidebar-width-expanded: 260px;
+  --sidebar-width-collapsed: 80px;
+
+  /* Duração e curva da animação de abrir/fechar.
+     cubic-bezier deixa o movimento mais natural (começa rápido e desacelera). */
+  --sidebar-transition: 300ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Tamanho da foto do usuário e espaço entre a foto e o nome. */
+  --avatar-size: 55px;
+  --profile-gap: 18px;
+
+  /* Altura fixa do topo da sidebar.
+     Ela precisa caber a foto (--avatar-size), o nome da empresa e um
+     respiro inferior. Se aumentar muito a foto, aumente este valor. */
+  --sidebar-header-height: 152px;
+
   display: block;
-  padding: 0;
-  margin: 0;
-  height: 100vh;
-  width: 260px;
-  background-color: #1D1D29;
-  position: fixed;
+  min-height: 100vh;
 }
 
-.user-profile {
+/* ==========================================================================
+   SHELL — Sidebar + conteúdo das rotas
+   ========================================================================== */
+
+/* Área total da aplicação: sidebar à esquerda e conteúdo à direita. */
+.app-shell {
   display: flex;
-  align-items: flex-start;
-  flex-direction: row;
-  gap: 12px;
-  padding: 0 0 0 20px;
+  min-height: 100vh;
+  background-color: #12121e;
 }
 
-.avatar-img{
-  width: 70px;
-  height: 70px;
-  margin-top: 20px;
-  border-radius: 50%;
-  object-fit: cover;
-  flex-shrink: 0;
-  border: 1px solid #E0E0E0;
+/* ==========================================================================
+   SIDEBAR
+   ========================================================================== */
+
+/* Invólucro externo da sidebar.
+   É ele que anima a largura; os elementos internos acompanham o movimento. */
+.sidebar-shell {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  flex: 0 0 var(--sidebar-width-expanded);
+  width: var(--sidebar-width-expanded);
+  min-width: 0;
+  height: 100vh;
+  transition:
+    flex-basis var(--sidebar-transition),
+    width var(--sidebar-transition);
 }
-.user-info{
+
+/* A classe .collapsed é adicionada pelo Angular quando a sidebar está fechada. */
+.app-shell.collapsed .sidebar-shell {
+  flex-basis: var(--sidebar-width-collapsed);
+  width: var(--sidebar-width-collapsed);
+}
+
+/* Estrutura interna: topo (perfil), meio (menu) e base (logout). */
+.sidebar {
   display: flex;
   flex-direction: column;
-  color: #E0E0E0;
-  min-width: 0;
+  justify-content: space-between;
+  width: 100%;
+  height: 100vh;
+  background-color: #181920;
+  border-right: 1px solid #2a2a35;
   box-sizing: border-box;
-  gap: 0;
-  margin: 0;
-  padding: 0;
-
+  overflow: hidden;
 }
 
-.user-info h1{
+/* ==========================================================================
+   TOPO — PERFIL
+   ========================================================================== */
 
-  padding: 7px 0 0 5px;
-  font-size: 1.25rem;
-  font-family: 'Inter', sans-serif;
-;
+/* Topo da sidebar: foto, nome, empresa e PIN.
+   A altura é fixa nos dois estados para os itens do menu não pularem
+   quando a sidebar abre ou fecha. */
+.sidebar-header {
+  position: relative; /* referência para posicionar o PIN com position: absolute */
+  flex-shrink: 0;
+  height: var(--sidebar-header-height);
+  padding: 28px 26px 0; /* 26px de respiro nas laterais no estado aberto */
+  box-sizing: border-box;
+  overflow: hidden; /* impede que textos apareçam fora da sidebar */
+  transition: padding var(--sidebar-transition);
 }
 
-.user-info h2{
-    color: gray;
-    font-size: 0.875rem;
-    margin-left: 5px;
-    margin-top: -10px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
+/* Quando fechada, a sobra horizontal é dividida igualmente:
+   (largura recolhida - tamanho da foto) / 2.
+   Assim a foto fica centralizada sem precisar de outro elemento. */
+.app-shell.collapsed .sidebar-header {
+  height: var(--sidebar-header-height);
+  padding: 28px calc((var(--sidebar-width-collapsed) - var(--avatar-size)) / 2) 0;
 }
 
+/* Linha do topo: foto + nome, alinhados verticalmente ao centro. */
+.profile-section {
+  display: flex;
+  align-items: center;
+  gap: var(--profile-gap);
+  min-width: 0;
+  white-space: nowrap;
+}
 
+/* Foto do usuário.
+   O tamanho vem de --avatar-size; flex-shrink: 0 impede que a foto
+   seja esmagada quando a sidebar está fechada. */
+.avatar-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  min-width: var(--avatar-size);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #d8d8de 0%, #9797a1 100%);
+  color: #ffffff;
+  overflow: hidden;
+  flex-shrink: 0;
+}
 
+/* object-fit: cover preenche o círculo sem deformar a imagem. */
+.avatar-circle img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
 
+/* Ícone padrão exibido quando o usuário não tem foto. */
+.avatar-circle app-header-icon {
+  width: 32px;
+  height: 32px;
+}
 
-.nav-btn{
+/* Nome do usuário.
+   flex: 1 ocupa o espaço restante; min-width: 0 permite o texto
+   ser cortado com reticências quando não couber.
+   O PIN fica no canto superior direito, então o nome não precisa
+   reservar espaço ao lado. */
+.profile-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: #ffffff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+  transition:
+    opacity 180ms ease,
+    transform var(--sidebar-transition);
+}
+
+/* No estado fechado o nome continua no DOM (para animar), mas fica invisível. */
+.app-shell.collapsed .profile-name {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+/* Nome da empresa.
+   Fica centralizado horizontalmente no header, abaixo do perfil.
+   As reticências são aplicadas quando o nome é maior que o espaço. */
+.profile-company {
   display: block;
-  margin-left: 42px;
-  padding-top: 50px;
-  color: #E0E0E0;
-  list-style: none;
+  margin-top: 12px;
+  text-align: center;
+  box-sizing: border-box;
+  overflow: hidden;
+  color: #8f8f98;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+  transition:
+    opacity 180ms ease,
+    transform var(--sidebar-transition);
 }
 
+/* A empresa também permanece no DOM e apenas desaparece com opacidade. */
+.app-shell.collapsed .profile-company {
+  opacity: 0;
+  transform: translateX(-8px);
+}
 
+/* Botão de PIN.
+   Ele fica sempre no DOM; a classe .visible controla quando aparece.
+   No estado aberto, fica no canto superior direito do header,
+   com 12px de respiro nas bordas, sem cobrir o nome. */
+.pin-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #8f8f98;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 160ms,
+    top var(--sidebar-transition),
+    right var(--sidebar-transition),
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
+}
+
+/* Quando esta classe existe, o PIN está visível e pode ser clicado. */
+.pin-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 0s,
+    top var(--sidebar-transition),
+    right var(--sidebar-transition),
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
+}
+
+/* Estado visual ao passar o mouse ou quando o PIN está fixado. */
+.pin-btn:hover,
+.pin-btn.active {
+  background-color: #2a2a35;
+  color: #ffffff;
+}
+
+/* Quando recolhida, o canto superior direito é ocupado pela foto.
+   Por isso o PIN desce e fica centralizado abaixo dela.
+   O calc() mantém o botão 8px abaixo da foto e centralizado
+   horizontalmente, mesmo que --avatar-size mude. */
+.app-shell.collapsed .pin-btn {
+  top: calc(28px + var(--avatar-size) + 8px);
+  right: calc((var(--sidebar-width-collapsed) - 28px) / 2);
+}
+
+/* ==========================================================================
+   MEIO — MENU DE NAVEGAÇÃO
+   ========================================================================== */
+
+/* Área rolável dos links do menu.
+   No estado aberto: 26px de padding lateral + 24px de padding do item
+   deixa o ícone em x = 50px. */
+.sidebar-nav {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 24px;
+  min-height: 0;
+  padding: 20px 26px 8px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  transition: padding var(--sidebar-transition);
+}
+
+/* No estado fechado o padding lateral do menu vira 0.
+   O item usa 28px de padding, então:
+   28px + 24px do ícone + 28px = 80px. O ícone fica centralizado. */
+.app-shell.collapsed .sidebar-nav {
+  gap: 24px;
+  padding: 20px 0 8px;
+}
+
+/* Cada link do menu.
+   padding e gap também animam, por isso o ícone desliza suavemente
+   da posição fechada para a aberta em vez de "teleportar". */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  box-sizing: border-box;
+  color: #e6e6ea;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: left;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    padding var(--sidebar-transition),
+    gap var(--sidebar-transition),
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out;
+}
+
+/* Fechado: gap 0 e padding de 28px para centralizar o ícone nos 80px. */
+.app-shell.collapsed .nav-item {
+  justify-content: flex-start;
+  padding: 12px 28px;
+  gap: 0;
+}
+
+/* Efeito ao passar o mouse em um item. */
+.nav-item:hover {
+  background-color: #2a2a35;
+  color: #ffffff;
+}
+
+/* Item da rota atual (classe aplicada automaticamente pelo routerLinkActive). */
+.nav-item.active {
+  background-color: #f4f4f5;
+  color: #181920;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(255, 255, 255, 0.08);
+}
+
+/* No estado fechado o destaque vira uma bola branca preenchida ao redor
+   do ícone. O texto do item fica invisível, então a cor escura é aplicada
+   apenas para o ícone ficar preto dentro da bola. */
+.app-shell.collapsed .nav-item.active {
+  background-color: transparent;
+  color: #181920;
+  box-shadow: none;
+}
+
+/* O ::after desenha a bola sem ocupar espaço no layout.
+   inset: -8px deixa a bola 8px afastada do ícone em todos os lados. */
+.app-shell.collapsed .nav-item.active .nav-icon {
+  position: relative;
+  isolation: isolate;
+}
+
+.app-shell.collapsed .nav-item.active .nav-icon::after {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  z-index: 0;
+  border-radius: 50%;
+  background-color: #f4f4f5;
+  pointer-events: none;
+}
+
+/* Mantém o ícone acima da bola branca para ele aparecer em preto. */
+.app-shell.collapsed .nav-item.active .nav-icon app-header-icon {
+  position: relative;
+  z-index: 1;
+}
+
+/* Caixa fixa do ícone: mantém todos os ícones alinhados. */
+.nav-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  flex-shrink: 0;
+}
+
+.nav-icon app-header-icon {
+  width: 24px;
+  height: 24px;
+}
+
+/* Os ícones de Início e Marketplaces vêm de arquivos SVG em public/.
+   Como são <img>, o currentColor não os alcança; por isso o filtro
+   escurece o desenho quando o item ativo tem fundo claro. */
+.nav-item.active .nav-icon app-header-icon {
+  filter: brightness(0);
+}
+
+/* Texto do link.
+   Permanece no DOM no estado fechado e só perde opacidade, permitindo
+   que a transição seja suave. */
+.nav-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 1;
+  transition:
+    opacity 180ms ease,
+    transform var(--sidebar-transition);
+}
+
+.app-shell.collapsed .nav-label {
+  opacity: 0;
+  transform: translateX(-8px);
+}
+
+/* ==========================================================================
+   BASE — LOGOUT
+   ========================================================================== */
+
+/* Base da sidebar: área do botão de logout. */
+.sidebar-footer {
+  display: flex;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 18px 0 32px;
+}
+
+/* Botão de logout. */
+.logout-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: #e6e6ea;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
+}
+
+.logout-btn:hover {
+  background-color: #2a2a35;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   BOTÃO CENTRAL DE EXPANDIR / RECOLHER
+   ========================================================================== */
+
+/* Fica metade para dentro e metade para fora da borda direita da sidebar.
+   top: 50% + translateY(-50%) centraliza verticalmente na tela.
+   Ele começa invisível; a classe .visible aparece quando o PIN é ativado. */
+.toggle-btn {
+  position: absolute;
+  top: 50%;
+  right: -16px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #2a2a35;
+  border-radius: 50%;
+  background-color: #1e1e24;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  color: #b8b8c0;
+  cursor: pointer;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-50%);
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 160ms,
+    background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
+}
+
+/* Quando o PIN está ativo, o botão central fica visível e clicável. */
+.toggle-btn.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    opacity 160ms ease,
+    visibility 0s linear 0s,
+    background-color 0.2s ease-in-out,
+    border-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
+}
+
+.toggle-btn:hover {
+  border-color: #3a3a45;
+  background-color: #2a2a35;
+  color: #ffffff;
+}
+
+/* ==========================================================================
+   CONTEÚDO
+   ========================================================================== */
+
+/* Área à direita da sidebar onde as páginas são renderizadas. */
+.app-content {
+  flex: 1;
+  min-width: 0;
+  min-height: 100vh;
+  background-color: #12121e;
+}
+
+/* ==========================================================================
+   RESPONSIVIDADE — Telas pequenas
+   ========================================================================== */
+
+/* Em telas menores que 768px a sidebar fica sempre com 80px.
+   Os textos e os controles de PIN/toggle são escondidos para não poluir. */
+@media (max-width: 768px) {
+  .sidebar-shell,
+  .app-shell.collapsed .sidebar-shell {
+    flex-basis: var(--sidebar-width-collapsed);
+    width: var(--sidebar-width-collapsed);
+  }
+
+  /* Mesmo cálculo do estado fechado: centraliza a foto de 70px nos 80px. */
+  .sidebar-header,
+  .app-shell.collapsed .sidebar-header {
+    height: var(--sidebar-header-height);
+    padding: 28px calc((var(--sidebar-width-collapsed) - var(--avatar-size)) / 2) 0;
+  }
+
+  .sidebar-nav,
+  .app-shell.collapsed .sidebar-nav {
+    padding: 20px 0 8px;
+  }
+
+  .nav-item,
+  .app-shell.collapsed .nav-item {
+    justify-content: flex-start;
+    padding: 12px 28px;
+    gap: 0;
+  }
+
+  .profile-name,
+  .profile-company,
+  .nav-label {
+    display: none !important;
+  }
+
+  .nav-item.active,
+  .app-shell.collapsed .nav-item.active {
+    background-color: transparent;
+    color: #181920;
+    box-shadow: none;
+  }
+
+  /* Como a sidebar fica sempre recolhida nesse tamanho, mantém a bola
+     branca preenchida no ícone ativo mesmo durante o hover. */
+  .nav-item.active .nav-icon {
+    position: relative;
+    isolation: isolate;
+  }
+
+  .nav-item.active .nav-icon::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    z-index: 0;
+    border-radius: 50%;
+    background-color: #f4f4f5;
+    pointer-events: none;
+  }
+
+  .nav-item.active .nav-icon app-header-icon {
+    position: relative;
+    z-index: 1;
+  }
+
+  .pin-btn,
+  .toggle-btn {
+    display: none;
+  }
+}

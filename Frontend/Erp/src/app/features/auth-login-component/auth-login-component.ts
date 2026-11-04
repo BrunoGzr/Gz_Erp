@@ -1,6 +1,5 @@
 import { Component, inject, signal} from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { identity } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../../service/auth-login-service';
 
@@ -34,15 +33,12 @@ export class AuthLoginComponent {
       identifier: this.username,
       password: this.password
     }
-    
+
     this.isLoading.set(true);
 
     this.authService.requestLogin(credentials).subscribe({
       next: (Response) => {
         
-        console.log('Login deu certo zé', Response);
-
-        localStorage.setItem('access_token', Response.token);
 
         this.isLoading.set(false);
 
@@ -52,7 +48,7 @@ export class AuthLoginComponent {
       error: (err) => {
         this.isLoading.set(false);
         console.error('erro no loggin', err);
-        
+
 
         if (err.status == 401){
           this.errorMessage.set("Usuario ou senha invalidos.")
@@ -61,10 +57,10 @@ export class AuthLoginComponent {
         } else {
           this.errorMessage.set("Ocorreu um erro inesperado, tente novamente mais tarde.")
         }
-      
+
       },
     })
-    
+
   }
 
 }

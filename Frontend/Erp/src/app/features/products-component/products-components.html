@@ -1,0 +1,792 @@
+<svg class="icon-sprite" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-search" viewBox="0 0 24 24">
+      <circle cx="11" cy="11" r="7" />
+      <path d="m21 21-4.3-4.3" />
+    </symbol>
+
+    <symbol id="i-filter" viewBox="0 0 24 24">
+      <path d="M3 5h18l-7 8v6l-4 2v-8L3 5Z" />
+    </symbol>
+
+    <symbol id="i-sort" viewBox="0 0 24 24">
+      <path d="M4 7h16" />
+      <path d="M7 12h10" />
+      <path d="M10 17h4" />
+    </symbol>
+
+    <symbol id="i-chevron-down" viewBox="0 0 24 24">
+      <path d="m6 9 6 6 6-6" />
+    </symbol>
+
+    <symbol id="i-plus" viewBox="0 0 24 24">
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </symbol>
+
+    <symbol id="i-download" viewBox="0 0 24 24">
+      <path d="M12 3v12" />
+      <path d="m7 10 5 5 5-5" />
+      <path d="M5 21h14" />
+    </symbol>
+
+    <symbol id="i-grid" viewBox="0 0 24 24">
+      <rect x="4" y="4" width="6" height="6" rx="1" />
+      <rect x="14" y="4" width="6" height="6" rx="1" />
+      <rect x="4" y="14" width="6" height="6" rx="1" />
+      <rect x="14" y="14" width="6" height="6" rx="1" />
+    </symbol>
+
+    <symbol id="i-list" viewBox="0 0 24 24">
+      <path d="M8 6h13" />
+      <path d="M8 12h13" />
+      <path d="M8 18h13" />
+      <path d="M3 6h.01" />
+      <path d="M3 12h.01" />
+      <path d="M3 18h.01" />
+    </symbol>
+
+    <symbol id="i-more" viewBox="0 0 24 24">
+      <circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    </symbol>
+
+    <symbol id="i-edit" viewBox="0 0 24 24">
+      <path d="M12 20h9" />
+      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    </symbol>
+
+    <symbol id="i-trash" viewBox="0 0 24 24">
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="m19 6-1 14H6L5 6" />
+      <path d="M10 11v6" />
+      <path d="M14 11v6" />
+    </symbol>
+
+    <symbol id="i-arrow-up-right" viewBox="0 0 24 24">
+      <path d="M7 17 17 7" />
+      <path d="M8 7h9v9" />
+    </symbol>
+
+    <symbol id="i-arrow-left" viewBox="0 0 24 24">
+      <path d="M19 12H5" />
+      <path d="m12 19-7-7 7-7" />
+    </symbol>
+
+    <symbol id="i-arrow-right" viewBox="0 0 24 24">
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </symbol>
+
+    <symbol id="i-shirt" viewBox="0 0 24 24">
+      <path d="M9 4 4 6 2 11l4 2v7h12v-7l4-2-2-5-4-2a5 5 0 0 1-10 0Z" />
+    </symbol>
+
+    <symbol id="i-package" viewBox="0 0 24 24">
+      <path d="m12 3 8 4.5v9L12 21l-8-4.5v-9L12 3Z" />
+      <path d="m4 7.5 8 4.5 8-4.5" />
+      <path d="M12 12v9" />
+    </symbol>
+  </defs>
+</svg>
+
+<div class="products-page" [attr.inert]="adsDrawerProduct() ? '' : null">
+  <header class="page-head">
+    <div>
+      <span class="eyebrow">Gestão de catálogo</span>
+      <h1>Produtos</h1>
+      <p>Gerencie estoque, preços e disponibilidade em um só lugar.</p>
+    </div>
+
+    <div class="page-actions">
+      <button class="btn" type="button">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <use href="#i-download"></use>
+        </svg>
+        Exportar
+      </button>
+
+      <button class="btn btn-primary" type="button">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <use href="#i-plus"></use>
+        </svg>
+        Adicionar produto
+      </button>
+
+      <button class="icon-btn" type="button" title="Mais opções" aria-label="Mais opções">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <use href="#i-more"></use>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <section class="kpis" aria-label="Resumo do catálogo">
+    @for (stat of stats; track stat.label) {
+      <article [class]="'kpi ' + stat.toneClass">
+        <div class="kpi-head">
+          <span class="kpi-label">
+            <span class="dot"></span>
+            {{ stat.label }}
+          </span>
+          <button class="kpi-more" type="button" title="Mais informações" aria-label="Mais informações">
+            <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+              <use href="#i-more"></use>
+            </svg>
+          </button>
+        </div>
+
+        <div class="kpi-value">{{ stat.value }}</div>
+
+        <div class="kpi-foot">
+          <span class="trend" [class.good]="stat.tone === 'good'" [class.bad]="stat.tone === 'bad'">
+            <span class="arrow">{{ stat.direction === 'up' ? '↑' : '↓' }}</span>
+            {{ stat.trend }}
+          </span>
+          <span class="kpi-note">{{ stat.note }}</span>
+        </div>
+
+        <span class="spark-label">Últimos 7 dias</span>
+        <svg
+          class="spark"
+          viewBox="0 0 96 24"
+          preserveAspectRatio="none"
+          role="img"
+          [attr.aria-label]="stat.label + ': tendência dos últimos 7 dias'"
+        >
+          <title>{{ stat.label }} — tendência dos últimos 7 dias</title>
+          <polyline [attr.points]="stat.points" vector-effect="non-scaling-stroke"></polyline>
+        </svg>
+
+        <div class="kpi-bar" aria-hidden="true">
+          <span [style.width.%]="stat.progress"></span>
+        </div>
+      </article>
+    }
+  </section>
+
+  <section class="panel" aria-label="Catálogo de produtos">
+    <div class="panel-head">
+      <div>
+        <h2>Catálogo</h2>
+        <p aria-live="polite">{{ filteredProducts().length }} produtos encontrados</p>
+      </div>
+
+      <div class="view-toggle" role="group" aria-label="Modo de visualização">
+        <button
+          type="button"
+          [class.active]="viewMode() === 'table'"
+          [attr.aria-pressed]="viewMode() === 'table'"
+          (click)="setView('table')"
+          title="Visualização em tabela"
+          aria-label="Visualização em tabela"
+        >
+          <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <use href="#i-list"></use>
+          </svg>
+        </button>
+
+        <button
+          type="button"
+          [class.active]="viewMode() === 'grid'"
+          [attr.aria-pressed]="viewMode() === 'grid'"
+          (click)="setView('grid')"
+          title="Visualização em grade"
+          aria-label="Visualização em grade"
+        >
+          <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+            <use href="#i-grid"></use>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <label class="search">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <use href="#i-search"></use>
+        </svg>
+        <input
+          type="search"
+          placeholder="Buscar por nome, SKU, categoria ou marketplace..."
+          [value]="search()"
+          (input)="onSearch($event)"
+          aria-label="Buscar produtos"
+        />
+      </label>
+
+      <select
+        class="select"
+        [value]="categoryFilter()"
+        (change)="onCategoryChange($event)"
+        aria-label="Filtrar por categoria"
+      >
+        <option value="all">
+          {{ categoryFilter() === 'all' ? 'Categoria' : 'Todas as categorias' }}
+        </option>
+
+        @for (category of categories; track category) {
+          <option [value]="category">{{ category }}</option>
+        }
+      </select>
+
+      <select
+        class="select"
+        [value]="marketplaceFilter()"
+        (change)="onMarketplaceChange($event)"
+        aria-label="Filtrar por marketplace"
+      >
+        <option value="all">
+          {{ marketplaceFilter() === 'all' ? 'Marketplace' : 'Todos os marketplaces' }}
+        </option>
+
+        @for (option of marketplaceOptions; track option.key) {
+          <option [value]="option.key">{{ option.label }}</option>
+        }
+      </select>
+
+      <select
+        class="select"
+        [value]="adsFilter()"
+        (change)="onAdsChange($event)"
+        aria-label="Filtrar por anúncios"
+      >
+        <option value="all">
+          {{ adsFilter() === 'all' ? 'Anúncios' : 'Todos os anúncios' }}
+        </option>
+
+        @for (option of adsOptions; track option.key) {
+          <option [value]="option.key">{{ option.label }}</option>
+        }
+      </select>
+
+      <select
+        class="select"
+        [value]="stockFilter()"
+        (change)="onStockChange($event)"
+        aria-label="Filtrar por estoque"
+      >
+        <option value="all">
+          {{ stockFilter() === 'all' ? 'Estoque' : 'Todo o estoque' }}
+        </option>
+
+        @for (option of stockOptions; track option.key) {
+          <option [value]="option.key">{{ option.label }}</option>
+        }
+      </select>
+
+      <button class="tool-btn" type="button">
+        <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+          <use href="#i-sort"></use>
+        </svg>
+        Ordenar
+      </button>
+    </div>
+
+    @if (activeFilters().length > 0) {
+      <div class="active-filters">
+        <span class="active-filters-label">Filtros ativos:</span>
+
+        @for (filter of activeFilters(); track filter.key) {
+          <button class="filter-chip" type="button" (click)="clearFilter(filter.key)">
+            {{ filter.label }}
+            <span aria-hidden="true">×</span>
+          </button>
+        }
+
+        <button class="clear-filters" type="button" (click)="clearFilters()">Limpar filtros</button>
+      </div>
+    }
+
+    @if (selectedCount() > 0) {
+      <div class="bulk" role="status" aria-live="polite">
+        <span><strong>{{ selectedCount() }}</strong> selecionado(s)</span>
+
+        <div class="bulk-actions">
+          <button type="button">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+              <use href="#i-download"></use>
+            </svg>
+            Exportar
+          </button>
+
+          <button type="button">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+              <use href="#i-edit"></use>
+            </svg>
+            Editar em massa
+          </button>
+
+          <button class="danger" type="button">
+            <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+              <use href="#i-trash"></use>
+            </svg>
+            Excluir
+          </button>
+
+          <button class="bulk-close" type="button" (click)="clearSelection()" aria-label="Limpar seleção">
+            ×
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (filteredProducts().length === 0) {
+      <div class="empty">
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <use href="#i-package"></use>
+        </svg>
+        <h3>Nenhum produto encontrado</h3>
+        <p>Ajuste a busca ou os filtros para ver outros itens.</p>
+      </div>
+    } @else if (viewMode() === 'table') {
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th class="check sticky-left" scope="col">
+                <label class="check-hit">
+                  <input
+                    type="checkbox"
+                    [checked]="allSelected()"
+                    [indeterminate]="someSelected()"
+                    (change)="toggleAll()"
+                    aria-label="Selecionar todos os produtos"
+                  />
+                </label>
+              </th>
+              <th class="sticky-product" scope="col">Produto</th>
+              <th scope="col">Categoria</th>
+              <th scope="col">Anúncios</th>
+              <th scope="col">Preço</th>
+              <th scope="col">Estoque</th>
+              <th scope="col">Vendas</th>
+              <th scope="col">Última atualização</th>
+              <th class="sticky-actions" scope="col">Ações</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            @for (product of filteredProducts(); track product.id) {
+              <tr [class.selected]="isSelected(product.id)" [attr.aria-selected]="isSelected(product.id)">
+                <td class="check sticky-left">
+                  <label class="check-hit">
+                    <input
+                      type="checkbox"
+                      [checked]="isSelected(product.id)"
+                      (change)="toggleSelection(product.id)"
+                      [attr.aria-label]="'Selecionar ' + product.name"
+                    />
+                  </label>
+                </td>
+
+                <td class="sticky-product">
+                  <div class="product-cell">
+                    <span [class]="'thumb ' + product.tone">
+                      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <use href="#i-shirt"></use>
+                      </svg>
+                    </span>
+
+                    <span class="product-info">
+                      <span class="product-name">{{ product.name }}</span>
+                      <span class="product-meta">{{ product.sku }}</span>
+                    </span>
+                  </div>
+                </td>
+
+                <td>
+                  <span class="category-badge">{{ product.category }}</span>
+                </td>
+
+                <td>
+                  @if (product.marketplaces.length > 0) {
+                    <button
+                      class="marketplaces"
+                      type="button"
+                      aria-haspopup="dialog"
+                      [attr.aria-expanded]="adsDrawerProduct()?.id === product.id"
+                      (click)="openAdsDrawer(product)"
+                      [attr.title]="'Ver anúncios de ' + product.name"
+                    >
+                      <span class="mp-total">Total: <strong>{{ totalAds(product) }}</strong></span>
+
+                      <span class="mp-list">
+                        @for (marketplace of product.marketplaces; track marketplace.key) {
+                          <span
+                            [class]="'mp mp-' + marketplace.key"
+                            [title]="marketplace.name + ': ' + marketplace.ads + ' anúncio(s)'"
+                          >
+                            <span class="mp-dot"></span>
+                            <b>{{ marketplace.ads }}</b> {{ marketplace.name }}
+                          </span>
+                        }
+                      </span>
+                    </button>
+                  } @else {
+                    <button class="mp-link" type="button">+ Vincular marketplace</button>
+                  }
+                </td>
+
+                <td>
+                  <span class="price">
+                    <strong>{{ product.price }}</strong>
+                    <small>Custo {{ product.cost }}</small>
+                  </span>
+                </td>
+
+                <td>
+                  <span class="stock">
+                    {{ product.stock }} un.
+                    @if (product.stock === 0) {
+                      <span class="stock-out">sem estoque</span>
+                    } @else if (product.stock <= 20) {
+                      <span class="stock-low">baixo</span>
+                    }
+                  </span>
+                </td>
+
+                <td class="muted">{{ product.sales }}</td>
+                <td class="muted">{{ product.updated }}</td>
+
+                <td class="sticky-actions">
+                  <div class="actions">
+                    <button class="icon-btn" type="button" title="Editar" aria-label="Editar">
+                      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+                        <use href="#i-edit"></use>
+                      </svg>
+                    </button>
+
+                    <button class="icon-btn danger" type="button" title="Excluir" aria-label="Excluir">
+                      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+                        <use href="#i-trash"></use>
+                      </svg>
+                    </button>
+
+                    <button class="icon-btn" type="button" title="Mais opções" aria-label="Mais opções">
+                      <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+                        <use href="#i-more"></use>
+                      </svg>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    } @else {
+      <div class="grid">
+        @for (product of filteredProducts(); track product.id) {
+          <article class="product-card" [class.selected]="isSelected(product.id)">
+            <div [class]="'card-media ' + product.tone">
+              <label class="card-check-hit">
+                <input
+                  class="card-check"
+                  type="checkbox"
+                  [checked]="isSelected(product.id)"
+                  (change)="toggleSelection(product.id)"
+                  [attr.aria-label]="'Selecionar ' + product.name"
+                />
+              </label>
+
+              <svg class="shirt" viewBox="0 0 24 24" aria-hidden="true">
+                <use href="#i-shirt"></use>
+              </svg>
+            </div>
+
+            <div class="card-body">
+              <span class="card-category">{{ product.category }} · {{ product.sku }}</span>
+              <h3>{{ product.name }}</h3>
+
+              <div class="card-marketplaces">
+                @if (product.marketplaces.length > 0) {
+                  <button
+                    class="card-marketplaces-button"
+                    type="button"
+                    aria-haspopup="dialog"
+                    [attr.aria-expanded]="adsDrawerProduct()?.id === product.id"
+                    (click)="openAdsDrawer(product)"
+                    [attr.title]="'Ver anúncios de ' + product.name"
+                  >
+                    <span class="mp-total">Total: <strong>{{ totalAds(product) }}</strong></span>
+                    @for (marketplace of product.marketplaces; track marketplace.key) {
+                      <span
+                        [class]="'mp mp-' + marketplace.key"
+                        [title]="marketplace.name + ': ' + marketplace.ads + ' anúncio(s)'"
+                      >
+                        <span class="mp-dot"></span>
+                        <b>{{ marketplace.ads }}</b> {{ marketplace.name }}
+                      </span>
+                    }
+                  </button>
+                } @else {
+                  <button class="mp-link" type="button">+ Vincular marketplace</button>
+                }
+              </div>
+            </div>
+
+            <div class="card-foot">
+              <div class="card-price">
+                <strong>{{ product.price }}</strong>
+                <small>
+                  @if (product.stock === 0) {
+                    Sem estoque
+                  } @else {
+                    {{ product.stock }} un. em estoque
+                  }
+                  · {{ product.sales }} vendidos
+                </small>
+              </div>
+
+              <button class="round-btn" type="button" title="Abrir produto" aria-label="Abrir produto">
+                <svg class="icon icon-sm" viewBox="0 0 24 24" aria-hidden="true">
+                  <use href="#i-arrow-up-right"></use>
+                </svg>
+              </button>
+            </div>
+          </article>
+        }
+      </div>
+    }
+
+    <div class="panel-foot">
+      <span class="muted">Mostrando {{ filteredProducts().length }} de 1.248 produtos</span>
+
+      <div class="pagination">
+        <button class="nav" type="button" disabled>
+          <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+            <use href="#i-arrow-left"></use>
+          </svg>
+          Anterior
+        </button>
+        <button class="active" type="button">1</button>
+        <button type="button">2</button>
+        <button type="button">3</button>
+        <span class="muted">...</span>
+        <button type="button">10</button>
+        <button class="nav" type="button">
+          Próximo
+          <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+            <use href="#i-arrow-right"></use>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </section>
+</div>
+
+@if (adsDrawerProduct(); as product) {
+  <div class="drawer-backdrop" (click)="closeAdsDrawer()" aria-hidden="true"></div>
+
+  <aside
+    class="ads-drawer"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'Edição rápida dos anúncios de ' + product.name"
+    (keydown)="onDrawerKeydown($event)"
+  >
+    <header class="drawer-head">
+      <div>
+        <span class="eyebrow">Edição rápida em massa</span>
+        <h2>{{ product.name }}</h2>
+        <p>
+          {{ product.sku }} · {{ product.category }} · {{ totalAds(product) }} anúncios em
+          {{ product.marketplaces.length }} marketplaces
+        </p>
+      </div>
+
+      <button
+        #drawerClose
+        class="icon-btn"
+        type="button"
+        (click)="closeAdsDrawer()"
+        aria-label="Fechar painel"
+      >
+        ×
+      </button>
+    </header>
+
+    @if (applyFeedback(); as feedback) {
+      <div [class]="'drawer-feedback ' + applyFeedbackTone()" role="status" aria-live="polite">
+        {{ feedback }}
+      </div>
+    }
+
+    <div class="drawer-body">
+      <section class="drawer-summary">
+        <div class="drawer-summary-head">
+          <span>Marketplaces vinculados</span>
+          <strong>{{ totalAds(product) }} anúncios</strong>
+        </div>
+
+        <div class="drawer-marketplaces-summary">
+          @for (marketplace of product.marketplaces; track marketplace.key) {
+            <span [class]="'mp mp-' + marketplace.key">
+              <span class="mp-dot"></span>
+              <b>{{ marketplace.ads }}</b> {{ marketplace.name }}
+            </span>
+          }
+        </div>
+      </section>
+
+      <div class="drawer-grid">
+        <section class="drawer-section">
+          <div class="drawer-section-head">
+            <div>
+              <h3>Preço</h3>
+            <p>Aplicado a todos os anúncios vinculados</p>
+          </div>
+        </div>
+
+        <div class="segmented">
+          <button
+            type="button"
+            [class.active]="priceMode() === 'percent'"
+            (click)="setPriceMode('percent')"
+          >
+            Ajuste em %
+          </button>
+          <button
+            type="button"
+            [class.active]="priceMode() === 'fixed'"
+            (click)="setPriceMode('fixed')"
+          >
+            Novo preço
+          </button>
+        </div>
+
+        <label class="drawer-input">
+          <span>{{ priceMode() === 'percent' ? '%' : 'R$' }}</span>
+          <input
+            type="number"
+            step="0.01"
+            [value]="priceValue() ?? ''"
+            (input)="onPriceInput($event)"
+            placeholder="0"
+            [attr.aria-label]="
+              priceMode() === 'percent' ? 'Percentual de ajuste de preço' : 'Novo preço'
+            "
+          />
+        </label>
+
+        @if (pricePreview(); as preview) {
+          <p class="drawer-preview">Novo preço: <strong>{{ preview }}</strong></p>
+        }
+
+        <div class="quick-actions" role="group" aria-label="Ajustes rápidos de preço">
+          <button class="quick-btn" type="button" (click)="addPricePercent(1)">+1%</button>
+          <button class="quick-btn" type="button" (click)="addPricePercent(5)">+5%</button>
+          <button class="quick-btn" type="button" (click)="addPricePercent(10)">+10%</button>
+          <button class="quick-btn" type="button" (click)="addPricePercent(20)">+20%</button>
+          <button class="quick-btn" type="button" (click)="addPricePercent(-5)">-5%</button>
+        </div>
+      </section>
+
+      <section class="drawer-section">
+        <div class="drawer-section-head">
+          <div>
+            <h3>Estoque</h3>
+            <p>Aplicado a todos os anúncios vinculados</p>
+          </div>
+        </div>
+
+        <div class="segmented">
+          <button
+            type="button"
+            [class.active]="stockMode() === 'set'"
+            (click)="setStockMode('set')"
+          >
+            Definir
+          </button>
+          <button
+            type="button"
+            [class.active]="stockMode() === 'adjust'"
+            (click)="setStockMode('adjust')"
+          >
+            Ajustar
+          </button>
+        </div>
+
+        <label class="drawer-input">
+          <span>un.</span>
+          <input
+            type="number"
+            step="1"
+            [value]="stockValue() ?? ''"
+            (input)="onStockInput($event)"
+            placeholder="0"
+            aria-label="Quantidade de estoque"
+          />
+        </label>
+
+        @if (stockPreview() !== null) {
+          <p class="drawer-preview">Estoque final: <strong>{{ stockPreview() }} un.</strong></p>
+        }
+
+        <div class="quick-actions" role="group" aria-label="Ajustes rápidos de estoque">
+          <button class="quick-btn" type="button" (click)="addStock(1)">+1</button>
+          <button class="quick-btn" type="button" (click)="addStock(5)">+5</button>
+          <button class="quick-btn" type="button" (click)="addStock(10)">+10</button>
+          <button class="quick-btn" type="button" (click)="addStock(100)">+100</button>
+        </div>
+        </section>
+      </div>
+
+      <section class="drawer-danger">
+        <div>
+          <h3>Desativar produto</h3>
+          <p>Desativa todos os anúncios vinculados em todos os marketplaces.</p>
+        </div>
+
+        @if (deactivateStep() === 0) {
+          <button class="btn btn-danger" type="button" (click)="requestDeactivate()">
+            Desativar produto
+          </button>
+        } @else if (deactivateStep() === 1) {
+          <div class="confirm-box">
+            <strong>Etapa 1 de 2</strong>
+            <p>
+              Isso vai desativar {{ totalAds(product) }} anúncios em
+              {{ product.marketplaces.length }} marketplaces vinculados. Deseja continuar?
+            </p>
+            <div class="confirm-actions">
+              <button class="btn" type="button" (click)="cancelDeactivate()">Cancelar</button>
+              <button class="btn btn-danger" type="button" (click)="continueDeactivate()">
+                Continuar
+              </button>
+            </div>
+          </div>
+        } @else if (deactivateStep() === 2) {
+          <div class="confirm-box">
+            <strong>Etapa 2 de 2 — confirmação final</strong>
+            <p>
+              Essa ação será refletida em todos os marketplaces vinculados e não poderá ser
+              desfeita aqui.
+            </p>
+            <div class="confirm-actions">
+              <button class="btn" type="button" (click)="cancelDeactivate()">Voltar</button>
+              <button class="btn btn-danger" type="button" (click)="confirmDeactivate()">
+                Confirmar desativação
+              </button>
+            </div>
+          </div>
+        } @else {
+          <div class="confirm-success">
+            <strong>Desativação confirmada.</strong>
+            <p>Simulação concluída para {{ totalAds(product) }} anúncios.</p>
+          </div>
+        }
+      </section>
+    </div>
+
+    <footer class="drawer-foot">
+      <button class="btn" type="button" (click)="closeAdsDrawer()">Fechar</button>
+      <button class="btn btn-primary" type="button" (click)="applyBulkChanges()">
+        Aplicar alterações
+      </button>
+    </footer>
+  </aside>
+}
