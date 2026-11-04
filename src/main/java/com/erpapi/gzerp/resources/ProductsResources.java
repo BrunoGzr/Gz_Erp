@@ -52,4 +52,6 @@ public class ProductsResources {
         return ResponseEntity.ok().body(service.productPagesGet(pageable));
     }
 
+    
+
 }

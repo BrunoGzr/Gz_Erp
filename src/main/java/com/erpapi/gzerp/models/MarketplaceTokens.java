@@ -46,7 +46,6 @@ public class MarketplaceTokens {
     @Column(name = "refresh_token_expires_at")
     private LocalDateTime refreshTokenExpiresAt;
 
-
     public MarketplaceTokens() {
     }
 

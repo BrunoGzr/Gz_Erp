@@ -15,12 +15,13 @@ import org.springframework.web.client.RestClient;
 @Service
 public class HttpServiceShopee {
 
-    private RestClient restClient;
+
+
+    private final RestClient restClient;
     private static final Logger log = LoggerFactory.getLogger(ShopeeService.class);
 
-    public HttpServiceShopee() {
-
-
+    public HttpServiceShopee(RestClient restClient) {
+        this.restClient = restClient;
 
     }
 

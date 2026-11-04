@@ -53,7 +53,7 @@ public class UsersAccounts {
     @OneToOne(mappedBy = "usersAccounts",fetch = FetchType.LAZY  ,cascade = CascadeType.ALL, optional = true )
     private Partners partner;
 
-    @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true )
+    @OneToOne(mappedBy = "usersAccounts", cascade = CascadeType.ALL, optional = true)
     private Employees employee;
 
     @Enumerated(EnumType.STRING)
@@ -65,7 +65,8 @@ public class UsersAccounts {
     @JoinColumn(name = "role_id")
     private Roles role;
 
-
+    @Column(name = "image_url")
+    private String imageUrl;
 
     public UsersAccounts() {
     }
@@ -156,5 +157,13 @@ public class UsersAccounts {
 
     public void setPublicId(UUID public_id) {
         this.publicId = public_id;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }

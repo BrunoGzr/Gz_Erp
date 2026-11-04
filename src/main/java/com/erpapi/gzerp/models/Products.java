@@ -1,10 +1,9 @@
 package com.erpapi.gzerp.models;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
+
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
@@ -43,7 +42,7 @@ public class Products {
 
     @Column(name = "stock", nullable = false)
     private int stock;
-
+    
     @Column(name = "base_price", precision = 10, scale = 2)
     private BigDecimal baseSellPrice;
 

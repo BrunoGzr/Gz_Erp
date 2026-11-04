@@ -24,6 +24,10 @@ public class CustomUserDetails implements UserDetails {
         return user.getId();
     }
 
+    public String getimageUrl(){
+        return user.getImageUrl();
+    }
+
     public long getTenantId(){
         return user.getTenant().getId();
     }

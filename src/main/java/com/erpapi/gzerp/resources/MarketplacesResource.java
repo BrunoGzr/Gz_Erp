@@ -33,7 +33,7 @@ public class MarketplacesResource {
     public ResponseEntity<?> renewTokens(@PathVariable UUID publicId){
         shopeeService.handleRenewToken(publicId);
 
-        return ResponseEntity.ok("Deu certo.");
+        return ResponseEntity.noContent().build();
     }
 
 }
