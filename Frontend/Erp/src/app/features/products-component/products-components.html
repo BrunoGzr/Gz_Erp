@@ -92,7 +92,12 @@
   </defs>
 </svg>
 
-<div class="products-page" [attr.inert]="adsDrawerProduct() ? '' : null">
+<div
+  class="products-page"
+  [attr.inert]="adsDrawerProduct() ? '' : null"
+  [class.scroll-locked]="adsDrawerProduct() !== null"
+  (scroll)="onScroll($event)"
+>
   <header class="page-head">
     <div>
       <span class="eyebrow">Gestão de catálogo</span>
@@ -342,7 +347,7 @@
         <p>Ajuste a busca ou os filtros para ver outros itens.</p>
       </div>
     } @else if (viewMode() === 'table') {
-      <div class="table-wrap">
+      <div class="table-wrap" (scroll)="onScroll($event)">
         <table>
           <thead>
             <tr>
@@ -615,7 +620,7 @@
       </div>
     }
 
-    <div class="drawer-body">
+    <div class="drawer-body" (scroll)="onScroll($event)">
       <section class="drawer-summary">
         <div class="drawer-summary-head">
           <span>Marketplaces vinculados</span>

@@ -82,6 +82,7 @@ export class ProductsComponents implements OnDestroy {
   readonly applyFeedbackTone = signal<'success' | 'error'>('success');
   private feedbackTimer: ReturnType<typeof setTimeout> | null = null;
   private focusTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly scrollTimers = new Map<HTMLElement, ReturnType<typeof setTimeout>>();
   private previousFocus: HTMLElement | null = null;
 
   readonly categories = ['Camisa', 'Jaqueta', 'Calça', 'Camiseta'];
@@ -400,6 +401,30 @@ export class ProductsComponents implements OnDestroy {
     this.clearSelection();
   }
 
+  onScroll(event: Event): void {
+    const target = event.currentTarget as HTMLElement | null;
+
+    if (!target) {
+      return;
+    }
+
+    target.classList.add('is-scrolling');
+
+    const currentTimer = this.scrollTimers.get(target);
+
+    if (currentTimer) {
+      clearTimeout(currentTimer);
+    }
+
+    this.scrollTimers.set(
+      target,
+      setTimeout(() => {
+        this.scrollTimers.delete(target);
+        target.classList.remove('is-scrolling');
+      }, 700),
+    );
+  }
+
   clearFilter(key: FilterKey): void {
     if (key === 'search') {
       this.search.set('');
@@ -578,6 +603,7 @@ export class ProductsComponents implements OnDestroy {
   ngOnDestroy(): void {
     this.clearFeedbackTimer();
     this.clearFocusTimer();
+    this.clearScrollTimers();
     this.document.body.style.overflow = '';
   }
 
@@ -606,6 +632,14 @@ export class ProductsComponents implements OnDestroy {
       clearTimeout(this.focusTimer);
       this.focusTimer = null;
     }
+  }
+
+  private clearScrollTimers(): void {
+    for (const timer of this.scrollTimers.values()) {
+      clearTimeout(timer);
+    }
+
+    this.scrollTimers.clear();
   }
 
   toggleSelection(id: number): void {

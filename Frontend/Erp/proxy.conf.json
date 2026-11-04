@@ -1,18 +1,18 @@
 {
   "/api": {
-    "target": "http://192.168.15.23:8989",
+    "target": "http://192.168.15.148:8989",
     "secure": false,
     "changeOrigin": true,
     "cookieDomainRewrite": "localhost"
   },
   "/products": {
-    "target": "http://192.168.15.23:8989",
+    "target": "http://192.168.15.148:8989",
     "secure": false,
     "changeOrigin": true,
     "cookieDomainRewrite": "localhost"
   },
   "/products/register": {
-    "target": "http://192.168.15.23:8989",
+    "target": "http://192.168.15.148:8989",
     "secure": false,
     "changeOrigin": true,
     "cookieDomainRewrite": "localhost"
