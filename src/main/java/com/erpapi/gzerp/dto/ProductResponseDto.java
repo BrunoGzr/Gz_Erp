@@ -4,6 +4,7 @@ import com.erpapi.gzerp.models.Products;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 public class ProductResponseDto {
@@ -28,6 +29,7 @@ public class ProductResponseDto {
 
     private LocalDateTime updatedAt;
 
+    private Map<String, Long> listingCount;
 
     public ProductResponseDto(Products product) {
         this.name = product.getName();
@@ -40,6 +42,9 @@ public class ProductResponseDto {
         this.createdAt = product.getCreatedAt();
         this.sales = product.getSales();
         this.updatedAt = product.getUpdatedAt();
+    }
+
+    public ProductResponseDto() {
     }
 
     public UUID getPublicId() {
@@ -120,5 +125,13 @@ public class ProductResponseDto {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public Map<String, Long> getListingCount() {
+        return listingCount;
+    }
+
+    public void setListingCount(Map<String, Long> listingCount) {
+        this.listingCount = listingCount;
     }
 }

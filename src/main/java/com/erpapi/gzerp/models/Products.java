@@ -2,8 +2,10 @@ package com.erpapi.gzerp.models;
 
 import jakarta.persistence.*;
 
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
@@ -23,21 +25,17 @@ public class Products {
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID publicId;
 
-    @Column(name = "sku", nullable = true, unique = true, length = 50)
+    @Column(name = "sku", nullable = true, length = 50)
     private String sku;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "tenant_id")
     private Tenants tenant;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
-    private UsersAccounts user;
-
     @Column(name = "active")
     private Boolean active;
 
-    @Column(name = "name",nullable = false)
+    @Column(name = "name",nullable = false, length = 256)
     private String name;
 
     @Column(name = "stock", nullable = false)
@@ -49,16 +47,18 @@ public class Products {
     @Column(name = "cost", nullable = false, precision = 10, scale = 2)
     private BigDecimal costPrice;
 
-    @Column(name = "image", nullable = true)
+    @Column(name = "image", nullable = true, length = 500)
     private String imageUrl;
 
     @Column(name = "sales", nullable = false)
     private int sales;
 
     @Column(name = "created_at",nullable = false, updatable = false)
+    @CreationTimestamp
     private LocalDateTime createdAt;
 
     @Column(name = "updated_at", nullable = false)
+    @UpdateTimestamp
     private LocalDateTime updatedAt;
 
     public Products() {
@@ -150,14 +150,6 @@ public class Products {
 
     public void setSku(String sku) {
         this.sku = sku;
-    }
-
-    public UsersAccounts getUser() {
-        return user;
-    }
-
-    public void setUser(UsersAccounts user) {
-        this.user = user;
     }
 
     public Boolean getActive() {

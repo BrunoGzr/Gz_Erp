@@ -4,7 +4,7 @@ CREATE TABLE marketplace_listing(
     public_id VARCHAR(36) UNIQUE NOT NULL,
     external_listing_id VARCHAR(256),
     title VARCHAR(256) NOT NULL,
-    marketplace ENUM('SHOPEE','MERCADO_LIVRE') NOT NULL,
+    marketplace ENUM('SHOPEE','MERCADOLIVRE') NOT NULL,
     stock INT UNSIGNED NOT NULL DEFAULT 0,
     sales INT UNSIGNED NOT NULL DEFAULT 0,
     sku VARCHAR(100) NOT NULL,

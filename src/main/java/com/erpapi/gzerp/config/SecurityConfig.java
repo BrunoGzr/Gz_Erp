@@ -63,7 +63,7 @@ public class SecurityConfig {
                                         "/api/auth/refresh"
                                 ).permitAll()
                                 .requestMatchers(HttpMethod.GET,"/",
-                                        "/errors",
+                                        "/error",
                                         "/favicon.ico",
                                         "/api/marketplaces/callback/shopee")
                                 .permitAll()

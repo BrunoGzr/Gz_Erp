@@ -5,6 +5,7 @@ import java.util.List;
 public class PageResponseDto {
 
     private List<?> itens;
+
     private int actualPage;
     private int totalPage;
     private long totalItens;

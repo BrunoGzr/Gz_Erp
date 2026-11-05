@@ -1,9 +1,7 @@
 package com.erpapi.gzerp.resources;
 
 import com.erpapi.gzerp.config.CustomUserDetails;
-import com.erpapi.gzerp.dto.PageResponseDto;
-import com.erpapi.gzerp.dto.ProductRegisterDto;
-import com.erpapi.gzerp.dto.ProductResponseDto;
+import com.erpapi.gzerp.dto.*;
 import com.erpapi.gzerp.models.Products;
 import com.erpapi.gzerp.repositories.ProductsRepo;
 import com.erpapi.gzerp.security.TenantContext;
@@ -19,9 +17,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
+import java.util.List;
 
 @RestController
-@RequestMapping("/products")
+@RequestMapping("/api/products")
 public class ProductsResources {
 
     private final ProductsService service;
@@ -42,16 +41,16 @@ public class ProductsResources {
         return  ResponseEntity.created(location).body(newProduct);
     };
 
-    @GetMapping("/products")
-    @PreAuthorize("hasAuthority('PERM_VIEW_PROD')")
-    public ResponseEntity<PageResponseDto> getProductsListing(@PageableDefault(
+    @GetMapping("/overall")
+    public ResponseEntity<ProductPageResponseDto> getProductPage(
+            @PageableDefault(
             size = 20
             ,sort = "name"
             ,direction = Sort.Direction.ASC)
-                Pageable pageable){
-        return ResponseEntity.ok().body(service.productPagesGet(pageable));
+            Pageable pageable){
+
+            ProductPageResponseDto dto = service.getProductsPage(pageable);
+
+            return ResponseEntity.ok().body(dto);
     }
-
-    
-
 }
