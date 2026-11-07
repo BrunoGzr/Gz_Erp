@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../service/auth-login-service';
 import { HeaderIconComponent } from './header-icon-component';
+import { TopbarComponent } from './topbar-component';
 
 export interface MenuItem {
   label: string;
@@ -12,7 +13,7 @@ export interface MenuItem {
 @Component({
   selector: 'app-header-component',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, RouterOutlet, HeaderIconComponent],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, HeaderIconComponent, TopbarComponent],
   templateUrl: './header-component.html',
   styleUrl: './header-component.css',
 })
@@ -48,6 +49,14 @@ export class HeaderComponent {
     { label: 'Marketplaces', icon: 'store', route: '/marketplaces' },
     { label: 'Equipe', icon: 'users', route: '/equipe' },
   ];
+
+  // Mantém o item ativo quando a rota recebe query params (ex.: filtros do catálogo).
+  readonly navLinkActiveOptions = {
+    paths: 'exact',
+    queryParams: 'ignored',
+    matrixParams: 'ignored',
+    fragment: 'ignored',
+  } as const;
 
   // --- Expansão por hover (quando não está fixada) ---
   onSidebarMouseEnter(): void {

@@ -502,10 +502,23 @@
 
 /* Área à direita da sidebar onde as páginas são renderizadas. */
 .app-content {
+  display: flex;
+  flex-direction: column;
   flex: 1;
   min-width: 0;
-  min-height: 100vh;
+  height: 100vh;
+  min-height: 0;
+  overflow: hidden;
   background-color: #12121e;
+}
+
+/* A topbar fica fixa acima; a rota ocupa o restante e controla sua própria rolagem. */
+.route-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* ==========================================================================

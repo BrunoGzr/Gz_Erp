@@ -74,7 +74,7 @@
             class="nav-item"
             [routerLink]="item.route"
             routerLinkActive="active"
-            [routerLinkActiveOptions]="{ exact: true }"
+            [routerLinkActiveOptions]="navLinkActiveOptions"
             ariaCurrentWhenActive="page"
             [attr.title]="item.label"
             [attr.aria-label]="item.label"
@@ -132,6 +132,10 @@
        O router-outlet é onde as páginas (dashboard, produtos etc.) aparecem.
        =============================================================== -->
   <main class="app-content">
-    <router-outlet></router-outlet>
+    <app-topbar />
+
+    <div class="route-shell">
+      <router-outlet></router-outlet>
+    </div>
   </main>
 </div>
