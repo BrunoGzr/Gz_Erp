@@ -2,12 +2,13 @@ package com.erpapi.gzerp.resources;
 
 import com.erpapi.gzerp.config.CustomUserDetails;
 import com.erpapi.gzerp.dto.*;
-import com.erpapi.gzerp.models.Products;
+
+
 import com.erpapi.gzerp.repositories.ProductsRepo;
-import com.erpapi.gzerp.security.TenantContext;
+
 import com.erpapi.gzerp.services.ProductsService;
 import jakarta.validation.Valid;
-import org.springframework.data.domain.Page;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -17,7 +18,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.List;
+
+
+
 
 @RestController
 @RequestMapping("/api/products")
@@ -47,9 +50,11 @@ public class ProductsResources {
             size = 20
             ,sort = "name"
             ,direction = Sort.Direction.ASC)
-            Pageable pageable){
+            Pageable pageable,
+            ProductFilterDto filter
+    ){
 
-            ProductPageResponseDto dto = service.getProductsPage(pageable);
+            ProductPageResponseDto dto = service.getProductsPage(pageable, filter);
 
             return ResponseEntity.ok().body(dto);
     }

@@ -3,8 +3,10 @@ package com.erpapi.gzerp.exceptionHandler;
 import com.erpapi.gzerp.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.http.*;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.core.AuthenticationException;
@@ -13,11 +15,13 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
-
+import java.util.stream.Collectors;
 
 
 @ControllerAdvice
@@ -31,25 +35,122 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
 
     @Override
-    protected @Nullable ResponseEntity<Object>
-    handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-                                 HttpHeaders headers,
-                                 HttpStatusCode status,
-                                 WebRequest request) {
-        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
                 "Invalid Request, please verify the following fields and try again");
         problemDetail.setTitle("Invalid Request");
         problemDetail.setType(URI.create("/Errors/Validation"));
-        List<FieldError> fieldErrors = ex.getBindingResult().getFieldErrors();
-        List<String> errorsTest = new ArrayList<>();
-        for (FieldError fieldError : fieldErrors) {
-            String message = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
-            errorsTest.add(message);
+
+        List<String> errors = new ArrayList<>();
+
+        for (FieldError fieldError : ex.getBindingResult().getFieldErrors()) {
+
+            String message;
+
+            if (fieldError.isBindingFailure()) {
+                // Erro de conversão (String → Enum/Boolean/etc.)
+                String field = fieldError.getField();
+                Class<?> fieldType = ex.getBindingResult().getFieldType(field);
+
+                if (fieldType != null && fieldType.isEnum()) {
+                    String allowed = Arrays.stream(fieldType.getEnumConstants())
+                            .map(Object::toString)
+                            .collect(Collectors.joining(", "));
+                    message = "Valor inválido para '" + field
+                            + "'. Valores aceitos: " + allowed + ".";
+                } else if (fieldType == Boolean.class || fieldType == boolean.class) {
+                    message = "Valor inválido para '" + field
+                            + "'. Valores aceitos: true, false.";
+                } else {
+                    message = "Valor inválido para '" + field + "'.";
+                }
+            } else {
+                // Erro de validação normal (@NotBlank, @Positive, etc.)
+                message = messageSource.getMessage(fieldError, LocaleContextHolder.getLocale());
+            }
+
+            errors.add(message);
         }
-        problemDetail.setProperty("errors", errorsTest);
+
+        problemDetail.setProperty("errors", errors);
 
         return handleExceptionInternal(ex, problemDetail, headers, HttpStatus.BAD_REQUEST, request);
     }
+
+
+    @ExceptionHandler(PropertyReferenceException.class)
+    public ProblemDetail handlePropertyReference(
+            PropertyReferenceException ex,
+            HttpServletRequest request) {
+
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Invalid Request, please verify the following fields and try again");
+        problemDetail.setTitle("Invalid Request");
+        problemDetail.setType(URI.create("/Errors/Validation"));
+        problemDetail.setInstance(URI.create(request.getRequestURI()));
+
+        // ex.getPropertyName() devolve "campoInexistente"
+        String campo = ex.getPropertyName();
+        String message = "Campo de ordenação inválido: '" + campo + "'.";
+
+        problemDetail.setProperty("errors", List.of(message));
+
+        return problemDetail;
+    }
+
+
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
+
+        // 1. Monta o envelope padrão que você já usa
+        ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "Invalid Request, please verify the following fields and try again"
+        );
+        problemDetail.setTitle("Invalid Request");
+        problemDetail.setType(URI.create("/Errors/Validation"));
+
+        // 2. Extrai qual campo falhou e qual era o tipo esperado (ex: StockFilter)
+        String fieldName = "unknown";
+        Class<?> requiredType = null;
+
+        if (ex instanceof MethodArgumentTypeMismatchException mismatchEx) {
+            fieldName = mismatchEx.getName();
+            requiredType = mismatchEx.getRequiredType();
+        }
+
+        // 3. Monta a mensagem amigável
+        String friendlyMessage;
+        if (requiredType != null && requiredType.isEnum()) {
+            String allowed = Arrays.stream(requiredType.getEnumConstants())
+                    .map(Object::toString)
+                    .collect(Collectors.joining(", "));
+            friendlyMessage = "Invalid value for '" + fieldName + "'. Allowed values: " + allowed + ".";
+        } else {
+            friendlyMessage = "Invalid value for '" + fieldName + "'.";
+        }
+
+        // 4. Define a lista de erros no mesmo formato do seu handleMethodArgumentNotValid
+        problemDetail.setProperty("errors", List.of(friendlyMessage));
+
+        return handleExceptionInternal(ex, problemDetail, headers, HttpStatus.BAD_REQUEST, request);
+    }
+
+
+
+
+
 
     @Override
     protected @Nullable ResponseEntity<Object>

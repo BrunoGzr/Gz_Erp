@@ -61,6 +61,9 @@ public class Products {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @Column(name = "min_stock", nullable = false)
+    private int minStock = 20;
+
     public Products() {
     }
 
@@ -158,5 +161,13 @@ public class Products {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+
+    public int getMinStock() {
+        return minStock;
+    }
+
+    public void setMinStock(int minStock) {
+        this.minStock = minStock;
     }
 }

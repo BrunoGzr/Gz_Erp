@@ -31,6 +31,8 @@ public class ProductResponseDto {
 
     private Map<String, Long> listingCount;
 
+    private int minStock;
+
     public ProductResponseDto(Products product) {
         this.name = product.getName();
         this.publicId = product.getPublicId();
@@ -133,5 +135,13 @@ public class ProductResponseDto {
 
     public void setListingCount(Map<String, Long> listingCount) {
         this.listingCount = listingCount;
+    }
+
+    public int getMinStock() {
+        return minStock;
+    }
+
+    public void setMinStock(int minStock) {
+        this.minStock = minStock;
     }
 }

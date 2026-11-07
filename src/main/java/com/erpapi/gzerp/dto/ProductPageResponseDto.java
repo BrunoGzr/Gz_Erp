@@ -1,5 +1,7 @@
 package com.erpapi.gzerp.dto;
 
+import com.erpapi.gzerp.enums.StockFilter;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -12,8 +14,7 @@ public record ProductPageResponseDto(
         int totalPage,
         Long totalItems,
         int pageSize,
-        Boolean hasNext
-        )
+        Boolean hasNext)
 {}
 
 
