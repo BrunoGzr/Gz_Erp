@@ -57,6 +57,9 @@ public class MarketplaceListing {
     @JoinColumn(name = "product_id_intern", updatable = false, nullable = false)
     private Products product;
 
+    @Column(name = "active", nullable = false)
+    private Boolean active;
+
     public MarketplaceListing() {
     }
 
@@ -154,5 +157,13 @@ public class MarketplaceListing {
 
     public Long getId() {
         return id;
+    }
+
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 }

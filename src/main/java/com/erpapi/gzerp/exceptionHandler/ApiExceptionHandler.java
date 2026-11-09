@@ -325,4 +325,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
 
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ProblemDetail handleEntityNotFoundException(EntityNotFoundException ex){
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
+                 "Entity: " + ex.getMessage() + " Not found");
+        return pd;
+    }
+
 }

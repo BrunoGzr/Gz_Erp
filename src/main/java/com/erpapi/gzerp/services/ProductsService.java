@@ -436,9 +436,19 @@ public class ProductsService {
     }
 
     @Transactional
-    public Void softDeleteProduct(UUID publicId){
+    public void softDeleteProduct(UUID publicId){
 
-        Products product = productsRepo.findBy
+        Long tenantId = TenantContext.required();
+
+        Products product = productsRepo.findByPublicIdAndTenant_IdAndActiveTrue(publicId,tenantId).orElseThrow(
+                () -> new EntityNotFoundException("Product")
+        );
+
+        product.setActive(false);
+
+        listingRepo.deactivateByProductPublicid(product.getPublicId());
+        productsRepo.save(product);
+
 
 
     }

@@ -77,7 +77,8 @@ public class ProductsResources {
     public ResponseEntity<Void> softDeleteProduct(
             @PathVariable UUID publicId
     ){
-
+        service.softDeleteProduct(publicId);
+        return ResponseEntity.noContent().build();
     }
 
 

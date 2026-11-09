@@ -3,11 +3,13 @@ package com.erpapi.gzerp.repositories;
 import com.erpapi.gzerp.dto.ListingCountProjectionDto;
 import com.erpapi.gzerp.models.MarketplaceListing;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public interface MarketplaceListingRepo extends JpaRepository<MarketplaceListing, Long> {
 
@@ -20,4 +22,15 @@ public interface MarketplaceListingRepo extends JpaRepository<MarketplaceListing
 """)
     List<ListingCountProjectionDto> countListingsByProductIds(@Param("productIds") List<Long> productIds);
 
+    List<MarketplaceListing> findAllByProduct_publicIdAndActiveTrue(UUID publicId);
+
+
+    @Modifying
+    @Query("""
+    UPDATE MarketplaceListing ml
+        SET ml.active = false
+            WHERE ml.product.publicId = :publicId
+                AND ml.active = true
+    """)
+    int deactivateByProductPublicid(UUID publicId);
 }
