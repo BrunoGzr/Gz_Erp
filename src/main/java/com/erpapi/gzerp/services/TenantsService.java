@@ -6,9 +6,9 @@ import com.erpapi.gzerp.dto.TenantRegisterDto;
 import com.erpapi.gzerp.dto.TenantResponseDto;
 import com.erpapi.gzerp.enums.Plans;
 import com.erpapi.gzerp.enums.Status;
-import com.erpapi.gzerp.models.Partners;
-import com.erpapi.gzerp.models.Tenants;
-import com.erpapi.gzerp.models.UsersAccounts;
+import com.erpapi.gzerp.models.*;
+import com.erpapi.gzerp.repositories.CategoryRepo;
+import com.erpapi.gzerp.repositories.DefaultCategoryRepo;
 import com.erpapi.gzerp.repositories.TenantsRepo;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,14 +26,17 @@ public class TenantsService {
     private final PartnersService partnersService;
     private final UsersAccountsService usersAccountsService;
     private final AuthService authService;
+    private final DefaultCategoryRepo defaultCategoryRepo;
+    private final CategoryRepo categoryRepo;
 
-    public TenantsService(TenantsRepo tenantsRepo, PartnersService partnersService, UsersAccountsService usersAccountsService, AuthService authService) {
+    public TenantsService(TenantsRepo tenantsRepo, PartnersService partnersService, UsersAccountsService usersAccountsService, AuthService authService, DefaultCategoryRepo defaultCategoryRepo, CategoryRepo categoryRepo) {
         this.tenantsRepo = tenantsRepo;
         this.partnersService = partnersService;
         this.usersAccountsService = usersAccountsService;
         this.authService = authService;
+        this.defaultCategoryRepo = defaultCategoryRepo;
+        this.categoryRepo = categoryRepo;
     }
-
 
     @Transactional
     public TenantResponseDto registerTenant(TenantRegisterDto dto){
@@ -64,7 +67,24 @@ public class TenantsService {
             Partners newPartner = partnersService.registerPartners(partnerDto,newUser, newTenant);
             newTenant.addPartner(newPartner);
         };
-        newTenant = tenantsRepo.save(newTenant);
+
+        final Tenants savedTenant = tenantsRepo.save(newTenant);
+
+        List<DefaultCategory> templates = defaultCategoryRepo.findAllByActiveTrue();
+
+        List<Categories> newCategories = templates.stream().map(
+                def -> {
+                    Categories cat = new Categories();
+                    cat.setPublicId(UUID.randomUUID());
+                    cat.setName(def.getName());
+                    cat.setTenant(savedTenant);
+                    cat.setActive(true);
+
+                    return cat;
+                }).toList();
+
+        categoryRepo.saveAll(newCategories);
+
         return new TenantResponseDto (newTenant);
     }
 }

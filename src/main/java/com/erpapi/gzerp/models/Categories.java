@@ -1,15 +1,17 @@
 package com.erpapi.gzerp.models;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcType;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.UpdateTimestamp;
 import org.hibernate.type.SqlTypes;
 
-import java.sql.SQLType;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Entity
-public class ProductCategory {
+@Table(name = "categories")
+public class Categories {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -25,7 +27,18 @@ public class ProductCategory {
     @Column(name = "name", length = 100 , nullable = false)
     private String name;
 
-    public ProductCategory() {
+    @Column(name = "active", nullable = false)
+    private Boolean active;
+
+    @Column(name = "created_at", nullable = false, updatable = false)
+    @CreationTimestamp
+    private LocalDateTime createdAt;
+
+    @Column(name = "updated_at", nullable = false)
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
+
+    public Categories() {
     }
 
     public Long getId() {
@@ -60,4 +73,11 @@ public class ProductCategory {
         this.tenant = tenant;
     }
 
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
 }

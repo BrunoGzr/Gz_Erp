@@ -10,6 +10,9 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -63,6 +66,14 @@ public class Products {
 
     @Column(name = "min_stock", nullable = false)
     private int minStock = 20;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "product_categories",
+            joinColumns = @JoinColumn(name = "product_id"),
+            inverseJoinColumns = @JoinColumn(name = "category_id")
+    )
+    private Set<Categories> categories = new HashSet<>();
 
     public Products() {
     }
@@ -169,5 +180,13 @@ public class Products {
 
     public void setMinStock(int minStock) {
         this.minStock = minStock;
+    }
+
+    public Set<Categories> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(Set<Categories> categories) {
+        this.categories = categories;
     }
 }

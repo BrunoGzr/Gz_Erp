@@ -4,6 +4,7 @@ import com.erpapi.gzerp.models.Products;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -33,6 +34,8 @@ public class ProductResponseDto {
 
     private int minStock;
 
+    private List<CategorySummaryDto> categories;
+
     public ProductResponseDto(Products product) {
         this.name = product.getName();
         this.publicId = product.getPublicId();
@@ -44,6 +47,7 @@ public class ProductResponseDto {
         this.createdAt = product.getCreatedAt();
         this.sales = product.getSales();
         this.updatedAt = product.getUpdatedAt();
+
     }
 
     public ProductResponseDto() {
@@ -143,5 +147,13 @@ public class ProductResponseDto {
 
     public void setMinStock(int minStock) {
         this.minStock = minStock;
+    }
+
+    public List<CategorySummaryDto> getCategories() {
+        return categories;
+    }
+
+    public void setCategories(List<CategorySummaryDto> categories) {
+        this.categories = categories;
     }
 }

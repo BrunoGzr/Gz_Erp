@@ -18,8 +18,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-
-
+import java.util.List;
+import java.util.UUID;
 
 
 @RestController
@@ -38,7 +38,7 @@ public class ProductsResources {
     @PreAuthorize("hasAuthority('PERM_CREATE_PROD')")
     public ResponseEntity<?> registerProducts(@RequestBody @Valid ProductRegisterDto dto
                                              ,@AuthenticationPrincipal CustomUserDetails user){
-        ProductResponseDto newProduct = service.registerProduct(dto, user.getUser());
+        ProductResponseDto newProduct = service.registerProduct(dto);
 
         URI location = URI.create("/products/" + newProduct.getPublicId());
         return  ResponseEntity.created(location).body(newProduct);
@@ -58,4 +58,29 @@ public class ProductsResources {
 
             return ResponseEntity.ok().body(dto);
     }
+
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<CategoryResponseDto>> getCategories(){
+        return ResponseEntity.ok().body(service.getCategories());
+    }
+
+    @PatchMapping("/{publicId}")
+    public ResponseEntity<ProductResponseDto> updateProduct(
+            @RequestBody @Valid ProductUpdateDto product,
+            @PathVariable UUID publicId
+            ){
+        return ResponseEntity.ok().body(service.updateProduct(product,publicId));
+    }
+
+    @DeleteMapping("/{publicId}")
+    public ResponseEntity<Void> softDeleteProduct(
+            @PathVariable UUID publicId
+    ){
+
+    }
+
+
+
+
 }

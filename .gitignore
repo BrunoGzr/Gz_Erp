@@ -20,6 +20,8 @@ target/
 *.iml
 *.ipr
 
+
+
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
@@ -41,3 +43,5 @@ build/
 /node_modules
 npm-debug.log
 yarn-error.log
+
+/*.txt

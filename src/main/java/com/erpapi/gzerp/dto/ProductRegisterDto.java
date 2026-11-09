@@ -1,19 +1,22 @@
 package com.erpapi.gzerp.dto;
 
 
+import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
 
 public class ProductRegisterDto {
 
     @NotBlank(message = "Invalid product name, please enter a valid one")
-    @Size(max = 255)
+    @Size(max = 256)
     private String name;
 
     @PositiveOrZero
     @NotNull
-    private int stock;
+    private Integer stock;
 
     @Digits(integer = 10 , fraction = 2)
     @NotNull
@@ -31,6 +34,11 @@ public class ProductRegisterDto {
     @Size(max = 50)
     private String sku;
 
+    @PositiveOrZero
+    private Integer minStock = 20;
+
+    private List<UUID> categoryIds;
+
     public ProductRegisterDto() {
     }
 
@@ -42,7 +50,7 @@ public class ProductRegisterDto {
         this.name = name;
     }
 
-    public int getStock() {
+    public Integer getStock() {
         return stock;
     }
 
@@ -80,5 +88,21 @@ public class ProductRegisterDto {
 
     public void setSku(String sku) {
         this.sku = sku;
+    }
+
+    public Integer getMinStock() {
+        return minStock;
+    }
+
+    public void setMinStock(Integer minStock) {
+        this.minStock = minStock;
+    }
+
+    public List<UUID> getCategoryIds() {
+        return categoryIds;
+    }
+
+    public void setCategoryIds(List<UUID> categoryIds) {
+        this.categoryIds = categoryIds;
     }
 }

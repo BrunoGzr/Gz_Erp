@@ -1,8 +1,11 @@
 package com.erpapi.gzerp.exceptionHandler;
 
 import com.erpapi.gzerp.exceptions.*;
+import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -28,6 +31,8 @@ import java.util.stream.Collectors;
 public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     private final MessageSource messageSource;
+
+    private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     public ApiExceptionHandler(MessageSource messageSource) {
         this.messageSource = messageSource;
@@ -258,5 +263,66 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setDetail(ex.getMessage());
         return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
     }
+
+    @ExceptionHandler(InvalidCategoryException.class)
+    public ResponseEntity<ProblemDetail> HandleInvalidCategoryException(InvalidCategoryException ex){
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Invalid Category");
+        problem.setTitle("Problem with the Category : ");
+        problem.setDetail(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(problem);
+    }
+
+
+    @ExceptionHandler(TenantNotFoundException.class)
+    public ProblemDetail handleTenantNotFound(TenantNotFoundException ex) {
+        log.error("Tenant inconsistente: id={} presente no JWT mas ausente no banco", ex.getMessage());
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Erro interno. Tente novamente mais tarde.");
+        pd.setTitle("Internal Server Error");
+        pd.setType(URI.create("/Errors/Internal"));
+        pd.setProperty("errors", List.of("Contate o suporte."));
+        return pd;
+
+    }
+
+    @ExceptionHandler(UnknownProductException.class)
+    public ProblemDetail handleUnknownProductException(UnknownProductException ex,
+                                                       HttpServletRequest request){
+        String url = request.getRequestURI();
+        if (request.getQueryString() != null) {
+            url += "?" + request.getQueryString();
+        }
+        log.error("Erro no endpoint: {} {} - Mensagem: {}",request.getMethod(), url, ex.getMessage());
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(
+                HttpStatus.NOT_FOUND,
+                "Item Not found in operation: {" + ex.getMessage() +"}");
+        pd.setTitle("Not found");
+
+        return pd;
+    }
+
+    @ExceptionHandler(TenantFraudException.class)
+    public ProblemDetail handleTenantFraudException(TenantFraudException ex,
+                                                    HttpServletRequest request){
+        String url = request.getRequestURI();
+        url = request.getQueryString() == null ? url : url +"?" + request.getQueryString();
+        log.error("Possivel atacante no endpoint: {} {} - Mensagem: {} \n" +
+                " ",request.getMethod(),url,ex.getMessage());
+
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
+                "Item not found");
+        pd.setTitle("Not found");
+
+        return pd;
+    }
+
+    @ExceptionHandler(InvalidProductException.class)
+    public ProblemDetail handleInvalidProductException(InvalidProductException ex){
+        ProblemDetail pd = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT,
+                "Invalid Product, conflict in : " +  ex.getMessage());
+        return pd;
+    }
+
 
 }

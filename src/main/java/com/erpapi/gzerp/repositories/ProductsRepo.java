@@ -10,13 +10,24 @@ import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 
 public interface ProductsRepo extends JpaRepository<Products, Long>, JpaSpecificationExecutor<Products> {
 
     boolean existsBySkuAndTenantId(String sku, Long tenantId);
     boolean existsByNameAndTenantId(String name, Long tenantId);
 
+    boolean existsBySkuAndTenant_IdAndIdNot(String sku, Long tenantId, Long id);
+
+    boolean existsByNameAndTenantIdAndIdNot(String name, Long tenantId, Long id);
+
     Page<Products> findByTenantIdAndActiveTrue(Long tenantId,
                                                Pageable pageable);
+
+    Optional<Products> findByPublicIdAndTenant_IdAndActiveTrue(UUID publicId, Long tenant_id);
+
+
+
 
 }
