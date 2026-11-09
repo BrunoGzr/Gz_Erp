@@ -3,6 +3,7 @@ import { inject, Service } from '@angular/core';
 import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import {
+    CategoryRef,
     Marketplace,
     ProductPageResponse,
     receivedProduct,
@@ -26,6 +27,10 @@ export class ProductService {
         return this.http.post<receivedProduct>(`${this.urlApi}/register`, productInfo)
     }
 
+    getCategories(): Observable<CategoryRef[]> {
+        return this.http.get<CategoryRef[]>(`${this.apiUrl}/products/categories`)
+    }
+
     getOverallProducts(params: {
         page: number;
         size: number;
@@ -34,6 +39,7 @@ export class ProductService {
         marketplace?: Marketplace | null;
         hasListings?: boolean | null;
         stock?: 'LOW' | 'OUT' | 'NORMAL' | null;
+        categoryIds?: string[] | null;
     }): Observable<ProductPageResponse> {
         let httpParams = new HttpParams()
             .set('page', params.page)
@@ -57,6 +63,10 @@ export class ProductService {
 
         if (params.stock) {
             httpParams = httpParams.set('stock', params.stock);
+        }
+
+        for (const categoryId of params.categoryIds ?? []) {
+            httpParams = httpParams.append('categoryIds', categoryId);
         }
 
         return this.http.get<ProductPageResponse>(`${this.apiUrl}/products/overall`, { params: httpParams })

@@ -322,9 +322,14 @@
         <button
           class="select-trigger"
           type="button"
+          [class.open]="openMenu() === 'category'"
+          [attr.aria-expanded]="openMenu() === 'category'"
           aria-haspopup="listbox"
-          disabled
-          title="Categorias serão habilitadas quando o backend implementar o filtro"
+          [attr.title]="
+            categoriesError() && categories().length === 0
+              ? categoriesError()
+              : 'Filtrar por categorias'
+          "
           (click)="toggleMenu('category')"
         >
           <span>{{ categoryFilterLabel() }}</span>
@@ -332,6 +337,58 @@
             <use href="#i-chevron-down"></use>
           </svg>
         </button>
+
+        @if (openMenu() === 'category') {
+          <div
+            class="select-menu multi"
+            role="listbox"
+            aria-multiselectable="true"
+            aria-label="Filtrar por categorias"
+          >
+            <button
+              class="select-option"
+              type="button"
+              role="option"
+              [class.selected]="selectedCategoryIds().size === 0"
+              [attr.aria-selected]="selectedCategoryIds().size === 0"
+              (click)="clearCategories()"
+            >
+              Todas as categorias
+              <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+                <use href="#i-check"></use>
+              </svg>
+            </button>
+
+            @if (categoriesLoading()) {
+              <span class="select-status">Carregando categorias…</span>
+            } @else if (categoriesError() && categories().length === 0) {
+              <div class="select-status error">
+                <span>{{ categoriesError() }}</span>
+                <button class="select-retry" type="button" (click)="retryCategories()">
+                  Tentar novamente
+                </button>
+              </div>
+            } @else if (categories().length === 0) {
+              <span class="select-status">Nenhuma categoria cadastrada.</span>
+            } @else {
+              @for (category of categories(); track category.publicId) {
+                <button
+                  class="select-option"
+                  type="button"
+                  role="option"
+                  [class.selected]="isCategorySelected(category.publicId)"
+                  [attr.aria-selected]="isCategorySelected(category.publicId)"
+                  (click)="toggleCategory(category.publicId)"
+                >
+                  {{ category.name }}
+                  <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
+                    <use href="#i-check"></use>
+                  </svg>
+                </button>
+              }
+            }
+          </div>
+        }
       </div>
 
       <div class="select-wrap">
@@ -533,7 +590,7 @@
         </span>
 
         @for (filter of activeFilters(); track filter.key) {
-          <button class="filter-chip" type="button" (click)="clearFilter(filter.key)">
+          <button class="filter-chip" type="button" (click)="clearActiveFilter(filter)">
             {{ filter.label }}
             <svg class="icon icon-xs" viewBox="0 0 24 24" aria-hidden="true">
               <use href="#i-close"></use>
@@ -678,7 +735,7 @@
                 </button>
               </th>
 
-              <th scope="col" title="Categorias chegam com o novo sistema de categorias">Categoria</th>
+              <th scope="col">Categorias</th>
 
               <th scope="col" title="Anúncios por marketplace">Anúncios</th>
 
@@ -788,7 +845,15 @@
                 </td>
 
                 <td>
-                  <span class="category-badge">{{ categoryLabel(product) }}</span>
+                  @if (productCategories(product).length > 0) {
+                    <span class="category-badges">
+                      @for (category of productCategories(product); track category.publicId) {
+                        <span class="category-badge">{{ category.name }}</span>
+                      }
+                    </span>
+                  } @else {
+                    <span class="category-empty">--</span>
+                  }
                 </td>
 
                 <td>
@@ -905,7 +970,18 @@
             </div>
 
             <div class="card-body">
-              <span class="card-category">{{ categoryLabel(product) }} · {{ product.sku || '—' }}</span>
+              <span class="card-category">
+                @if (productCategories(product).length > 0) {
+                  <span class="category-badges">
+                    @for (category of productCategories(product); track category.publicId) {
+                      <span class="category-badge">{{ category.name }}</span>
+                    }
+                  </span>
+                } @else {
+                  <span class="category-empty">Sem categoria</span>
+                }
+                <span class="card-sku">{{ product.sku || '—' }}</span>
+              </span>
               <h3>{{ product.name }}</h3>
 
               <div class="card-marketplaces">
@@ -1121,7 +1197,7 @@
         <span class="eyebrow">Edição rápida em massa</span>
         <h2>{{ product.name }}</h2>
         <p>
-          {{ product.sku || '—' }} · {{ categoryLabel(product) }} ·
+          {{ product.sku || '—' }} · {{ categoryNames(product) }} ·
           {{ marketplaceTotal(product) }} anúncios em
           {{ marketplaceEntries(product).length }} marketplaces
         </p>

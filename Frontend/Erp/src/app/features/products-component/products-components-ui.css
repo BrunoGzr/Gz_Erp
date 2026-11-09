@@ -107,6 +107,21 @@ th.sticky-actions{text-align:center}
 .panel.is-loading::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:var(--radius-panel) var(--radius-panel) 0 0;background:linear-gradient(90deg,transparent,var(--blue),transparent);background-size:200% 100%;animation:panel-loading 1.1s linear infinite;pointer-events:none}
 @keyframes panel-loading{from{background-position:200% 0}to{background-position:-200% 0}}
 
+/* Categorias: badges na tabela e nos cards. */
+.category-badges{display:flex;flex-wrap:wrap;gap:4px;max-width:220px}
+.category-badge{display:inline-flex;align-items:center;max-width:100%;padding:2px 8px;border:1px solid rgba(96,165,250,.24);border-radius:var(--radius-pill);background:rgba(96,165,250,.08);color:#93c5fd;font-size:.7rem;font-weight:600;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.category-empty{color:var(--muted);font-size:.75rem}
+.card-category{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
+.card-sku{color:var(--muted);font-size:.72rem;letter-spacing:.03em}
+.card-category .category-badges{max-width:100%}
+
+/* Menu de categorias multi-seleção. */
+.select-menu.multi{max-height:320px}
+.select-status{display:flex;flex-direction:column;gap:6px;padding:10px 12px;color:var(--muted);font-size:.74rem;text-align:center}
+.select-status.error{color:#fca5a5;text-align:left}
+.select-retry{align-self:flex-start;padding:2px 0;border:0;background:transparent;color:var(--blue);font:inherit;font-size:.74rem;font-weight:600;cursor:pointer}
+.select-retry:hover{text-decoration:underline}
+
 /* Respeito a quem prefere menos movimento. */
 @media (prefers-reduced-motion: reduce){
   .products-page *,.toast-stack *,.ads-drawer,.drawer-backdrop{animation-duration:.001s !important;animation-iteration-count:1 !important;transition-duration:.001s !important}

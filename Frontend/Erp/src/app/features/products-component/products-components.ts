@@ -15,7 +15,12 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, catchError, defer, finalize, of, switchMap, tap } from 'rxjs';
-import { Marketplace, ProductPageResponse, ProductResponse } from '../../models/productModels';
+import {
+  CategoryRef,
+  Marketplace,
+  ProductPageResponse,
+  ProductResponse,
+} from '../../models/productModels';
 import { ProductService } from '../../service/product-service';
 
 type ViewMode = 'table' | 'grid';
@@ -35,6 +40,13 @@ interface ProductToast {
   id: number;
   message: string;
   tone: ToastTone;
+}
+
+interface ActiveFilter {
+  key: string;
+  label: string;
+  filter: FilterKey;
+  categoryId?: string;
 }
 
 interface PageNumber {
@@ -71,6 +83,8 @@ const SORT_FIELDS: Record<SortKey, string> = {
 };
 
 const PAGE_SIZES = [20, 50, 100, 200];
+
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const TOAST_ICONS: Record<ToastTone, string> = {
   success: '#i-check',
@@ -154,7 +168,10 @@ export class ProductsComponents implements OnInit, OnDestroy {
   @ViewChild('reviewClose') private reviewClose?: ElementRef<HTMLButtonElement>;
 
   readonly viewMode = signal<ViewMode>('table');
-  readonly categoryFilter = signal('all');
+  readonly selectedCategoryIds = signal<ReadonlySet<string>>(new Set<string>());
+  readonly categories = signal<CategoryRef[]>([]);
+  readonly categoriesLoading = signal(false);
+  readonly categoriesError = signal<string | null>(null);
   readonly marketplaceFilter = signal<MarketplaceFilter>('all');
   readonly adsFilter = signal<AdsFilter>('all');
   readonly stockFilter = signal<StockFilter>('all');
@@ -253,6 +270,7 @@ export class ProductsComponents implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.readFiltersFromUrl();
+    this.loadCategories();
     this.reload();
   }
 
@@ -270,11 +288,13 @@ export class ProductsComponents implements OnInit, OnDestroy {
     marketplace: Marketplace | null;
     hasListings: boolean | null;
     stock: 'LOW' | 'OUT' | 'NORMAL' | null;
+    categoryIds: string[] | null;
   } {
     const key = this.sortKey();
     const marketplace = this.marketplaceFilter();
     const ads = this.adsFilter();
     const stock = this.stockFilter();
+    const categoryIds = this.selectedCategoryIds();
 
     return {
       page: this.page(),
@@ -284,6 +304,7 @@ export class ProductsComponents implements OnInit, OnDestroy {
       marketplace: marketplace === 'all' ? null : marketplace,
       hasListings: ads === 'all' ? null : ads === 'with',
       stock: stock === 'all' ? null : stock.toUpperCase() as 'LOW' | 'OUT' | 'NORMAL',
+      categoryIds: categoryIds.size > 0 ? [...categoryIds] : null,
     };
   }
 
@@ -291,6 +312,10 @@ export class ProductsComponents implements OnInit, OnDestroy {
     const params = this.route.snapshot.queryParamMap;
 
     this.search.set(params.get('searchTerm')?.trim() ?? '');
+
+    this.selectedCategoryIds.set(
+      new Set(params.getAll('categoryIds').filter((id) => UUID_PATTERN.test(id))),
+    );
 
     const marketplace = params.get('marketplace');
     this.marketplaceFilter.set(
@@ -339,9 +364,11 @@ export class ProductsComponents implements OnInit, OnDestroy {
     const marketplace = this.marketplaceFilter();
     const ads = this.adsFilter();
     const stock = this.stockFilter();
+    const categoryIds = [...this.selectedCategoryIds()];
 
-    const queryParams: Record<string, string | number | boolean | null> = {
+    const queryParams: Record<string, string | number | boolean | string[] | null> = {
       searchTerm: this.search().trim() || null,
+      categoryIds: categoryIds.length > 0 ? categoryIds : null,
       marketplace: marketplace === 'all' ? null : marketplace,
       hasListings: ads === 'all' ? null : ads === 'with',
       stock: stock === 'all' ? null : stock.toUpperCase(),
@@ -357,7 +384,10 @@ export class ProductsComponents implements OnInit, OnDestroy {
     });
   }
 
-  private apiErrorMessage(error: HttpErrorResponse): string {
+  private apiErrorMessage(
+    error: HttpErrorResponse,
+    fallback = 'Não foi possível carregar o catálogo. Tente novamente.',
+  ): string {
     const body = error.error as { errors?: string[]; detail?: string } | null;
     const validationMessage = body?.errors?.[0];
 
@@ -369,7 +399,40 @@ export class ProductsComponents implements OnInit, OnDestroy {
       return 'Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente.';
     }
 
-    return body?.detail ?? 'Não foi possível carregar o catálogo. Tente novamente.';
+    return body?.detail ?? fallback;
+  }
+
+  loadCategories(): void {
+    if (this.categoriesLoading()) {
+      return;
+    }
+
+    this.categoriesLoading.set(true);
+    this.categoriesError.set(null);
+
+    this.productService
+      .getCategories()
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          const message = this.apiErrorMessage(error, 'Não foi possível carregar as categorias.');
+          this.categoriesError.set(message);
+          this.showToast(message, 'error');
+          return of(null);
+        }),
+        finalize(() => this.categoriesLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((categories) => {
+        if (categories) {
+          this.categories.set(
+            [...categories].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
+          );
+        }
+      });
+  }
+
+  retryCategories(): void {
+    this.loadCategories();
   }
 
   private applyPage(response: ProductPageResponse): void {
@@ -387,15 +450,28 @@ export class ProductsComponents implements OnInit, OnDestroy {
   readonly hasActiveFilters = computed(
     () =>
       this.search().trim() !== '' ||
-      this.categoryFilter() !== 'all' ||
+      this.selectedCategoryIds().size > 0 ||
       this.marketplaceFilter() !== 'all' ||
       this.adsFilter() !== 'all' ||
       this.stockFilter() !== 'all',
   );
 
-  readonly categoryFilterLabel = computed(() =>
-    this.categoryFilter() === 'all' ? 'Categoria' : this.categoryFilter(),
-  );
+  readonly categoryFilterLabel = computed(() => {
+    const count = this.selectedCategoryIds().size;
+    return count > 0 ? `Categorias (${count})` : 'Categorias';
+  });
+
+  readonly selectedCategories = computed(() => {
+    const names = new Map(
+      this.categories().map((category) => [category.publicId, category.name]),
+    );
+    const loading = this.categoriesLoading();
+
+    return [...this.selectedCategoryIds()].map((publicId) => ({
+      publicId,
+      name: names.get(publicId) ?? (loading ? 'Carregando…' : 'Categoria indisponível'),
+    }));
+  });
 
   readonly marketplaceFilterLabel = computed(() =>
     this.marketplaceFilter() === 'all'
@@ -425,32 +501,42 @@ export class ProductsComponents implements OnInit, OnDestroy {
     return stock === 'out' ? 'Sem estoque' : 'Estoque saudável';
   });
 
-  readonly activeFilters = computed<{ key: FilterKey; label: string }[]>(() => {
-    const filters: { key: FilterKey; label: string }[] = [];
+  readonly activeFilters = computed<ActiveFilter[]>(() => {
+    const filters: ActiveFilter[] = [];
     const term = this.search().trim();
 
     if (term) {
-      filters.push({ key: 'search', label: `Busca: "${term}"` });
+      filters.push({ key: 'search', label: `Busca: "${term}"`, filter: 'search' });
     }
 
-    if (this.categoryFilter() !== 'all') {
-      filters.push({ key: 'category', label: `Categoria: ${this.categoryFilter()}` });
+    for (const category of this.selectedCategories()) {
+      filters.push({
+        key: `category:${category.publicId}`,
+        label: `Categoria: ${category.name}`,
+        filter: 'category',
+        categoryId: category.publicId,
+      });
     }
 
     if (this.marketplaceFilter() !== 'all') {
       const label = MARKETPLACES[this.marketplaceFilter() as Marketplace].label;
-      filters.push({ key: 'marketplace', label: `Marketplace: ${label}` });
+      filters.push({
+        key: 'marketplace',
+        label: `Marketplace: ${label}`,
+        filter: 'marketplace',
+      });
     }
 
     if (this.adsFilter() !== 'all') {
       filters.push({
         key: 'ads',
         label: this.adsFilter() === 'with' ? 'Com anúncios' : 'Sem vínculos',
+        filter: 'ads',
       });
     }
 
     if (this.stockFilter() !== 'all') {
-      filters.push({ key: 'stock', label: this.stockFilterLabel() });
+      filters.push({ key: 'stock', label: this.stockFilterLabel(), filter: 'stock' });
     }
 
     return filters;
@@ -740,16 +826,49 @@ export class ProductsComponents implements OnInit, OnDestroy {
     }
   }
 
-  chooseCategory(value: string): void {
-    if (this.categoryFilter() === value) {
-      this.closeMenus();
+  isCategorySelected(publicId: string): boolean {
+    return this.selectedCategoryIds().has(publicId);
+  }
+
+  toggleCategory(publicId: string): void {
+    const next = new Set(this.selectedCategoryIds());
+    next.has(publicId) ? next.delete(publicId) : next.add(publicId);
+    this.selectedCategoryIds.set(next);
+    this.applyCategoryFilter();
+  }
+
+  clearCategories(): void {
+    if (this.selectedCategoryIds().size === 0) {
       return;
     }
 
-    this.categoryFilter.set(value);
+    this.selectedCategoryIds.set(new Set<string>());
+    this.applyCategoryFilter();
+  }
+
+  removeCategory(publicId: string): void {
+    if (!this.selectedCategoryIds().has(publicId)) {
+      return;
+    }
+
+    const next = new Set(this.selectedCategoryIds());
+    next.delete(publicId);
+    this.selectedCategoryIds.set(next);
+    this.applyCategoryFilter();
+  }
+
+  clearActiveFilter(filter: ActiveFilter): void {
+    if (filter.filter === 'category' && filter.categoryId) {
+      this.removeCategory(filter.categoryId);
+      return;
+    }
+
+    this.clearFilter(filter.filter);
+  }
+
+  private applyCategoryFilter(): void {
     this.page.set(0);
     this.clearSelection();
-    this.closeMenus();
     this.reload();
   }
 
@@ -821,7 +940,7 @@ export class ProductsComponents implements OnInit, OnDestroy {
       this.clearSearchTimer();
       this.search.set('');
     } else if (key === 'category') {
-      this.categoryFilter.set('all');
+      this.selectedCategoryIds.set(new Set<string>());
     } else if (key === 'marketplace') {
       this.marketplaceFilter.set('all');
     } else if (key === 'ads') {
@@ -838,7 +957,7 @@ export class ProductsComponents implements OnInit, OnDestroy {
   clearFilters(): void {
     this.clearSearchTimer();
     this.search.set('');
-    this.categoryFilter.set('all');
+    this.selectedCategoryIds.set(new Set<string>());
     this.marketplaceFilter.set('all');
     this.adsFilter.set('all');
     this.stockFilter.set('all');
@@ -1172,8 +1291,13 @@ export class ProductsComponents implements OnInit, OnDestroy {
     return this.numberFormatter.format(value ?? 0);
   }
 
-  categoryLabel(product: ProductResponse): string {
-    return product.category ?? '--';
+  productCategories(product: ProductResponse): CategoryRef[] {
+    return product.categories ?? [];
+  }
+
+  categoryNames(product: ProductResponse): string {
+    const names = this.productCategories(product).map((category) => category.name);
+    return names.length > 0 ? names.join(', ') : 'Sem categoria';
   }
 
   toneFor(product: ProductResponse): string {

@@ -23,11 +23,16 @@ export interface receivedProduct{
 
 export type Marketplace = 'SHOPEE' | 'MERCADOLIVRE';
 
+export interface CategoryRef {
+    publicId: string;
+    name: string;
+}
+
 export interface ProductResponse {
     publicId: string;
     sku: string | null;
     name: string;
-    category?: string | null;
+    categories: CategoryRef[];
     stock: number;
     minStock: number;
     baseSellPrice: number;

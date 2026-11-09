@@ -1,0 +1,268 @@
+=====================================================================
+CONTRATO DE API — FILTRO DE CATEGORIAS EM /api/products/overall
+Backend: GzErp (ProductsService#getProductsPage + Categories)
+Data: 07/11/2026
+Estado da validacao:
+  - Este contrato e baseado no CODIGO ATUAL (ProductFilterDto,
+    ProductsService, CategoryRepo), conferido linha a linha.
+  - VALIDADO COM TESTES REAIS em 07/11/2026 apos reinicio do backend:
+    todos os casos da secao 3 foram medidos (status + skus) e batem
+    com o codigo. Unico desvio era previsao minha (Pet Shop), corrigida
+    no documento — o filtro em si comporta-se exatamente como o codigo
+    implementa.
+=====================================================================
+
+
+1. COMO O FILTRO FUNCIONA NO CODIGO
+---------------------------------------------------------------------
+ProductFilterDto (record):
+
+    public record ProductFilterDto(
+            String category,            // ANTIGA: ainda IGNORADA
+            Marketplace marketplace,
+            Boolean hasListings,
+            StockFilter stock,
+            String searchTerm,
+            List<UUID> categoryIds      // NOVA: consumida pelo Specification
+    )
+
+Fluxo no service (getProductsPage):
+
+    List<Long> categoryIdsInternal =
+        (filterDto.categoryIds() == null || filterDto.categoryIds().isEmpty())
+            ? List.of()
+            : categoryRepo.findIdsByPublicIdsAndTenantId(
+                  filterDto.categoryIds(), tenantId);
+    ...
+    if (!categoryIdsInternal.isEmpty()) {
+        predicates.add(existsCategory(root, query, cb, categoryIdsInternal));
+    }
+
+existsCategory = EXISTS (
+    SELECT id FROM Products
+    JOIN categories (INNER JOIN via product_categories)
+    WHERE product = corrente AND category.id IN (categoryIdsInternos)
+)
+
+Semantica:
+  - Selecao multipla de categorias = OU (produto em QUALQUER uma delas).
+  - Sempre limitado ao tenant do token (categories e por tenant;
+    a resolucao acontece NO service, na conversao public_id -> id).
+  - Combinavel com searchTerm / marketplace / hasListings / stock
+    (todos os predicados via AND).
+
+
+2. PARAMETRO DE ENTRADA
+---------------------------------------------------------------------
+Param          Tipo      Default  Descricao
+categoryIds    UUID               Lista de public_id da tabela
+                                  categories. REPEATIVEL (uma
+                                  entrada por UUID, assim:
+                                     ?categoryIds=<uuid1>&categoryIds=<uuid2>
+                                  Ordem nao importa; duplicados
+                                  contam uma vez na consulta (IN).
+category       string    -        LEGADO (desatualizado): e aceito,
+                                  mas NAO e consumido pelo service
+                                  (nenhum predicate usa). NAO
+                                  enviar no frontend.
+
+O valor e o public_id (UUID), NAO o id interno (BIGINT). A conversao
+public_id -> id acontece no service, com escopo do tenant
+(findIdsByPublicIdsAndTenantId).
+
+
+3. COMPORTAMENTO ESPERADO (o que o frontend deve assumir)
+---------------------------------------------------------------------
+Entrada                                      Resultado esperado
+-------------------------------------------  ----------------------
+Sem categoryIds / lista vazia                200; sem filtro (tudo).
+1 UUID valido, do tenant                     200; so aqueles produtos
+                                             daquela categoria que
+                                             tem produto em
+                                             product_categories.
+Varios UUIDs validos                         200; produtos de
+                                             QUALQUER (OU) delas.
+UUID inexistente / de outro tenant           200; UUID e DESCARTADO
+                                             (resolucao por tenant no
+                                             service) — nao da erro.
+                                             Se nada restar de valido,
+                                             fica sem filtro.
+Mistura de validos + inexistentes            200; os validos
+                                             filtram, os invalidos
+                                             sao descartados.
+Valor que nao e UUID (banana)                400 "Valor inválido para
+                                              'categoryIds'." (medido)
+                                              Origem: falha de BIND do
+                                              DTO (nao e do service).
+                                              Converter UUID falha =>
+                                              rejeicao antes do service;
+                                              nenhum filtro parcial e
+                                              aplicado.
+
+Combinacao com outros filtros (AND):
+  ?categoryIds=<UuidEletronicos>&stock=NORMAL
+  -> apenas produtos de Eletronicos com stock > min_stock.
+
+Nao suportado ordenar por categoria (sort nao conhece 'category').
+Pagina/size/sort operam como sempre.
+
+Casos medidos nos dados atuais (07/11/2026):
+  Eletronicos (CAT-01)    -> 1 produto ativo     (CAT-01)      [medido]
+  Cozinha (CAT-05)        -> 1 produto ativo     (CAT-05)      [medido]
+  Pet Shop                -> 1 produto ativo     (CAT-04; CAT-07
+                                                  esta inativo)[medido]
+  ELE+COZ                 -> 2 (CAT-01,CAT-05)                 [medido]
+  ELE+COZ+MOD             -> 3 (+CAT-02)                       [medido]
+  duplicado x3            -> dedupado, 1                       [medido]
+  UUID inexistente        -> 200; sem filtro (todos os 7)      [medido]
+  mistura valido+invalido -> 200; valida o valido (1)          [medido]
+  categoryIds vazio       -> 200; sem filtro (todos os 7)      [medido]
+  banana                  -> 400 "Valor inválido..."           [medido]
+  combo com stock/termo   -> 200; AND aplicado                 [medido]
+  category (string)       -> 200; ignorado (todos os 7)        [medido]
+
+
+4. CONTRATO DE SAIDA (200) — ATUALIZADO em 07/11/2026
+---------------------------------------------------------------------
+ProductPageResponseDto + items[i]; o item ganhou o campo `categories`:
+
+{
+  "publicId":      "bb0ad502-...",
+  "sku":           "MOCK-001",
+  "name":          "Mock Product 01",
+  "stock":         1,
+  "minStock":      20,
+  "baseSellPrice": 101.00,
+  "costPrice":     0.00,
+  "imageUrl":      null,
+  "sales":         0,
+  "createdAt":     "2026-11-05T15:14:21",
+  "updatedAt":     "2026-11-05T15:14:21",
+  "listingCount":  { "SHOPEE": 3, "MERCADOLIVRE": 3 },
+  "categories":    [ { "publicId": "19403941-...", "name": "Eletrônicos" } ]
+}
+
+Regras de `categories`:
+  - Array de {publicId: UUID, name} (CategorySummaryDto), ordenacao
+    nao garantida.
+  - [] (array vazia) quando o produto nao tem categoria — nunca null.
+  - Pode conter CATEGORIA INATIVA se o produto estiver vinculado
+    (ver GAP A).
+  - publicId destes elementos pode ser enviado direto em
+    ?categoryIds= (round-trip fechado).
+
+
+5. GAPS CONHECIDOS DO BACKEND (afetam o que o frontend pode construir)
+---------------------------------------------------------------------
+GAP A — RESOLVIDO em 07/11/2026: o item agora traz as categorias.
+    ProductResponseDto ganhou `categories: List<CategorySummaryDto>`
+    onde CategorySummaryDto = {publicId, name}, mapeado via
+    CategoryRepo.findCategoriesByProductIds (somente os ids da pagina;
+    sem N+1) agrupado por productId.
+    Confirmed by tests:
+      - `categories` aparece em todos os items (chave nova apos
+        baseSellPrice).
+      - Produto multi-categoria (CAT-08) vem com 2 elementos:
+        [{"publicId":"...","name":"Promocoes"},{"publicId":"...",
+         "name":"Baixo Giro"}].
+      - Produto SEM categoria -> `categories: []` (array, nunca null;
+        testado com produto temporario sem vinculo, apagado depois).
+      - Round-trip completo: os publicId retornados sao os mesmos
+        aceitos em ?categoryIds= (ex.: Eletronicos =
+        19403941-a309-4dbe-9b69-bf25f1943df8 filtra CAT-01 e o item
+        CAT-01 vem com exatamente ese publicId).
+      - Categorias INATIVAS [medido]: item de produto ativo vinculado a
+        categoria INATIVA ainda mostra o nome dela em `categories`
+        (o JOIN de findCategoriesByProductIds NAO filtra `active`).
+        E o ?categoryIds=<publicId-da-inativa> TAMBEM filtra (a
+        resolucao findIdsByPublicIdsAndTenantId permite categorias
+        inativas). Front deve saber: nome de categoria inativa pode
+        aparecer no card, apenas GET /products/categories nao lista.
+
+GAP B — RESOLVIDO em 07/11/2026: endpoint de listar categorias CRIADO.
+    Rota real (aninhada em products):
+        GET /api/products/categories    [medido: 200]
+        Body: [{name, publicId}, ...] (CategoryResponseDto)
+    Confirmed by tests:
+      - Total = 12 (todas do tenant 1), ordenado por name ASC.
+      - Nao devolve categorias INATIVAS: com uma categoria
+        desativada temporariamente no banco, ela NAO apareceu na
+        lista e o total seguiu 12.
+      - Autenticidade: sem token -> 401 (rota protegida).
+      - ROUND-TRIP: pegando publicId deste endpoint (Baixo Giro) e
+        enviando em /overall?categoryIds=<publicId>, retornou
+        CAT-08 (1 item; o outro produto da categoria, CAT-07,
+        esta inativo). Front consegue popular chips e filtrar.
+    createCategory (POST) ainda SEM rota (ver secao 7).
+
+GAP C — cadastro/edicao de produto ainda nao aceita categorias
+    (ProductRegisterDto nao tem campo). Vinculo hoje so nasce via SQL
+    (como no seed_categories_products.txt).
+
+GAP D — o campo antigo 'category' (string) e codigo morto para o
+    filtro. Recomenda-se ao backend apagar do ProductFilterDto para
+    nao confundir o front.
+
+GAP A e B RESOLVIDOS — o ciclo completo funciona:
+  - o frontend puxa as categorias do tenant em
+    GET /api/products/categories;
+  - filtra com ?categoryIds=<publicId>;
+  - recebe de volta em items[i].categories (badge/chip no card).
+
+
+6. SUGESTAO DE TYPES (TypeScript) PARA O FRONTEND
+---------------------------------------------------------------------
+interface CategoryRef { publicId: string; name: string; }
+
+interface ProductResponse {
+  publicId:      string;
+  sku:           string | null;
+  name:          string;
+  stock:         number;
+  minStock:      number;
+  baseSellPrice: number;
+  costPrice:     number;
+  imageUrl:      string | null;
+  sales:         number;
+  createdAt:     string;   // yyyy-MM-dd'T'HH:mm:ss
+  updatedAt:     string;
+  listingCount:  { SHOPEE?: number; MERCADOLIVRE?: number };
+  categories:    CategoryRef[];   // [] quando sem categoria (nunca null)
+}
+
+interface ProductListQuery {
+  page?:        number;
+  size?:        number;
+  sort?:        `${ProductSortField},${"asc" | "desc"}`;
+  searchTerm?:  string;
+  marketplace?: Marketplace;
+  hasListings?: boolean;
+  stock?:       StockFilter;
+  categoryIds?: string[];   // UUIDs de categorias; repetivel na URL
+}
+
+// Montagem da query com multiplos chips:
+// const qs = categoryIds
+//   .map(id => `categoryIds=${encodeURIComponent(id)}`)
+//   .join('&');
+// fetch(`/api/products/overall?` + qs)   (+ page/size/sort/etc.)
+
+
+7. ENDPOINTS SUGERIDOS PARA O BACKEND (status 07/11/2026)
+---------------------------------------------------------------------
+- GET /api/products/categories -> FEITO E TESTADO (ver GAP B na 5):
+    [{name, publicId}, ...] ordenado por name ASC, somente ativas,
+    escopo do tenant do token, autenticado (401 sem token).
+- POST /api/categories         -> PENDENTE (createCategory pronto no
+    service, sem rota): body {name} -> 201 com CategoryResponseDto
+    criado; erro de duplicidade ("Category already exists.") deve
+    padronizar 409/400 com envelope /Errors/Validation
+- categories: CategorySummaryDto[] em ProductResponseDto
+    -> FEITO E TESTADO (ver GAP A na 5)
+- Aceitar categoryIds no cadastro/edicao de produto, validando
+    pertencimento ao tenant
+- Remover o campo 'category' (string) antigo do ProductFilterDto
+
+=====================================================================
+FIM DO CONTRATO
+=====================================================================
