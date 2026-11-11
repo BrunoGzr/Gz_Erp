@@ -17,7 +17,8 @@ public interface MarketplaceListingRepo extends JpaRepository<MarketplaceListing
     @Query("""
     SELECT new map(l.product.id as productId, l.marketplace as marketplace, count(l) as total)
     FROM MarketplaceListing l
-    WHERE l.product.id IN :productIds
+    WHERE l.product.id  IN :productIds
+    AND l.active = true
     GROUP BY l.product.id, l.marketplace
 """)
     List<ListingCountProjectionDto> countListingsByProductIds(@Param("productIds") List<Long> productIds);

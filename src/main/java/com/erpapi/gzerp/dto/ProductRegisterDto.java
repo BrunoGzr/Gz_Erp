@@ -3,6 +3,7 @@ package com.erpapi.gzerp.dto;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.URL;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,6 +30,8 @@ public class ProductRegisterDto {
     private BigDecimal costPrice;
 
     @Size(max = 500)
+    @URL
+    @Nullable
     private String imageUrl;
 
     @Size(max = 50)
@@ -37,6 +40,7 @@ public class ProductRegisterDto {
     @PositiveOrZero
     private Integer minStock = 20;
 
+    @NotNull
     private List<UUID> categoryIds;
 
     public ProductRegisterDto() {

@@ -8,10 +8,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public interface ProductsRepo extends JpaRepository<Products, Long>, JpaSpecificationExecutor<Products> {
 
@@ -25,9 +22,10 @@ public interface ProductsRepo extends JpaRepository<Products, Long>, JpaSpecific
     Page<Products> findByTenantIdAndActiveTrue(Long tenantId,
                                                Pageable pageable);
 
-    Optional<Products> findByPublicIdAndTenant_IdAndActiveTrue(UUID publicId, Long tenant_id);
+    Optional<Products> findByPublicIdAndTenant_IdAndActiveTrue(UUID publicId, Long tenantId);
 
 
+    List<Products> findAllByTenant_IdAndActiveTrueAndPublicIdIn(Long tenantId, Collection<UUID> publicIds);
 
 
 

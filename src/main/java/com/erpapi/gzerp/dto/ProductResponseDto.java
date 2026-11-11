@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.dto;
 
+import com.erpapi.gzerp.enums.ProductStatus;
 import com.erpapi.gzerp.models.Products;
 
 import java.math.BigDecimal;
@@ -35,6 +36,8 @@ public class ProductResponseDto {
     private int minStock;
 
     private List<CategorySummaryDto> categories;
+
+    private ProductStatus status;
 
     public ProductResponseDto(Products product) {
         this.name = product.getName();
@@ -155,5 +158,13 @@ public class ProductResponseDto {
 
     public void setCategories(List<CategorySummaryDto> categories) {
         this.categories = categories;
+    }
+
+    public ProductStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProductStatus status) {
+        this.status = status;
     }
 }

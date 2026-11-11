@@ -1,0 +1,2 @@
+ALTER TABLE products ADD
+    status ENUM('ACTIVE', 'INACTIVE', 'PAUSED');

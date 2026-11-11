@@ -332,4 +332,11 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return pd;
     }
 
+    @ExceptionHandler(InvalidPageSizeException.class)
+    public ProblemDetail handleInvalidPageSizeException(InvalidPageSizeException ex){
+
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Invalid page size: " + ex.getMessage() + " , available sizes : 20, 50, 100, 200.");
+    }
+
 }

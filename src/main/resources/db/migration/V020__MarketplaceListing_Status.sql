@@ -1,0 +1,2 @@
+ALTER TABLE marketplace_listing ADD
+    status ENUM('ACTIVE', 'PAUSED', 'INACTIVE', 'BANNED', 'DELETED') NOT NULL DEFAULT 'ACTIVE';

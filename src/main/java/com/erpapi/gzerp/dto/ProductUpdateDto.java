@@ -1,6 +1,9 @@
 package com.erpapi.gzerp.dto;
 
+import com.erpapi.gzerp.enums.ProductStatus;
+import jakarta.persistence.Enumerated;
 import jakarta.validation.constraints.*;
+import org.hibernate.validator.constraints.URL;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,6 +26,7 @@ public class ProductUpdateDto {
     private BigDecimal costPrice;
 
     @Size(max = 500)
+    @URL
     private String imageUrl;
 
     @Size(max = 50)
@@ -30,6 +34,9 @@ public class ProductUpdateDto {
 
     @PositiveOrZero
     private Integer minStock;
+
+    @Enumerated
+    private ProductStatus status;
 
     private List<UUID> categoryIds;
 
@@ -98,5 +105,13 @@ public class ProductUpdateDto {
 
     public void setCategoryIds(List<UUID> categoryIds) {
         this.categoryIds = categoryIds;
+    }
+
+    public ProductStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProductStatus status) {
+        this.status = status;
     }
 }

@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.models;
 
+import com.erpapi.gzerp.enums.ProductStatus;
 import jakarta.persistence.*;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -10,7 +11,6 @@ import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -24,7 +24,7 @@ public class Products {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "public_id",nullable = false, unique = true, length = 36)
+    @Column(name = "public_id", nullable = false, unique = true, length = 36)
     @JdbcTypeCode(SqlTypes.VARCHAR)
     private UUID publicId;
 
@@ -38,12 +38,12 @@ public class Products {
     @Column(name = "active")
     private Boolean active;
 
-    @Column(name = "name",nullable = false, length = 256)
+    @Column(name = "name", nullable = false, length = 256)
     private String name;
 
     @Column(name = "stock", nullable = false)
     private int stock;
-    
+
     @Column(name = "base_price", precision = 10, scale = 2)
     private BigDecimal baseSellPrice;
 
@@ -56,7 +56,7 @@ public class Products {
     @Column(name = "sales", nullable = false)
     private int sales;
 
-    @Column(name = "created_at",nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     @CreationTimestamp
     private LocalDateTime createdAt;
 
@@ -74,6 +74,9 @@ public class Products {
             inverseJoinColumns = @JoinColumn(name = "category_id")
     )
     private Set<Categories> categories = new HashSet<>();
+
+    @Enumerated(EnumType.STRING)
+    private ProductStatus status;
 
     public Products() {
     }
@@ -188,5 +191,21 @@ public class Products {
 
     public void setCategories(Set<Categories> categories) {
         this.categories = categories;
+    }
+
+    public ProductStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ProductStatus status) {
+        this.status = status;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

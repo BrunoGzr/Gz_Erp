@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.models;
 
+import com.erpapi.gzerp.enums.ListingStatus;
 import com.erpapi.gzerp.enums.Marketplace;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -59,6 +60,9 @@ public class MarketplaceListing {
 
     @Column(name = "active", nullable = false)
     private Boolean active;
+
+    @Column(name= "status", nullable = false)
+    private ListingStatus status;
 
     public MarketplaceListing() {
     }
