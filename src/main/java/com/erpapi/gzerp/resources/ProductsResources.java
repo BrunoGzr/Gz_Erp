@@ -1,14 +1,11 @@
 package com.erpapi.gzerp.resources;
 
-import com.erpapi.gzerp.config.CustomUserDetails;
 import com.erpapi.gzerp.dto.*;
 
 
 import com.erpapi.gzerp.exceptions.InvalidPageSizeException;
-import com.erpapi.gzerp.repositories.ProductsRepo;
 
 import com.erpapi.gzerp.services.ProductsService;
-import com.sun.jdi.request.InvalidRequestStateException;
 import jakarta.validation.Valid;
 
 import jakarta.validation.constraints.NotNull;
@@ -17,12 +14,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -78,7 +72,7 @@ public class ProductsResources {
             @RequestBody @Valid ProductUpdateDto product,
             @PathVariable @Valid UUID publicId
             ){
-        return ResponseEntity.ok().body(service.updateProduct(product,publicId));
+        return ResponseEntity.ok().body(service.updateProductRequest(product,publicId));
     }
 
     @DeleteMapping("/{publicId}")

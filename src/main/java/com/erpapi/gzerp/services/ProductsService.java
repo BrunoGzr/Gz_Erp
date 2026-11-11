@@ -12,7 +12,6 @@ import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.repositories.*;
 import com.erpapi.gzerp.security.TenantContext;
 import jakarta.persistence.criteria.*;
-import jakarta.validation.Valid;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -183,24 +182,7 @@ public class ProductsService {
         List<ProductResponseDto> dtos = page.getContent().stream()
                 .map(product -> {
                     Map<String, Long> productsCounts = countsByProductId.getOrDefault(product.getId(), new HashMap<>());
-                    ProductResponseDto dto = new ProductResponseDto();
-                    dto.setPublicId(product.getPublicId());
-                    dto.setSku(product.getSku());
-                    dto.setName(product.getName());
-                    dto.setStock(product.getStock());
-                    dto.setBaseSellPrice(product.getBaseSellPrice());
-                    dto.setCostPrice(product.getCostPrice());
-                    dto.setImageUrl(product.getImageUrl());
-                    dto.setSales(product.getSales());
-                    dto.setCreatedAt(product.getCreatedAt());
-                    dto.setUpdatedAt(product.getUpdatedAt());
-                    dto.setListingCount(productsCounts);
-                    dto.setMinStock(product.getMinStock());
-                    dto.setStatus(product.getStatus());
-                    dto.setCategories(categoriesByProductId.getOrDefault(product.getId(), List.of()));
-
-
-                    return  dto;
+                    return mapResponseDtoToProductOverallPageable(product,productsCounts,categoriesByProductId.getOrDefault(product.getId(), List.of()));
                 }).toList();
 
         return new ProductPageResponseDto(
@@ -295,112 +277,18 @@ public class ProductsService {
     }
 
     @Transactional
-    public ProductResponseDto updateProduct(ProductUpdateDto dto, UUID publicId){
+    public ProductResponseDto updateProductRequest(ProductUpdateDto dto, UUID publicId){
+
         Long tenantId = TenantContext.required();
         Products actualProduct = productsRepo.findByPublicIdAndTenant_IdAndActiveTrue(publicId,tenantId).orElseThrow(
                 () -> new UnknownProductException("Product not found for Update, please enter a valid one.")
         );
 
-        verifyUseUpdate(dto,tenantId,actualProduct);
+        updateProductLogic(actualProduct,dto,tenantId);
 
-        if (dto.getStatus() != null && !dto.getStatus().name().isBlank()){
-            actualProduct.setStatus(dto.getStatus());
-        }
-
-        if (dto.getName() != null && !dto.getName().isBlank()){
-            String name = dto.getName().replace("(?U)\\s", "").trim();
-            actualProduct.setName(name);
-        }
-
-        if (dto.getSku() == null || dto.getSku().isBlank()){
-            actualProduct.setSku(generateRandomSku(actualProduct));
-        }
-        else {
-            String sku = dto.getSku().replace("(?U)\\s", "").trim();
-            actualProduct.setSku(sku);
-        }
-
-        if (dto.getBaseSellPrice() != null){
-            actualProduct.setBaseSellPrice(dto.getBaseSellPrice());
-        }
-
-        if (dto.getCategoryIds() != null){
-            if (dto.getCategoryIds().isEmpty()){
-                actualProduct.getCategories().clear();
-            }else {
-                List<UUID> requested = dto.getCategoryIds().stream().distinct().toList();
-
-                List<Categories> resolvedCategories = categoryRepo.findAllByActiveTrueAndTenant_IdAndPublicIdIn(tenantId,dto.getCategoryIds());
-
-                if (resolvedCategories.size() != requested.size()){
-                    Set<UUID> found = resolvedCategories.stream().map(Categories::getPublicId).collect(Collectors.toSet());
-
-                    List<UUID> missing = dto.getCategoryIds().stream()
-                            .filter(id -> !found.contains(id))
-                            .toList();
-
-                    throw new InvalidCategoryException("Categories invalid or inactive: " + missing);
-                }
-
-                actualProduct.getCategories().clear();
-                actualProduct.getCategories().addAll(resolvedCategories);
-            }
-        }
-
-        if (dto.getImageUrl() != null){
-            String j = dto.getImageUrl();
-            actualProduct.setImageUrl( j.isBlank()? null : j );
-        }
-
-        if (dto.getCostPrice() != null){
-            actualProduct.setCostPrice(dto.getCostPrice());
-        }
-
-        if (dto.getMinStock() != null){
-            actualProduct.setMinStock(dto.getMinStock());
-        }
-
-        if (dto.getStock() != null){
-            actualProduct.setStock(dto.getStock());
-        }
-
-        try {
-            actualProduct = productsRepo.saveAndFlush(actualProduct);
-        } catch (DataIntegrityViolationException exception){
-            throw new InvalidProductException("Product Name or Sku already in use, please use another one");
-
-        }
+        return mapResponseDtoToProduct(actualProduct);
 
 
-        List<ListingCountProjectionDto> rawCounts = listingRepo.countListingsByProductIds(List.of(actualProduct.getId()));
-
-        Map<String, Long> listingCount = new HashMap<>();
-
-        for (ListingCountProjectionDto row : rawCounts){
-            listingCount.put(row.getMarketplace(),row.getTotal());
-        }
-
-        ProductResponseDto response = new ProductResponseDto();
-
-        response.setPublicId(actualProduct.getPublicId());
-        response.setSku(actualProduct.getSku());
-        response.setName(actualProduct.getName());
-        response.setStock(actualProduct.getStock());
-        response.setBaseSellPrice(actualProduct.getBaseSellPrice());
-        response.setCostPrice(actualProduct.getCostPrice());
-        response.setImageUrl(actualProduct.getImageUrl());
-        response.setSales(actualProduct.getSales());
-        response.setCreatedAt(actualProduct.getCreatedAt());
-        response.setUpdatedAt(actualProduct.getUpdatedAt());
-        response.setListingCount(listingCount);
-        response.setMinStock(actualProduct.getMinStock());
-        response.setCategories(actualProduct.getCategories().stream().map(category -> {
-            return new CategorySummaryDto(category.getPublicId(),category.getName());
-        }).toList());
-        response.setStatus(actualProduct.getStatus());
-
-
-        return response;
     }
 
     private String generateRandomSku(Products product){
@@ -483,26 +371,7 @@ public class ProductsService {
             throw new InvalidProductException("Product Name or Sku already in use, please use another one");
         }
 
-        ProductResponseDto response = new ProductResponseDto();
-
-        response.setPublicId(newProduct.getPublicId());
-        response.setSku(newProduct.getSku());
-        response.setName(newProduct.getName());
-        response.setStock(newProduct.getStock());
-        response.setBaseSellPrice(newProduct.getBaseSellPrice());
-        response.setCostPrice(newProduct.getCostPrice());
-        response.setImageUrl(newProduct.getImageUrl());
-        response.setSales(newProduct.getSales());
-        response.setCreatedAt(newProduct.getCreatedAt());
-        response.setUpdatedAt(newProduct.getUpdatedAt());
-        response.setListingCount(new HashMap<>());
-        response.setMinStock(newProduct.getMinStock());
-        response.setCategories(newProduct.getCategories().stream().map(
-                category -> new CategorySummaryDto(category.getPublicId(), category.getName())
-        ).toList());
-        response.setStatus(newProduct.getStatus());
-
-        return response;
+        return mapResponseDtoToProductRegister(newProduct);
     }
 
     @Transactional
@@ -511,7 +380,7 @@ public class ProductsService {
 
         boolean haveNull = list.stream().anyMatch(Objects::isNull);
 
-        if (haveNull){
+        if (haveNull || list.size() > 200){
             throw new IllegalArgumentException();
         }
 
@@ -554,7 +423,87 @@ public class ProductsService {
         Products product = productsRepo.findByPublicIdAndTenant_IdAndActiveTrue(publicId,tenantid).orElseThrow(
                 () -> new EntityNotFoundException("Product"));
 
-        List<ListingCountProjectionDto> rawCounts = listingRepo.countListingsByProductIds(List.of(product.getId()));
+        return mapResponseDtoToProduct(product);
+    }
+
+    @Transactional
+    protected void updateProductLogic(Products actualProduct, ProductUpdateDto dto, Long tenantId){
+
+
+
+        if (dto.getStatus() != null && !dto.getStatus().name().isBlank()){
+            actualProduct.setStatus(dto.getStatus());
+        }
+
+        if (dto.getName() != null && !dto.getName().isBlank()){
+            String name = dto.getName().replace("(?U)\\s", "").trim();
+            actualProduct.setName(name);
+        }
+
+        if (dto.getSku() == null || dto.getSku().isBlank()){
+            actualProduct.setSku(generateRandomSku(actualProduct));
+        }
+        else {
+            String sku = dto.getSku().replace("(?U)\\s", "").trim();
+            actualProduct.setSku(sku);
+        }
+
+        if (dto.getBaseSellPrice() != null){
+            actualProduct.setBaseSellPrice(dto.getBaseSellPrice());
+        }
+
+        if (dto.getCategoryIds() != null){
+            if (dto.getCategoryIds().isEmpty()){
+                actualProduct.getCategories().clear();
+            }else {
+                List<UUID> requested = dto.getCategoryIds().stream().distinct().toList();
+
+                List<Categories> resolvedCategories = categoryRepo.findAllByActiveTrueAndTenant_IdAndPublicIdIn(tenantId,dto.getCategoryIds());
+
+                if (resolvedCategories.size() != requested.size()){
+                    Set<UUID> found = resolvedCategories.stream().map(Categories::getPublicId).collect(Collectors.toSet());
+
+                    List<UUID> missing = dto.getCategoryIds().stream()
+                            .filter(id -> !found.contains(id))
+                            .toList();
+
+                    throw new InvalidCategoryException("Categories invalid or inactive: " + missing);
+                }
+
+                actualProduct.getCategories().clear();
+                actualProduct.getCategories().addAll(resolvedCategories);
+            }
+        }
+
+        if (dto.getImageUrl() != null){
+            String j = dto.getImageUrl();
+            actualProduct.setImageUrl( j.isBlank()? null : j );
+        }
+
+        if (dto.getCostPrice() != null){
+            actualProduct.setCostPrice(dto.getCostPrice());
+        }
+
+        if (dto.getMinStock() != null){
+            actualProduct.setMinStock(dto.getMinStock());
+        }
+
+        if (dto.getStock() != null){
+            actualProduct.setStock(dto.getStock());
+        }
+
+        try {
+            actualProduct = productsRepo.saveAndFlush(actualProduct);
+        } catch (DataIntegrityViolationException exception){
+            throw new InvalidProductException("Product Name or Sku already in use, please use another one");
+        }
+
+    }
+
+
+    private ProductResponseDto mapResponseDtoToProduct(Products actualProduct){
+
+        List<ListingCountProjectionDto> rawCounts = listingRepo.countListingsByProductIds(List.of(actualProduct.getId()));
 
         Map<String, Long> listingCount = new HashMap<>();
 
@@ -562,29 +511,82 @@ public class ProductsService {
             listingCount.put(row.getMarketplace(),row.getTotal());
         }
 
-        ProductResponseDto dto = new ProductResponseDto();
+        ProductResponseDto response = new ProductResponseDto();
 
-        dto.setPublicId(product.getPublicId());
-        dto.setSku(product.getSku());
-        dto.setName(product.getName());
-        dto.setStock(product.getStock());
-        dto.setBaseSellPrice(product.getBaseSellPrice());
-        dto.setCostPrice(product.getCostPrice());
-        dto.setImageUrl(product.getImageUrl());
-        dto.setSales(product.getSales());
-        dto.setCreatedAt(product.getCreatedAt());
-        dto.setUpdatedAt(product.getUpdatedAt());
-        dto.setListingCount(listingCount);
-        dto.setMinStock(product.getMinStock());
-        dto.setCategories(product.getCategories().stream().map(
-                category -> {
-                    return new CategorySummaryDto(category.getPublicId(),category.getName());
-                }
-        ).toList());
-        dto.setStatus(product.getStatus());
+        response.setPublicId(actualProduct.getPublicId());
+        response.setSku(actualProduct.getSku());
+        response.setName(actualProduct.getName());
+        response.setStock(actualProduct.getStock());
+        response.setBaseSellPrice(actualProduct.getBaseSellPrice());
+        response.setCostPrice(actualProduct.getCostPrice());
+        response.setImageUrl(actualProduct.getImageUrl());
+        response.setSales(actualProduct.getSales());
+        response.setCreatedAt(actualProduct.getCreatedAt());
+        response.setUpdatedAt(actualProduct.getUpdatedAt());
+        response.setListingCount(listingCount);
+        response.setMinStock(actualProduct.getMinStock());
+        response.setCategories(actualProduct.getCategories().stream().map(category -> {
+            return new CategorySummaryDto(category.getPublicId(),category.getName());
+        }).toList());
+        response.setStatus(actualProduct.getStatus());
 
-        return dto;
+
+        return response;
+
+
     }
+
+    private ProductResponseDto mapResponseDtoToProductOverallPageable(Products actualProduct, Map<String,Long> listingCount
+                                                                      , List<CategorySummaryDto> categories){
+
+        ProductResponseDto response = new ProductResponseDto();
+
+        response.setPublicId(actualProduct.getPublicId());
+        response.setSku(actualProduct.getSku());
+        response.setName(actualProduct.getName());
+        response.setStock(actualProduct.getStock());
+        response.setBaseSellPrice(actualProduct.getBaseSellPrice());
+        response.setCostPrice(actualProduct.getCostPrice());
+        response.setImageUrl(actualProduct.getImageUrl());
+        response.setSales(actualProduct.getSales());
+        response.setCreatedAt(actualProduct.getCreatedAt());
+        response.setUpdatedAt(actualProduct.getUpdatedAt());
+        response.setListingCount(listingCount);
+        response.setMinStock(actualProduct.getMinStock());
+        response.setCategories(categories);
+        response.setStatus(actualProduct.getStatus());
+
+        return response;
+
+
+    }
+    private ProductResponseDto mapResponseDtoToProductRegister(Products actualProduct){
+
+        ProductResponseDto response = new ProductResponseDto();
+
+        response.setPublicId(actualProduct.getPublicId());
+        response.setSku(actualProduct.getSku());
+        response.setName(actualProduct.getName());
+        response.setStock(actualProduct.getStock());
+        response.setBaseSellPrice(actualProduct.getBaseSellPrice());
+        response.setCostPrice(actualProduct.getCostPrice());
+        response.setImageUrl(actualProduct.getImageUrl());
+        response.setSales(actualProduct.getSales());
+        response.setCreatedAt(actualProduct.getCreatedAt());
+        response.setUpdatedAt(actualProduct.getUpdatedAt());
+        response.setListingCount(new HashMap<>());
+        response.setMinStock(actualProduct.getMinStock());
+        response.setCategories(actualProduct.getCategories().stream().map(category -> {
+            return new CategorySummaryDto(category.getPublicId(),category.getName());
+        }).toList());
+        response.setStatus(actualProduct.getStatus());
+        return response;
+
+
+    }
+
+
+
 
 
 
