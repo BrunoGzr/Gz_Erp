@@ -102,6 +102,13 @@ public class ProductsResources {
         return ResponseEntity.ok().body(dto);
     }
 
+    @PatchMapping("/bulk")
+    public ResponseEntity<List<ProductResponseDto>> updateProductsBulk(
+            @RequestBody @Valid List<@NotNull @Valid ProductUpdateDto> list
+    ){
+        return ResponseEntity.ok().body(service.updateProductsBulk(list));
+    }
+
 
 
 

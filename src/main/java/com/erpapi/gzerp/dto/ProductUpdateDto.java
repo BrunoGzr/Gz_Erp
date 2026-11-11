@@ -14,6 +14,9 @@ public class ProductUpdateDto {
     @Size(max = 256)
     private String name;
 
+    @NotNull
+    private UUID publicId;
+
     @PositiveOrZero
     private Integer stock;
 
@@ -113,5 +116,13 @@ public class ProductUpdateDto {
 
     public void setStatus(ProductStatus status) {
         this.status = status;
+    }
+
+    public UUID getPublicId() {
+        return publicId;
+    }
+
+    public void setPublicId(UUID publicId) {
+        this.publicId = publicId;
     }
 }

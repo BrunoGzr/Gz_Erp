@@ -182,7 +182,7 @@ public class ProductsService {
         List<ProductResponseDto> dtos = page.getContent().stream()
                 .map(product -> {
                     Map<String, Long> productsCounts = countsByProductId.getOrDefault(product.getId(), new HashMap<>());
-                    return mapResponseDtoToProductOverallPageable(product,productsCounts,categoriesByProductId.getOrDefault(product.getId(), List.of()));
+                    return mapResponseDtoToProduct(product,productsCounts,categoriesByProductId.getOrDefault(product.getId(), List.of()));
                 }).toList();
 
         return new ProductPageResponseDto(
@@ -284,11 +284,19 @@ public class ProductsService {
                 () -> new UnknownProductException("Product not found for Update, please enter a valid one.")
         );
 
-        updateProductLogic(actualProduct,dto,tenantId);
+        if (!publicId.equals(dto.getPublicId())){
+            throw new PublicIdMismatchException("");
+        }
+
+        actualProduct = updateProductLogic(actualProduct,dto,tenantId);
+
+        try {
+            actualProduct = productsRepo.saveAndFlush(actualProduct);
+        } catch (DataIntegrityViolationException exception){
+            throw new InvalidProductException("Product Name or Sku already in use, please use another one");
+        }
 
         return mapResponseDtoToProduct(actualProduct);
-
-
     }
 
     private String generateRandomSku(Products product){
@@ -371,7 +379,9 @@ public class ProductsService {
             throw new InvalidProductException("Product Name or Sku already in use, please use another one");
         }
 
-        return mapResponseDtoToProductRegister(newProduct);
+        return mapResponseDtoToProduct(newProduct,Map.of(),
+                newProduct.getCategories().stream().map(category -> new CategorySummaryDto(category.getPublicId(), category.getName()))
+                .toList());
     }
 
     @Transactional
@@ -381,7 +391,7 @@ public class ProductsService {
         boolean haveNull = list.stream().anyMatch(Objects::isNull);
 
         if (haveNull || list.size() > 200){
-            throw new IllegalArgumentException();
+            throw new NoArgumentException("Failed to update Status, no items found");
         }
 
         if (list.isEmpty()){
@@ -427,7 +437,7 @@ public class ProductsService {
     }
 
     @Transactional
-    protected void updateProductLogic(Products actualProduct, ProductUpdateDto dto, Long tenantId){
+    protected Products updateProductLogic(Products actualProduct, ProductUpdateDto dto, Long tenantId){
 
 
 
@@ -492,11 +502,60 @@ public class ProductsService {
             actualProduct.setStock(dto.getStock());
         }
 
+        return actualProduct;
+    }
+
+
+    @Transactional
+    public List<ProductResponseDto> updateProductsBulk(List<ProductUpdateDto> dtos){
+        Long tenantId = TenantContext.required();
+
+        boolean haveNull = dtos.stream().anyMatch(Objects::isNull);
+
+        if (haveNull){
+            throw new IllegalArgumentException("Malformed list.");
+        }
+
+        if (dtos.isEmpty()){
+            throw new NoArgumentException("Failed to update Products, no items found");
+        }
+
+        if (dtos.size() > 200){
+            throw new IllegalArgumentException("Too many items, max: 200, get: " + dtos.size());
+        }
+
+        List<UUID> publicIdList = dtos.stream().map(dto-> {
+            return dto.getPublicId();
+        }).toList();
+
+        List<Products> productsList = productsRepo.findAllByTenant_IdAndActiveTrueAndPublicIdIn(tenantId,publicIdList);
+
+
+        Map<UUID,Products> productsMapByPublicId = productsList.stream()
+                .collect(Collectors.toMap(Products::getPublicId,Function.identity(),(a,b) -> b));
+
+        List<UUID> missing = publicIdList.stream().filter(List -> !productsMapByPublicId.containsKey(List) ).toList();
+
+        if (!missing.isEmpty()){
+            throw new IllegalArgumentException("Items not found: " + missing);
+        }
+
+        List<Products> updatedProducts = new ArrayList<>();
+
+        for (ProductUpdateDto dto: dtos){
+            Products actualProduct = productsMapByPublicId.get(dto.getPublicId());
+            updateProductLogic(actualProduct,dto,tenantId);
+
+            updatedProducts.add(actualProduct);
+        }
+
         try {
-            actualProduct = productsRepo.saveAndFlush(actualProduct);
-        } catch (DataIntegrityViolationException exception){
+            productsRepo.saveAllAndFlush(updatedProducts);
+        } catch (DataIntegrityViolationException ex){
             throw new InvalidProductException("Product Name or Sku already in use, please use another one");
         }
+
+        return mapResponseDtoToProductBatch(updatedProducts);
 
     }
 
@@ -536,7 +595,7 @@ public class ProductsService {
 
     }
 
-    private ProductResponseDto mapResponseDtoToProductOverallPageable(Products actualProduct, Map<String,Long> listingCount
+    private ProductResponseDto mapResponseDtoToProduct(Products actualProduct, Map<String,Long> listingCount
                                                                       , List<CategorySummaryDto> categories){
 
         ProductResponseDto response = new ProductResponseDto();
@@ -560,30 +619,55 @@ public class ProductsService {
 
 
     }
-    private ProductResponseDto mapResponseDtoToProductRegister(Products actualProduct){
 
-        ProductResponseDto response = new ProductResponseDto();
+    private List<ProductResponseDto> mapResponseDtoToProductBatch(List<Products> products){
+        if (products.isEmpty()){
+            return List.of();
+        }
+        List<Long> ids = products.stream().map(product ->{
+            return product.getId();
+        }).toList();
 
-        response.setPublicId(actualProduct.getPublicId());
-        response.setSku(actualProduct.getSku());
-        response.setName(actualProduct.getName());
-        response.setStock(actualProduct.getStock());
-        response.setBaseSellPrice(actualProduct.getBaseSellPrice());
-        response.setCostPrice(actualProduct.getCostPrice());
-        response.setImageUrl(actualProduct.getImageUrl());
-        response.setSales(actualProduct.getSales());
-        response.setCreatedAt(actualProduct.getCreatedAt());
-        response.setUpdatedAt(actualProduct.getUpdatedAt());
-        response.setListingCount(new HashMap<>());
-        response.setMinStock(actualProduct.getMinStock());
-        response.setCategories(actualProduct.getCategories().stream().map(category -> {
-            return new CategorySummaryDto(category.getPublicId(),category.getName());
-        }).toList());
-        response.setStatus(actualProduct.getStatus());
-        return response;
+        Map<Long, Map<String,Long>> listingCounts = loadListingCounts(ids);
+        Map<Long,List<CategorySummaryDto>> categories = loadCategories(ids);
 
+        return products.stream().map(product -> {
+            return mapResponseDtoToProduct(product,listingCounts.getOrDefault(product.getId(),Map.of())
+                    ,categories.getOrDefault(product.getId(),List.of()));
+        }).toList();
 
     }
+
+    private Map<Long,Map<String,Long>> loadListingCounts (List<Long> productIds){
+        if (productIds.isEmpty()){
+            return Map.of();
+        }
+        return listingRepo.countListingsByProductIds(productIds).stream()
+                .collect(Collectors.groupingBy(
+                        ListingCountProjectionDto::getProductId,
+                        Collectors.toMap(
+                                ListingCountProjectionDto::getMarketplace,
+                                ListingCountProjectionDto::getTotal
+                        )
+                ));
+    }
+
+    private Map<Long,List<CategorySummaryDto>> loadCategories (List<Long> productIds){
+        if (productIds.isEmpty()){
+            return Map.of();
+        }
+        return categoryRepo.findCategoriesByProductIds(productIds).stream()
+                .collect(Collectors.groupingBy(
+                        CategoryByProductProjection::getProductId,
+                        Collectors.mapping(row -> new CategorySummaryDto(
+                                UUID.fromString(row.getPublicId()),
+                                row.getName()
+                        ),
+                                Collectors.toList())
+                ));
+    }
+
+
 
 
 

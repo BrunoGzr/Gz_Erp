@@ -3,6 +3,7 @@ package com.erpapi.gzerp.exceptionHandler;
 import com.erpapi.gzerp.exceptions.*;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -151,10 +152,6 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
         return handleExceptionInternal(ex, problemDetail, headers, HttpStatus.BAD_REQUEST, request);
     }
-
-
-
-
 
 
     @Override
@@ -338,5 +335,37 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
         return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
                 "Invalid page size: " + ex.getMessage() + " , available sizes : 20, 50, 100, 200.");
     }
+
+    @ExceptionHandler(PublicIdMismatchException.class)
+    public ProblemDetail handlePublicIdMismatch(PublicIdMismatchException ex) {
+        return ProblemDetail.forStatusAndDetail(
+                HttpStatus.BAD_REQUEST,
+                "PublicId must be equal to the publicId in the path."
+        );
+    }
+
+    @ExceptionHandler(NoArgumentException.class)
+    public ProblemDetail handleNoArgumentException(NoArgumentException ex,
+                                                   HttpServletRequest request){
+        String url = request.getRequestURI();
+        url = request.getQueryString() == null ? url : url +"?" + request.getQueryString();
+
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND,
+                "No Items found in the list for endpoint: " + url + ". Message: " + ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ProblemDetail handleIllegalArgumentException (IllegalArgumentException exception,
+                                                         HttpServletRequest request){
+
+        String url = request.getRequestURI();
+        url = request.getQueryString() == null ? url : url +"?" + request.getQueryString();
+
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
+                "Illegal arguments in endpoint: " + url + ", Message: " + exception.getMessage() );
+
+    }
+
+
 
 }
