@@ -9,19 +9,29 @@ import {
   OnInit,
   ViewChild,
   computed,
+  effect,
   inject,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Subject, catchError, defer, finalize, of, switchMap, tap } from 'rxjs';
 import {
   CategoryRef,
+  CategoryType,
   Marketplace,
+  ProductBulkEditPayload,
   ProductPageResponse,
   ProductResponse,
+  ProductStatus,
 } from '../../models/productModels';
+import { ProductActionsService } from '../../service/product-actions-service';
 import { ProductService } from '../../service/product-service';
+import { categoryTypeLabel, statusLabel } from '../../shared/format/product-format';
+import { stockState } from '../../shared/product/product-view';
+import { ConfirmDialogComponent } from '../../shared/ui/confirm-dialog/confirm-dialog';
+import { ProductStatusBadgeComponent } from '../../shared/ui/product-status-badge/product-status-badge';
+import { ProductBulkEditDialogComponent } from './product-bulk-edit-dialog';
 
 type ViewMode = 'table' | 'grid';
 type MarketplaceFilter = 'all' | Marketplace;
@@ -47,6 +57,12 @@ interface ActiveFilter {
   label: string;
   filter: FilterKey;
   categoryId?: string;
+  categoryType?: CategoryType;
+}
+
+interface RowMenuPosition {
+  top: number;
+  left: number;
 }
 
 interface PageNumber {
@@ -144,7 +160,12 @@ const SIMULATED_SUMMARY: ProductSummary = {
 };
 
 @Component({
-  imports: [],
+  imports: [
+    RouterLink,
+    ProductStatusBadgeComponent,
+    ConfirmDialogComponent,
+    ProductBulkEditDialogComponent,
+  ],
   selector: 'app-products-components',
   styleUrls: [
     './products-components.css',
@@ -154,12 +175,14 @@ const SIMULATED_SUMMARY: ProductSummary = {
     './products-components-ui.css',
     './products-components-select.css',
     './products-components-kpi.css',
+    './products-components-actions.css',
   ],
   templateUrl: './products-components.html',
 })
 export class ProductsComponents implements OnInit, OnDestroy {
   private readonly document = inject(DOCUMENT);
   private readonly productService = inject(ProductService);
+  private readonly productActions = inject(ProductActionsService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
@@ -242,6 +265,34 @@ export class ProductsComponents implements OnInit, OnDestroy {
   readonly summary = signal<ProductSummary>(SIMULATED_SUMMARY);
   readonly reviewDrawerOpen = signal(false);
 
+  readonly statusActions: { value: ProductStatus; label: string }[] = [
+    { value: 'ACTIVE', label: 'Ativar' },
+    { value: 'PAUSED', label: 'Pausar' },
+    { value: 'INACTIVE', label: 'Inativar' },
+  ];
+  readonly statusLabel = statusLabel;
+  readonly stockState = stockState;
+
+  readonly rowMenuProduct = signal<ProductResponse | null>(null);
+  readonly rowMenuPosition = signal<RowMenuPosition | null>(null);
+  readonly statusUpdatingId = signal<string | null>(null);
+
+  readonly deleteTarget = signal<ProductResponse | null>(null);
+  readonly deleteLoading = signal(false);
+  readonly deleteError = signal<string | null>(null);
+
+  readonly bulkEditOpen = signal(false);
+  readonly bulkEditLoading = signal(false);
+  readonly bulkEditError = signal<string | null>(null);
+
+  readonly bulkDeleteOpen = signal(false);
+  readonly bulkDeleteLoading = signal(false);
+  readonly bulkDeleteError = signal<string | null>(null);
+
+  get currentUrl(): string {
+    return this.router.url;
+  }
+
   constructor() {
     this.reload$
       .pipe(
@@ -266,9 +317,14 @@ export class ProductsComponents implements OnInit, OnDestroy {
         takeUntilDestroyed(this.destroyRef),
       )
       .subscribe();
+
+    effect(() => {
+      this.document.body.style.overflow = this.locksBody() ? 'hidden' : '';
+    });
   }
 
   ngOnInit(): void {
+    this.readNavigationFeedback();
     this.readFiltersFromUrl();
     this.loadCategories();
     this.reload();
@@ -436,6 +492,16 @@ export class ProductsComponents implements OnInit, OnDestroy {
   }
 
   private applyPage(response: ProductPageResponse): void {
+    if (
+      response.items.length === 0 &&
+      response.totalPage > 0 &&
+      this.page() >= response.totalPage
+    ) {
+      this.page.set(Math.max(0, response.totalPage - 1));
+      this.reload();
+      return;
+    }
+
     this.items.set(response.items);
     this.page.set(response.actualPage);
     this.totalPages.set(response.totalPage);
@@ -461,17 +527,32 @@ export class ProductsComponents implements OnInit, OnDestroy {
     return count > 0 ? `Categorias (${count})` : 'Categorias';
   });
 
+  readonly noCategoryFilterSelected = computed(() => this.selectedCategoryIds().size === 0);
+
   readonly selectedCategories = computed(() => {
-    const names = new Map(
-      this.categories().map((category) => [category.publicId, category.name]),
+    const categoriesById = new Map(
+      this.categories().map((category) => [category.publicId, category]),
     );
     const loading = this.categoriesLoading();
 
-    return [...this.selectedCategoryIds()].map((publicId) => ({
-      publicId,
-      name: names.get(publicId) ?? (loading ? 'Carregando…' : 'Categoria indisponível'),
-    }));
+    return [...this.selectedCategoryIds()].map((publicId) => {
+      const category = categoriesById.get(publicId);
+
+      return {
+        publicId,
+        name: category?.name ?? (loading ? 'Carregando…' : 'Categoria indisponível'),
+        type: category?.type ?? null,
+      };
+    });
   });
+
+  readonly productCategoryOptions = computed(() =>
+    this.categories().filter((category) => category.type === 'PRODUCT'),
+  );
+
+  readonly stateCategoryOptions = computed(() =>
+    this.categories().filter((category) => category.type === 'STATE'),
+  );
 
   readonly marketplaceFilterLabel = computed(() =>
     this.marketplaceFilter() === 'all'
@@ -510,11 +591,13 @@ export class ProductsComponents implements OnInit, OnDestroy {
     }
 
     for (const category of this.selectedCategories()) {
+      const typeLabel = category.type ? categoryTypeLabel(category.type) : 'Categoria';
       filters.push({
         key: `category:${category.publicId}`,
-        label: `Categoria: ${category.name}`,
+        label: `${typeLabel}: ${category.name}`,
         filter: 'category',
         categoryId: category.publicId,
+        categoryType: category.type ?? undefined,
       });
     }
 
@@ -608,11 +691,27 @@ export class ProductsComponents implements OnInit, OnDestroy {
   });
 
   readonly overlayOpen = computed(
-    () => this.adsDrawerProduct() !== null || this.reviewDrawerOpen(),
+    () =>
+      this.adsDrawerProduct() !== null ||
+      this.reviewDrawerOpen() ||
+      this.deleteTarget() !== null ||
+      this.bulkEditOpen() ||
+      this.bulkDeleteOpen(),
+  );
+
+  private readonly locksBody = computed(
+    () =>
+      this.adsDrawerProduct() !== null ||
+      this.reviewDrawerOpen() ||
+      this.bulkEditOpen(),
   );
 
   private percentOf(part: number, total: number): number {
     return total > 0 ? (part / total) * 100 : 0;
+  }
+
+  isPositiveZero(card: KpiCard): boolean {
+    return card.value === 0 && card.positiveZero;
   }
 
   readonly kpiCards = computed<KpiCard[]>(() => {
@@ -723,7 +822,7 @@ export class ProductsComponents implements OnInit, OnDestroy {
 
     const base = product.baseSellPrice;
 
-    if (!Number.isFinite(base)) {
+    if (base === null || !Number.isFinite(base)) {
       return null;
     }
 
@@ -815,16 +914,482 @@ export class ProductsComponents implements OnInit, OnDestroy {
     if (!target?.closest('.select-wrap')) {
       this.closeMenus();
     }
+
+    if (!target?.closest('.row-menu') && !target?.closest('.row-menu-trigger')) {
+      this.closeRowMenu();
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.closeRowMenu();
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
-    this.closeMenus();
+    if (this.rowMenuProduct()) {
+      this.closeRowMenu();
+      return;
+    }
+
+    if (this.deleteTarget()) {
+      this.closeDeleteConfirm();
+      return;
+    }
+
+    if (this.bulkDeleteOpen()) {
+      this.closeBulkDelete();
+      return;
+    }
+
+    if (this.bulkEditOpen()) {
+      this.closeBulkEdit();
+      return;
+    }
+
+    if (this.adsDrawerProduct()) {
+      this.closeAdsDrawer();
+      return;
+    }
 
     if (this.reviewDrawerOpen()) {
       this.closeReviewDrawer();
+      return;
+    }
+
+    this.closeMenus();
+  }
+
+  openRowMenu(event: MouseEvent, product: ProductResponse): void {
+    event.stopPropagation();
+    this.clearFocusTimer();
+
+    const trigger = event.currentTarget as HTMLElement | null;
+    const view = this.document.defaultView;
+
+    if (!trigger || !view) {
+      return;
+    }
+
+    const rect = trigger.getBoundingClientRect();
+    const width = 234;
+    const estimatedHeight = 330;
+    const left = Math.min(Math.max(8, rect.right - width), view.innerWidth - width - 8);
+    const top = Math.min(rect.bottom + 6, view.innerHeight - estimatedHeight - 8);
+
+    this.rowMenuProduct.set(product);
+    this.rowMenuPosition.set({ top: Math.max(8, top), left });
+    this.focusTimer = setTimeout(() => {
+      this.focusTimer = null;
+      this.document.querySelector<HTMLElement>('.row-menu__item')?.focus();
+    }, 0);
+  }
+
+  closeRowMenu(): void {
+    if (!this.rowMenuProduct()) {
+      return;
+    }
+
+    this.rowMenuProduct.set(null);
+    this.rowMenuPosition.set(null);
+    this.clearFocusTimer();
+  }
+
+  onRowMenuKeydown(event: KeyboardEvent): void {
+    const menu = event.currentTarget as HTMLElement;
+    const items = Array.from(menu.querySelectorAll<HTMLElement>('.row-menu__item'));
+
+    if (items.length === 0) {
+      return;
+    }
+
+    const activeIndex = items.indexOf(this.document.activeElement as HTMLElement);
+
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      this.closeRowMenu();
+      return;
+    }
+
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      items[(activeIndex + 1 + items.length) % items.length].focus();
+      return;
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      items[(activeIndex - 1 + items.length) % items.length].focus();
+      return;
+    }
+
+    if (event.key === 'Home') {
+      event.preventDefault();
+      items[0].focus();
+      return;
+    }
+
+    if (event.key === 'End') {
+      event.preventDefault();
+      items[items.length - 1].focus();
     }
   }
+
+  openProduct(product: ProductResponse): void {
+    this.closeRowMenu();
+    void this.router.navigate(['/produtos', product.publicId], {
+      queryParams: { returnUrl: this.currentUrl },
+    });
+  }
+
+  editProduct(product: ProductResponse): void {
+    this.closeRowMenu();
+    void this.router.navigate(['/produtos', product.publicId, 'editar'], {
+      queryParams: { returnUrl: this.currentUrl },
+    });
+  }
+
+  duplicateProduct(product: ProductResponse): void {
+    this.closeRowMenu();
+    void this.router.navigate(['/produtos/novo'], {
+      queryParams: { duplicarDe: product.publicId, returnUrl: this.currentUrl },
+    });
+  }
+
+  copyProductLink(product: ProductResponse): void {
+    const origin = this.document.defaultView?.location.origin ?? '';
+    this.copyToClipboard(`${origin}/produtos/${product.publicId}`, 'Link do produto');
+  }
+
+  copySku(product: ProductResponse): void {
+    if (!product.sku) {
+      this.showToast('Este produto não possui SKU.', 'error');
+      return;
+    }
+
+    this.copyToClipboard(product.sku, 'SKU');
+  }
+
+  setProductStatus(product: ProductResponse, status: ProductStatus): void {
+    if (this.statusUpdatingId()) {
+      return;
+    }
+
+    this.statusUpdatingId.set(product.publicId);
+
+    this.productActions
+      .updateStatus(product.publicId, status)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          if (error.status === 404) {
+            this.items.update((items) => items.filter((item) => item.publicId !== product.publicId));
+            this.removeIdsFromSelection([product.publicId]);
+            this.reload();
+            this.showToast('O produto não existe mais ou foi desabilitado.', 'error');
+          } else {
+            this.showToast(
+              this.apiErrorMessage(error, 'Não foi possível alterar o status do produto.'),
+              'error',
+            );
+          }
+
+          return of(false);
+        }),
+        finalize(() => this.statusUpdatingId.set(null)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((result) => {
+        if (result === false) {
+          return;
+        }
+
+        this.items.update((items) =>
+          items.map((item) =>
+            item.publicId === product.publicId ? { ...item, status } : item,
+          ),
+        );
+
+        if (this.adsDrawerProduct()?.publicId === product.publicId) {
+          this.adsDrawerProduct.update((current) =>
+            current ? { ...current, status } : current,
+          );
+        }
+
+        this.showToast(
+          `Status de ${product.name} atualizado para ${statusLabel(status)}.`,
+          'success',
+        );
+        this.closeRowMenu();
+      });
+  }
+
+  openDeleteConfirm(product: ProductResponse): void {
+    this.closeRowMenu();
+    this.deleteError.set(null);
+    this.deleteTarget.set(product);
+  }
+
+  closeDeleteConfirm(): void {
+    if (this.deleteLoading()) {
+      return;
+    }
+
+    this.deleteTarget.set(null);
+    this.deleteError.set(null);
+  }
+
+  confirmDelete(): void {
+    const product = this.deleteTarget();
+
+    if (!product || this.deleteLoading()) {
+      return;
+    }
+
+    this.deleteLoading.set(true);
+    this.deleteError.set(null);
+
+    this.productActions
+      .delete(product.publicId)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          if (error.status === 404) {
+            this.finishDelete(product, 'Produto já havia sido removido.');
+            return of(false);
+          }
+
+          this.deleteError.set(
+            this.apiErrorMessage(error, 'Não foi possível excluir o produto.'),
+          );
+          return of(false);
+        }),
+        finalize(() => this.deleteLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((result) => {
+        if (result === false) {
+          return;
+        }
+
+        this.finishDelete(product, 'Produto excluído com sucesso.');
+      });
+  }
+
+  openBulkEdit(): void {
+    if (this.selectedCount() === 0) {
+      return;
+    }
+
+    if (this.selectedCount() > 200) {
+      this.showToast('Selecione no máximo 200 produtos para editar em massa.', 'error');
+      return;
+    }
+
+    this.bulkEditError.set(null);
+    this.bulkEditOpen.set(true);
+  }
+
+  closeBulkEdit(): void {
+    if (!this.bulkEditLoading()) {
+      this.bulkEditOpen.set(false);
+      this.bulkEditError.set(null);
+    }
+  }
+
+  onBulkEditSubmitted(payload: ProductBulkEditPayload): void {
+    if (this.bulkEditLoading()) {
+      return;
+    }
+
+    const selectedProducts = this.items().filter((product) =>
+      this.selectedIds().has(product.publicId),
+    );
+
+    if (selectedProducts.length === 0) {
+      this.bulkEditError.set('Nenhum produto selecionado.');
+      return;
+    }
+
+    if (selectedProducts.length > 200) {
+      this.bulkEditError.set('Selecione no máximo 200 produtos.');
+      return;
+    }
+
+    this.bulkEditLoading.set(true);
+    this.bulkEditError.set(null);
+
+    this.productActions
+      .updateMany(selectedProducts, payload)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          this.bulkEditError.set(
+            this.apiErrorMessage(error, 'Não foi possível editar os produtos em massa.'),
+          );
+          return of(null);
+        }),
+        finalize(() => this.bulkEditLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((updated) => {
+        if (!updated) {
+          return;
+        }
+
+        this.bulkEditOpen.set(false);
+        this.clearSelection();
+        this.showToast(`${updated.length} produto(s) atualizado(s) em massa.`, 'success');
+        this.reload();
+      });
+  }
+
+  openBulkDelete(): void {
+    if (this.selectedCount() === 0) {
+      return;
+    }
+
+    if (this.selectedCount() > 200) {
+      this.showToast('Selecione no máximo 200 produtos para excluir em massa.', 'error');
+      return;
+    }
+
+    this.bulkDeleteError.set(null);
+    this.bulkDeleteOpen.set(true);
+  }
+
+  closeBulkDelete(): void {
+    if (!this.bulkDeleteLoading()) {
+      this.bulkDeleteOpen.set(false);
+      this.bulkDeleteError.set(null);
+    }
+  }
+
+  confirmBulkDelete(): void {
+    const ids = [...this.selectedIds()];
+
+    if (ids.length === 0 || this.bulkDeleteLoading()) {
+      return;
+    }
+
+    this.bulkDeleteLoading.set(true);
+    this.bulkDeleteError.set(null);
+
+    this.productActions
+      .deleteMany(ids)
+      .pipe(
+        catchError((error: HttpErrorResponse) => {
+          if (error.status === 404) {
+            this.finishBulkDelete(
+              ids,
+              'Alguns produtos já não existiam mais. A lista foi atualizada.',
+              'info',
+            );
+            return of(false);
+          }
+
+          this.bulkDeleteError.set(
+            this.apiErrorMessage(error, 'Não foi possível excluir os produtos selecionados.'),
+          );
+          return of(false);
+        }),
+        finalize(() => this.bulkDeleteLoading.set(false)),
+        takeUntilDestroyed(this.destroyRef),
+      )
+      .subscribe((result) => {
+        if (result === false) {
+          return;
+        }
+
+        this.finishBulkDelete(ids, `${ids.length} produto(s) excluído(s).`, 'success');
+      });
+  }
+
+  private finishDelete(product: ProductResponse, message: string): void {
+    this.deleteTarget.set(null);
+    this.deleteError.set(null);
+    this.items.update((items) => items.filter((item) => item.publicId !== product.publicId));
+    this.removeIdsFromSelection([product.publicId]);
+
+    if (this.adsDrawerProduct()?.publicId === product.publicId) {
+      this.closeAdsDrawer();
+    }
+
+    if (this.items().length === 0 && this.page() > 0) {
+      this.page.update((page) => page - 1);
+    }
+
+    this.showToast(message, 'success');
+    this.reload();
+  }
+
+  private finishBulkDelete(ids: string[], message: string, tone: ToastTone): void {
+    this.bulkDeleteOpen.set(false);
+    this.bulkDeleteError.set(null);
+    this.selectedIds.set(new Set<string>());
+    this.items.update((items) => items.filter((item) => !ids.includes(item.publicId)));
+
+    if (this.items().length === 0 && this.page() > 0) {
+      this.page.update((page) => page - 1);
+    }
+
+    this.showToast(message, tone);
+    this.reload();
+  }
+
+  private removeIdsFromSelection(ids: string[]): void {
+    if (ids.length === 0) {
+      return;
+    }
+
+    const idSet = new Set(ids);
+    const next = new Set(this.selectedIds());
+
+    for (const id of idSet) {
+      next.delete(id);
+    }
+
+    this.selectedIds.set(next);
+  }
+
+  private copyToClipboard(value: string, label: string): void {
+    const navigatorRef = this.document.defaultView?.navigator;
+
+    if (navigatorRef?.clipboard) {
+      navigatorRef.clipboard
+        .writeText(value)
+        .then(() => this.showToast(`${label} copiado.`, 'success'))
+        .catch(() => this.showToast('Não foi possível copiar.', 'error'));
+      return;
+    }
+
+    const textarea = this.document.createElement('textarea');
+    textarea.value = value;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    this.document.body.appendChild(textarea);
+    textarea.select();
+    const copied = this.document.execCommand('copy');
+    textarea.remove();
+    this.showToast(
+      copied ? `${label} copiado.` : 'Não foi possível copiar.',
+      copied ? 'success' : 'error',
+    );
+  }
+
+  private readNavigationFeedback(): void {
+    const history = this.document.defaultView?.history;
+    const state = history?.state as
+      | { productFeedback?: string; productFeedbackTone?: ToastTone }
+      | null;
+
+    if (state?.productFeedback) {
+      this.showToast(state.productFeedback, state.productFeedbackTone ?? 'success');
+      history?.replaceState(
+        { ...state, productFeedback: undefined, productFeedbackTone: undefined },
+        '',
+      );
+    }
+  }
+
 
   isCategorySelected(publicId: string): boolean {
     return this.selectedCategoryIds().has(publicId);
@@ -912,6 +1477,7 @@ export class ProductsComponents implements OnInit, OnDestroy {
   }
 
   onScroll(event: Event): void {
+    this.closeRowMenu();
     const target = event.currentTarget as HTMLElement | null;
 
     if (!target) {
@@ -969,11 +1535,11 @@ export class ProductsComponents implements OnInit, OnDestroy {
   }
 
   openAdsDrawer(product: ProductResponse): void {
+    this.closeRowMenu();
     this.clearFeedbackTimer();
     this.clearFocusTimer();
     this.previousFocus =
       this.document.activeElement instanceof HTMLElement ? this.document.activeElement : null;
-    this.document.body.style.overflow = 'hidden';
     this.adsDrawerProduct.set(product);
     this.priceMode.set('percent');
     this.priceValue.set(null);
@@ -992,7 +1558,6 @@ export class ProductsComponents implements OnInit, OnDestroy {
   closeAdsDrawer(): void {
     this.clearFeedbackTimer();
     this.clearFocusTimer();
-    this.document.body.style.overflow = '';
     this.adsDrawerProduct.set(null);
     this.deactivateStep.set(0);
     this.applyFeedback.set(null);
@@ -1284,7 +1849,7 @@ export class ProductsComponents implements OnInit, OnDestroy {
   }
 
   formatCurrency(value: number | null | undefined): string {
-    return this.currencyFormatter.format(value ?? 0);
+    return value == null ? '--' : this.currencyFormatter.format(value);
   }
 
   formatNumber(value: number | null | undefined): string {
@@ -1295,9 +1860,36 @@ export class ProductsComponents implements OnInit, OnDestroy {
     return product.categories ?? [];
   }
 
+  categoriesByType(product: ProductResponse, type: CategoryType): CategoryRef[] {
+    return this.productCategories(product).filter((category) => category.type === type);
+  }
+
+  hasCategories(product: ProductResponse): boolean {
+    return this.productCategories(product).length > 0;
+  }
+
+  hasListings(product: ProductResponse): boolean {
+    return this.marketplaceTotal(product) > 0;
+  }
+
+  isCurrentStatus(product: ProductResponse, status: ProductStatus): boolean {
+    return product.status === status;
+  }
+
   categoryNames(product: ProductResponse): string {
-    const names = this.productCategories(product).map((category) => category.name);
-    return names.length > 0 ? names.join(', ') : 'Sem categoria';
+    const productNames = this.categoriesByType(product, 'PRODUCT').map((category) => category.name);
+    const stateNames = this.categoriesByType(product, 'STATE').map((category) => category.name);
+    const parts: string[] = [];
+
+    if (productNames.length > 0) {
+      parts.push(`Produto: ${productNames.join(', ')}`);
+    }
+
+    if (stateNames.length > 0) {
+      parts.push(`Estado: ${stateNames.join(', ')}`);
+    }
+
+    return parts.length > 0 ? parts.join(' · ') : 'Sem categoria';
   }
 
   toneFor(product: ProductResponse): string {
@@ -1332,17 +1924,6 @@ export class ProductsComponents implements OnInit, OnDestroy {
 
   onImageError(publicId: string): void {
     this.failedImages.update((current) => new Set([...current, publicId]));
-  }
-
-  onExport(): void {
-    this.showToast(
-      `Relatório com ${this.totalItems()} produto(s) gerado. Download iniciado.`,
-      'success',
-    );
-  }
-
-  onAddProduct(): void {
-    this.showToast('Fluxo de cadastro de produto iniciado.', 'info');
   }
 
   onMoreOptions(): void {
@@ -1389,18 +1970,6 @@ export class ProductsComponents implements OnInit, OnDestroy {
       behavior: 'smooth',
       block: 'start',
     });
-  }
-
-  onBulkExport(): void {
-    this.showToast(`${this.selectedCount()} produto(s) incluído(s) na exportação.`, 'success');
-  }
-
-  onBulkEdit(): void {
-    this.showToast(`Edição em massa preparada para ${this.selectedCount()} produto(s).`, 'info');
-  }
-
-  onBulkDelete(): void {
-    this.showToast(`Exclusão de ${this.selectedCount()} produto(s) solicitada.`, 'error');
   }
 
   onLinkMarketplace(product: ProductResponse): void {

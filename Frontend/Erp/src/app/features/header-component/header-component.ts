@@ -55,7 +55,7 @@ export class HeaderComponent implements OnDestroy {
 
   // Mantém o item ativo quando a rota recebe query params (ex.: filtros do catálogo).
   readonly navLinkActiveOptions = {
-    paths: 'exact',
+    paths: 'subset',
     queryParams: 'ignored',
     matrixParams: 'ignored',
     fragment: 'ignored',

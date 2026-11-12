@@ -1,7 +1,182 @@
+/* ==========================================================================
+   GzErp — Fundação visual global
+   --------------------------------------------------------------------------
+   Este arquivo concentra os tokens de design do produto. Todo componente
+   deve consumir estes tokens em vez de repetir valores literais.
+   A referência completa de uso está em /Project.md (raiz do repositório).
+   ========================================================================== */
+
+:root {
+  /* --- Superfícies ------------------------------------------------------ */
+  --gz-bg: #12121e;
+  --gz-panel: #181920;
+  --gz-panel-elevated: #1a1a22;
+  --gz-surface: #1e1e24;
+  --gz-surface-hover: #2a2a35;
+  --gz-surface-hover-strong: #3a3a45;
+  --gz-border: #2a2a35;
+  --gz-border-strong: #3a3a45;
+  --gz-line: rgba(42, 42, 53, 0.62);
+
+  /* --- Texto ------------------------------------------------------------ */
+  --gz-text: #e6e6ea;
+  --gz-text-strong: #f4f4f5;
+  --gz-text-muted: #8f8f98;
+  --gz-text-muted-2: #a8b3c7;
+  --gz-text-faint: #6f6f7a;
+  --gz-white: #ffffff;
+  --gz-on-strong: #181920;
+
+  /* --- Cores semânticas ------------------------------------------------- */
+  --gz-accent: #60a5fa;
+  --gz-accent-soft: rgba(96, 165, 250, 0.6);
+  --gz-accent-focus: rgba(96, 165, 250, 0.7);
+  --gz-accent-bg: rgba(96, 165, 250, 0.1);
+  --gz-accent-text: #93c5fd;
+  --gz-success: #4ade80;
+  --gz-success-text: #86efac;
+  --gz-warning: #fbbf24;
+  --gz-warning-text: #fcd34d;
+  --gz-danger: #f87171;
+  --gz-danger-text: #fca5a5;
+  --gz-violet: #a78bfa;
+  --gz-violet-text: #c4b5fd;
+
+  /* --- Marcas de marketplace ------------------------------------------- */
+  --gz-shopee: #ee4d2d;
+  --gz-mercadolivre: #ffe600;
+
+  /* --- Tipografia ------------------------------------------------------- */
+  --gz-font-sans: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --gz-font-size-2xs: 0.625rem;  /* 10px — badges e micro-rótulos          */
+  --gz-font-size-xs: 0.6875rem;  /* 11px — metadados densos                */
+  --gz-font-size-sm: 0.75rem;    /* 12px — textos auxiliares               */
+  --gz-font-size-md: 0.8125rem;  /* 13px — controles e corpo denso         */
+  --gz-font-size-base: 0.875rem; /* 14px — corpo padrão em telas de dados  */
+  --gz-font-size-lg: 1rem;       /* 16px — títulos de seção                */
+  --gz-font-size-xl: 1.25rem;    /* 20px — títulos de drawer               */
+  --gz-font-size-2xl: 1.5rem;    /* 24px — títulos de página               */
+  --gz-line-height-tight: 1.2;
+  --gz-line-height-normal: 1.5;
+
+  /* --- Raios ------------------------------------------------------------ */
+  --gz-radius-sm: 8px;
+  --gz-radius-md: 12px;
+  --gz-radius-media: 14px;
+  --gz-radius-lg: 16px;
+  --gz-radius-xl: 20px;
+  --gz-radius-2xl: 24px;
+  --gz-radius-badge: 6px;
+  --gz-radius-pill: 999px;
+
+  /* --- Sombras ---------------------------------------------------------- */
+  --gz-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --gz-shadow-md: 0 8px 22px rgba(0, 0, 0, 0.22);
+  --gz-shadow-lg: 0 18px 46px rgba(0, 0, 0, 0.5);
+  --gz-shadow-xl: 0 32px 80px rgba(0, 0, 0, 0.55);
+
+  /* --- Skeleton / carregamento ----------------------------------------- */
+  --gz-skeleton-base: #1f1f29;
+  --gz-skeleton-highlight: #2b2b38;
+  --gz-media-bg: #0f0f16;
+
+  /* --- Estados de linha e detalhes ------------------------------------- */
+  --gz-row-hover: #1c1c24;
+  --gz-row-selected: #1c202a;
+  --gz-scrollbar-thumb-hover: #50505f;
+  --gz-severity-low: #94a3b8;
+
+  /* --- Avatar padrão ---------------------------------------------------- */
+  --gz-avatar-start: #d8d8de;
+  --gz-avatar-end: #9797a1;
+
+  /* --- Movimento -------------------------------------------------------- */
+  --gz-transition-fast: 160ms ease;
+  --gz-transition: 200ms ease-in-out;
+  --gz-transition-slow: 300ms cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* --- Layout ----------------------------------------------------------- */
+  --gz-sidebar-expanded: 260px;
+  --gz-sidebar-collapsed: 80px;
+  --gz-topbar-height: 48px;
+
+  /* --- Camadas ---------------------------------------------------------- */
+  --gz-z-topbar: 50;
+  --gz-z-popover: 60;
+  --gz-z-sidebar: 1000;
+  --gz-z-overlay: 1100;
+  --gz-z-overlay-content: 1101;
+  --gz-z-toast: 1300;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #12121e;
+  min-height: 100dvh;
+  background-color: var(--gz-bg);
+  color: var(--gz-text);
+  font-family: var(--gz-font-sans);
+  font-size: 1rem;
+  line-height: var(--gz-line-height-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Controles herdam a tipografia do produto por padrão. */
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+img,
+svg {
+  display: block;
+}
+
+::selection {
+  background: rgba(96, 165, 250, 0.32);
+  color: var(--gz-white);
+}
+
+/* Anel de foco único em todo o produto.
+   :where() mantém especificidade zero para que componentes possam sobrescrever. */
+:where(a, button, input, select, textarea, [tabindex]):focus-visible {
+  outline: 2px solid var(--gz-accent-focus);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Movimento reduzido
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

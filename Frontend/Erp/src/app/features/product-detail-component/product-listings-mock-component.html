@@ -1,0 +1,91 @@
+<section class="listings-panel" aria-label="Anúncios do produto">
+  <header class="listings-head">
+    <div>
+      <span class="eyebrow">Marketplaces</span>
+      <h2>Anúncios do produto</h2>
+      <p>
+        {{ listings().length }} anúncio(s) nesta visão
+        @if (isMock()) {
+          · dados de demonstração
+        }
+      </p>
+    </div>
+
+    <div class="listings-actions">
+      <button class="btn" type="button" (click)="notify('Criação em massa de anúncios solicitada.')">
+        Criar em massa
+      </button>
+      <button
+        class="btn btn-primary"
+        type="button"
+        (click)="notify('Edição em massa de anúncios iniciada (mock).')"
+      >
+        Editar em massa
+      </button>
+    </div>
+  </header>
+
+  @if (isMock()) {
+    <p class="mock-note" role="status">
+      A listagem real de anúncios ainda não possui endpoint/pageable. Os dados abaixo são
+      demonstrativos, mas os botões já representam o fluxo futuro.
+    </p>
+  }
+
+  <div class="listings-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Anúncio</th>
+          <th scope="col">Marketplace</th>
+          <th scope="col">Status</th>
+          <th class="num" scope="col">Preço</th>
+          <th class="num" scope="col">Estoque</th>
+          <th class="num" scope="col">Vendas</th>
+          <th class="actions-col" scope="col">Ações</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        @for (listing of listings(); track listing.id) {
+          <tr>
+            <td>
+              <span class="listing-title">{{ listing.title }}</span>
+            </td>
+            <td>
+              <span [class]="'marketplace-tag ' + listing.marketplace.toLowerCase()">
+                {{ marketplaceLabel(listing.marketplace) }}
+              </span>
+            </td>
+            <td>
+              <app-product-status-badge [status]="listing.status" />
+            </td>
+            <td class="num">{{ formatCurrency(listing.price) }}</td>
+            <td class="num">{{ formatNumber(listing.stock) }} un.</td>
+            <td class="num muted">{{ formatNumber(listing.sales) }}</td>
+            <td class="actions-col">
+              <div class="listing-buttons">
+                <button
+                  class="mini-btn"
+                  type="button"
+                  [attr.aria-label]="'Editar anúncio ' + listing.title"
+                  (click)="notify('Edição do anúncio solicitada (mock).')"
+                >
+                  Editar
+                </button>
+                <button
+                  class="mini-btn"
+                  type="button"
+                  [attr.aria-label]="'Duplicar anúncio ' + listing.title"
+                  (click)="notify('Duplicação do anúncio solicitada (mock).')"
+                >
+                  Duplicar
+                </button>
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

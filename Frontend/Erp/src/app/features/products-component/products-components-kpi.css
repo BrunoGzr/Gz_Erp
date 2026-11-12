@@ -1,8 +1,8 @@
 /* KPI cards do catálogo (ações de saúde, sem trends/sparklines). */
 .kpi{display:flex;flex-direction:column;align-items:center;width:100%;font:inherit;color:inherit;text-align:center;cursor:pointer;transition:border-color .2s ease-in-out,box-shadow .2s ease-in-out,transform .2s ease-in-out}
-.kpi:hover{border-color:#3a3a45;transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.22)}
-.kpi:focus-visible{outline:2px solid rgba(96,165,250,.7);outline-offset:2px}
-.kpi.violet{--tone:#a78bfa;background:radial-gradient(120% 140% at 100% 0,rgba(167,139,250,.12),transparent 58%),var(--panel);box-shadow:inset 0 0 0 1px rgba(167,139,250,.16)}
+.kpi:hover{border-color:var(--gz-border-strong);transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,0,0,.22)}
+.kpi:focus-visible{outline:2px solid var(--gz-accent-focus);outline-offset:2px}
+.kpi.violet{--tone:var(--gz-violet);background:radial-gradient(120% 140% at 100% 0,rgba(167,139,250,.12),transparent 58%),var(--panel);box-shadow:inset 0 0 0 1px rgba(167,139,250,.16)}
 .kpi.violet:hover{border-color:rgba(167,139,250,.55);box-shadow:0 0 0 1px rgba(167,139,250,.2),0 10px 26px rgba(0,0,0,.28)}
 .kpi.zero{--tone:var(--green)}
 .kpi-head{justify-content:center;width:100%}
@@ -20,20 +20,20 @@
 @media (min-width: 1400px){.kpi-badges.severity .kpi-chip{font-size:.68rem}}
 .kpi-chip{display:inline-flex;align-items:center;gap:5px;color:var(--muted2);font-size:.68rem;font-weight:600;white-space:nowrap}
 .kpi-chip-dot{width:6px;height:6px;flex:0 0 auto;border-radius:50%;background:currentColor}
-.kpi-chip.mp-shopee .kpi-chip-dot{background:#EE4D2D}
-.kpi-chip.mp-mercado-livre .kpi-chip-dot{background:#FFE600}
+.kpi-chip.mp-shopee .kpi-chip-dot{background:var(--gz-shopee)}
+.kpi-chip.mp-mercado-livre .kpi-chip-dot{background:var(--gz-mercadolivre)}
 .kpi-chip.sev-critical .kpi-chip-dot{background:var(--red)}
 .kpi-chip.sev-medium .kpi-chip-dot{background:var(--amber)}
-.kpi-chip.sev-low .kpi-chip-dot{background:#94a3b8}
+.kpi-chip.sev-low .kpi-chip-dot{background:var(--gz-severity-low)}
 .kpi-severity-bar{position:absolute;inset:auto 0 0;display:flex;height:3px;background:rgba(255,255,255,.07);overflow:hidden}
 .kpi-severity-bar .sev-critical{background:var(--red)}
 .kpi-severity-bar .sev-medium{background:var(--amber)}
-.kpi-severity-bar .sev-low{background:#94a3b8}
+.kpi-severity-bar .sev-low{background:var(--gz-severity-low)}
 
 /* Drawer "Ações a fazer" (simulação até a integração com os marketplaces). */
 .review-drawer{width:min(560px,calc(100vw - 32px))}
 .review-soon{display:flex;flex-direction:column;align-items:center;gap:8px;padding:26px 18px;border:1px dashed rgba(167,139,250,.35);border-radius:16px;background:rgba(167,139,250,.06);text-align:center}
-.review-soon-icon{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:rgba(167,139,250,.14);color:#c4b5fd}
+.review-soon-icon{display:flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;background:rgba(167,139,250,.14);color:var(--gz-violet-text)}
 .review-soon h3{margin:4px 0 0;color:var(--strong);font-size:.98rem}
 .review-soon p{margin:0;max-width:40ch;color:var(--muted);font-size:.78rem;line-height:1.5}
 .review-severities{display:flex;flex-wrap:wrap;gap:8px}

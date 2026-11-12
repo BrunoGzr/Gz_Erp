@@ -16,6 +16,27 @@ export const routes: Routes = [
       children: [
         { path: 'dashboard', component: DashboardComponent },
         { path: "", redirectTo: 'dashboard', pathMatch: 'full' },
+        {
+          path: 'produtos/novo',
+          loadComponent: () =>
+            import('./features/product-form-component/product-form-component').then(
+              (module) => module.ProductFormComponent,
+            ),
+        },
+        {
+          path: 'produtos/:publicId/editar',
+          loadComponent: () =>
+            import('./features/product-form-component/product-form-component').then(
+              (module) => module.ProductFormComponent,
+            ),
+        },
+        {
+          path: 'produtos/:publicId',
+          loadComponent: () =>
+            import('./features/product-detail-component/product-detail-component').then(
+              (module) => module.ProductDetailComponent,
+            ),
+        },
         { path: 'produtos', component: ProductsComponents}
       ]
     },

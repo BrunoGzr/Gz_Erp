@@ -1,22 +1,22 @@
 :host {
-  --bg: #12121e;
-  --panel: #181920;
-  --p2: #1e1e24;
-  --border: #2a2a35;
-  --text: #e6e6ea;
-  --strong: #f4f4f5;
-  --muted: #8f8f98;
-  --muted2: #a8b3c7;
-  --blue: #60a5fa;
-  --green: #4ade80;
-  --amber: #fbbf24;
-  --red: #f87171;
-  --violet: #a78bfa;
-  --radius-pill: 999px;
+  --bg: var(--gz-bg);
+  --panel: var(--gz-panel);
+  --p2: var(--gz-surface);
+  --border: var(--gz-border);
+  --text: var(--gz-text);
+  --strong: var(--gz-text-strong);
+  --muted: var(--gz-text-muted);
+  --muted2: var(--gz-text-muted-2);
+  --blue: var(--gz-accent);
+  --green: var(--gz-success);
+  --amber: var(--gz-warning);
+  --red: var(--gz-danger);
+  --violet: var(--gz-violet);
+  --radius-pill: var(--gz-radius-pill);
   display: block;
   flex: 0 0 auto;
   color: var(--text);
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--gz-font-sans);
 }
 
 .icon {
@@ -32,7 +32,7 @@
 
 .topbar {
   position: relative;
-  z-index: 50;
+  z-index: var(--gz-z-topbar);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -77,7 +77,7 @@
 .topbar-search .icon-search {
   width: 15px;
   height: 15px;
-  color: #6f6f7a;
+  color: var(--gz-text-faint);
 }
 
 .topbar-search input {
@@ -93,7 +93,7 @@
 }
 
 .topbar-search input::placeholder {
-  color: #6f6f7a;
+  color: var(--gz-text-faint);
 }
 
 .search-kbd,
@@ -167,8 +167,8 @@
   border: 2px solid var(--bg);
   border-radius: var(--radius-pill);
   background: var(--red);
-  color: #ffffff;
-  font-size: 0.58rem;
+  color: var(--gz-white);
+  font-size: var(--gz-font-size-2xs);
   font-weight: 700;
   line-height: 1;
   box-sizing: border-box;
@@ -178,10 +178,10 @@
 .topbar-popover {
   position: absolute;
   top: calc(100% + 8px);
-  z-index: 60;
+  z-index: var(--gz-z-popover);
   border: 1px solid var(--border);
   border-radius: 14px;
-  background: #1a1a22;
+  background: var(--gz-panel-elevated);
   box-shadow: 0 18px 46px rgba(0, 0, 0, 0.5);
   animation: topbar-pop-in 0.16s ease both;
   overflow: hidden;
@@ -497,6 +497,28 @@
   .search-kbd {
     display: none;
   }
+}
+
+@media (max-width: 520px) {
+  .search-popover,
+  .help-popover,
+  .notif-popover {
+    width: calc(100vw - 32px);
+    min-width: 0;
+  }
+
+  .notif-popover {
+    max-width: calc(100vw - 32px);
+  }
+}
+
+/* Foco visível consistente nos controles da topbar. */
+.topbar-btn:focus-visible,
+.notif-item:focus-visible,
+.link-btn:focus-visible,
+.search-result:focus-visible {
+  outline: 2px solid var(--gz-accent-focus);
+  outline-offset: 2px;
 }
 
 @media (prefers-reduced-motion: reduce) {

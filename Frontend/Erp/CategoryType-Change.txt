@@ -1,0 +1,207 @@
+=====================================================================
+CATEGORY TYPE — MUDANCA DE COMPORTAMENTO
+Categorias de PRODUTO x Categorias de ESTADO
+Documento de referencia — 12/11/2026
+=====================================================================
+
+1. O QUE MUDOU
+---------------------------------------------------------------------
+Cada categoria agora tem um tipo:
+
+  PRODUCT -> categoria de produto (ex.: Eletrônicos, Pet Shop)
+  STATE   -> categoria de estado (ex.: Baixo Giro, Promoções)
+
+O tipo e persistido em categories.category_type e em
+default_categories.category_type (ENUM('PRODUCT','STATE')).
+
+O tipo NAO substitui active/status:
+  - active controla se o registro existe no app (soft delete);
+  - status controla o produto (ACTIVE/PAUSED/INACTIVE);
+  - category_type apenas classifica a categoria.
+
+Categorias antigas foram classificadas por nome:
+  PRODUCT: Eletrônicos, Celulares e Acessórios, Moda e Vestuário,
+           Casa e Decoração, Beleza e Cuidados Pessoais,
+           Cozinha e Utilidades, Ferramentas e Construção,
+           Brinquedos e Jogos, Pet Shop.
+  STATE:   Baixo Giro, Promoções, Kit e Combos.
+
+Novos tenants copiam name + category_type dos default_categories.
+Categorias customizadas antigas que nao batem com os defaults ficam
+como PRODUCT; precisam de revisao manual.
+
+
+2. BANCO
+---------------------------------------------------------------------
+Migration aplicada: V021__CategoryType_implemented.sql
+
+  ALTER TABLE categories
+      ADD COLUMN category_type ENUM('PRODUCT','STATE') ...
+
+  ALTER TABLE default_categories
+      ADD COLUMN category_type ENUM('PRODUCT','STATE') ...
+
+  - backfill por nome nos defaults;
+  - backfill das categorias existentes por JOIN com defaults;
+  - fallback PRODUCT para categorias sem correspondencia;
+  - NOT NULL DEFAULT 'PRODUCT';
+  - indice (tenant_id, category_type, active).
+
+A unicidade atual continua sendo (tenant_id, name): o mesmo nome nao
+pode existir como PRODUCT e STATE no mesmo tenant.
+
+
+3. GET /api/products/categories
+---------------------------------------------------------------------
+Resposta agora inclui o campo type:
+
+  [
+    {
+      "name": "Eletrônicos",
+      "publicId": "....",
+      "type": "PRODUCT"
+    },
+    {
+      "name": "Baixo Giro",
+      "publicId": "....",
+      "type": "STATE"
+    }
+  ]
+
+- A lista sem filtro continua ordenada por name ASC e somente ativas.
+- O endpoint aceita ?type=PRODUCT ou ?type=STATE.
+- O tipo e obrigatorio na resposta; clients antigos que ignoram
+  campos extras continuam funcionando.
+
+ESTADO ATUAL:
+  - O filtro ?type funciona: PRODUCT devolve somente categorias
+    PRODUCT e STATE somente STATE.
+  - A consulta filtrada mantem ordenacao por name ASC.
+  - Type invalido (?type=BOGUS) -> 400 com errors[].
+  - Sem ?type, devolve todas as categorias ativas (ordenadas).
+
+
+4. POST /api/products/categories
+---------------------------------------------------------------------
+O endpoint de criacao existe em:
+
+  POST /api/products/categories
+
+Body:
+
+  {
+    "name": "Categoria Nova",
+    "type": "PRODUCT"
+  }
+
+Resposta esperada (200, nao 201):
+
+  {
+    "name": "Categoria Nova",
+    "publicId": "....",
+    "type": "PRODUCT"
+  }
+
+Regras:
+  - name obrigatorio, nao vazio, maximo 100 (banco);
+  - type obrigatorio: PRODUCT | STATE (case-sensitive);
+  - type invalido ("BOGUS", "product") -> 400 malformado;
+  - name duplicado no tenant -> 409 Category already exists;
+  - category_type e gravado tanto na categoria criada quanto nos
+    defaults usados por novos tenants.
+
+ESTADO ATUAL:
+  - POST com body valido (name + type) -> 200 com type no retorno.
+  - Body sem type -> 400 Validation.
+  - type invalido -> 400 malformado.
+  - name duplicado -> 409.
+  - name vazio -> 400; name >100 -> 400.
+  - Testado com PRODUCT e STATE; ambos gravam category_type.
+
+
+5. PRODUTOS E CATEGORIAS
+---------------------------------------------------------------------
+Os endpoints de produto continuam recebendo categoryIds:
+
+  POST   /api/products/register
+  PATCH  /api/products/{publicId}
+  PATCH  /api/products/bulk
+  GET    /api/products/{publicId}
+  GET    /api/products/overall
+
+Comportamento atual:
+  - categoryIds aceita qualquer categoria ativa do tenant, seja
+    PRODUCT ou STATE;
+  - o vínculo e many-to-many, como antes;
+  - o /overall filtra por categoryIds independentemente do tipo;
+    testado com categoria PRODUCT e STATE;
+  - categoria inativa/inexistente/de outro tenant continua 409.
+
+ESTADO ATUAL:
+  - POST /register, GET /{publicId} e PATCH /{publicId} devolvem
+    type em categories[] corretamente.
+  - /overall e PATCH /bulk tambem devolvem type correto; a query de
+    projecao agora seleciona c.categoryType AS type.
+  - categoryIds aceita misturar PRODUCT e STATE, por decisao de
+    negocio; a validacao de tipo/cardinalidade e client-side.
+  - Se o formulario separar os campos, a API pode evoluir para
+    productCategoryIds + stateCategoryIds; hoje ela usa uma lista
+    unica.
+
+Exemplo esperado apos incluir type no summary:
+
+  "categories": [
+    { "publicId": "...", "name": "Eletrônicos", "type": "PRODUCT" },
+    { "publicId": "...", "name": "Baixo Giro", "type": "STATE" }
+  ]
+
+
+6. IMPACTO NOS CONTRATOS
+---------------------------------------------------------------------
+Atualizar os contratos que expoem categorias:
+
+  ApiProducts-overall-GET-Contrato.txt
+  ApiProducts-Register-POST-Contrato.txt
+  ApiProducts{publicId}-GET-Contrato.txt
+  ApiProducts{publicId}-PATCH-Contrato.txt
+  ApiProducts-bulk-PATCH-Contrato.txt
+
+Mudancas:
+  - /categories passa a devolver type e aceita ?type;
+  - categories[] do produto devolve type em todos os endpoints;
+  - POST /categories documentado com body/type;
+  - categoryIds pode misturar PRODUCT/STATE; validacao client-side.
+
+
+7. FRONTEND
+---------------------------------------------------------------------
+  - Select de categoria de produto: filtrar type=PRODUCT.
+  - Select/chips de estado: filtrar type=STATE.
+  - Ao renderizar ProductResponse.categories, separar por type.
+  - Nao usar o nome para inferir tipo.
+  - Cadastro de categoria deve enviar type.
+  - /categories?type=PRODUCT|STATE funciona; use-o para popular
+    cada select.
+  - categories[].type esta disponivel em todos os endpoints de
+    produto (incluindo /overall e bulk).
+
+
+8. RESUMO-CHECQUE
+---------------------------------------------------------------------
+Modelo:
+  - categories.category_type e default_categories.category_type;
+  - PRODUCT | STATE; NOT NULL DEFAULT PRODUCT;
+  - defaults e categorias antigas classificados;
+  - novos tenants copiam o tipo.
+
+API:
+  - GET /categories devolve type e aceita ?type=PRODUCT|STATE;
+  - POST /categories exige name + type e devolve type;
+  - categoryIds aceita categorias dos dois tipos;
+  - /overall filtra por categoryIds de qualquer tipo;
+  - categories[].type correto em POST/GET/PATCH/bulk/overall.
+
+Pendencias criticas:
+  - nenhuma para o type; validacao de cardinalidade/tipo em
+    categoryIds fica no client, por decisao de negocio.
+=====================================================================

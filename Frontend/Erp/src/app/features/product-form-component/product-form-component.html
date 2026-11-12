@@ -1,0 +1,430 @@
+<div class="form-page">
+  <button class="back-link" type="button" (click)="onCancel()">
+    <span aria-hidden="true">←</span>
+    Voltar
+  </button>
+
+  @if (loading()) {
+    <section class="form-panel form-skeleton" aria-busy="true" aria-label="Carregando formulário">
+      <span class="sk-line w-40"></span>
+      <span class="sk-line w-90"></span>
+      <span class="sk-line w-70"></span>
+      <span class="sk-line w-50"></span>
+    </section>
+  } @else if (notFound()) {
+    <section class="state-panel" role="status">
+      <span class="state-icon" aria-hidden="true">!</span>
+      <h1>Produto não encontrado</h1>
+      <p>O produto foi removido, está desabilitado ou o link é inválido.</p>
+      <button class="btn" type="button" (click)="goBack()">Voltar ao catálogo</button>
+    </section>
+  } @else {
+    <header class="studio-head">
+      <div class="head-copy">
+        <span class="eyebrow">Catálogo</span>
+        <div class="title-row">
+          <h1>{{ pageTitle() }}</h1>
+          <span class="mode-pill" [class.editing]="isEdit()">
+            {{ isEdit() ? 'Edição' : isDuplicate() ? 'Duplicação' : 'Novo' }}
+          </span>
+        </div>
+        <p>{{ pageDescription() }}</p>
+      </div>
+
+      <span class="head-status">
+        <span class="status-dot" aria-hidden="true"></span>
+        {{ isEdit() ? 'Produto existente' : 'Entra como ativo' }}
+      </span>
+    </header>
+
+    <form class="studio-form" (submit)="onSubmit($event)" novalidate>
+      <aside class="preview-column">
+        <section class="preview-card" aria-label="Prévia do produto">
+          <input
+            #imageInput
+            id="product-image-file"
+            class="image-input"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            (change)="onImageSelected($event)"
+          />
+
+          <button
+            class="image-shell"
+            type="button"
+            aria-label="Selecionar imagem do produto"
+            [class.dragging]="imageDragOver()"
+            (click)="triggerImageInput()"
+            (dragover)="onImageDragOver($event)"
+            (dragleave)="onImageDragLeave($event)"
+            (drop)="onImageDrop($event)"
+          >
+            @if (hasPreviewImage()) {
+              <img
+                [src]="imagePreviewUrl() ?? ''"
+                [alt]="previewName()"
+                (error)="onPreviewError()"
+              />
+            } @else {
+              <span class="image-empty">
+                <span class="image-plus" aria-hidden="true">+</span>
+                <strong>Imagem do produto</strong>
+                <small>Arraste ou clique para enviar</small>
+              </span>
+            }
+
+            @if (showMockBadge()) {
+              <span class="mock-badge">Upload mock</span>
+            }
+
+            <span class="image-drop-overlay" [class.visible]="imageDragOver()">
+              Solte a imagem aqui
+            </span>
+          </button>
+
+          <div class="image-actions">
+            <button class="mini-btn" type="button" (click)="triggerImageInput()">
+              Escolher imagem
+            </button>
+
+            @if (canRemoveImage()) {
+              <button class="mini-btn danger" type="button" (click)="removeImage()">
+                Remover
+              </button>
+            }
+
+            @if (canRestoreImage()) {
+              <button class="mini-btn" type="button" (click)="restoreExistingImage()">
+                Restaurar atual
+              </button>
+            }
+          </div>
+
+          @if (imageError()) {
+            <p class="field-error">{{ imageError() }}</p>
+          }
+
+          <p class="image-note">{{ imageNotice() }}</p>
+
+          <div class="preview-body">
+            <span class="preview-eyebrow">
+              {{ isEdit() ? 'Prévia do produto' : 'Prévia do novo produto' }}
+            </span>
+            <h2>{{ previewName() }}</h2>
+            <p class="preview-sku">{{ previewSku() }}</p>
+            <div class="preview-price">{{ formatCurrency(previewPrice()) }}</div>
+
+            <div class="preview-meta">
+              <span><b>{{ previewStock() }}</b> em estoque</span>
+              <app-product-status-badge [status]="previewStatus()" [showUnknown]="true" />
+            </div>
+
+            <div class="preview-categories">
+              @if (hasSelectedCategories()) {
+                @for (category of selectedCategoryRefs(); track category.publicId) {
+                  <span class="category-chip" [class.state]="category.type === 'STATE'">
+                    {{ category.name }}
+                  </span>
+                }
+              } @else {
+                <span class="preview-muted">Nenhuma categoria selecionada</span>
+              }
+            </div>
+          </div>
+        </section>
+
+        <section class="tip-card">
+          <span class="tip-icon" aria-hidden="true">i</span>
+          <div>
+            <strong>Prévia em tempo real</strong>
+            <p>
+              Os dados do formulário atualizam este cartão enquanto você edita. O upload de
+              imagem está em modo mock local.
+            </p>
+          </div>
+        </section>
+      </aside>
+
+      <div class="form-column">
+        @if (formError()) {
+          <div class="form-banner error" role="alert">{{ formError() }}</div>
+        }
+
+        <section class="form-card">
+          <header class="card-head">
+            <span class="step">01</span>
+            <div>
+              <h2>Identificação</h2>
+              <p>Nome e SKU que identificam o produto.</p>
+            </div>
+          </header>
+
+          <div class="form-grid form-grid-3">
+            <label class="field field-span-2" for="product-name">
+              <span class="field-label">Nome <em>*</em></span>
+              <input
+                id="product-name"
+                type="text"
+                autocomplete="off"
+                [formField]="productForm.name"
+                [class.invalid]="productForm.name().touched() && productForm.name().invalid()"
+                (input)="nameServerError.set(null)"
+              />
+              @if (productForm.name().touched() && productForm.name().errors().length > 0) {
+                <span class="field-error">{{ productForm.name().errors()[0].message }}</span>
+              }
+              @if (nameServerError()) {
+                <span class="field-error">{{ nameServerError() }}</span>
+              }
+            </label>
+
+            <label class="field" for="product-sku">
+              <span class="field-label">SKU</span>
+              <input
+                id="product-sku"
+                type="text"
+                autocomplete="off"
+                [formField]="productForm.sku"
+                [class.invalid]="productForm.sku().touched() && productForm.sku().invalid()"
+                (input)="skuServerError.set(null)"
+              />
+              <span class="field-hint">
+                @if (isEdit()) {
+                  Deixe vazio para gerar um novo SKU automaticamente.
+                } @else {
+                  Deixe vazio para gerar automaticamente.
+                }
+              </span>
+              @if (productForm.sku().touched() && productForm.sku().errors().length > 0) {
+                <span class="field-error">{{ productForm.sku().errors()[0].message }}</span>
+              }
+              @if (skuServerError()) {
+                <span class="field-error">{{ skuServerError() }}</span>
+              }
+            </label>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <header class="card-head">
+            <span class="step">02</span>
+            <div>
+              <h2>Preço e estoque</h2>
+              <p>Valores usados no catálogo e nos anúncios.</p>
+            </div>
+          </header>
+
+          <div class="form-grid form-grid-3">
+            <label class="field" for="product-stock">
+              <span class="field-label">Estoque <em>*</em></span>
+              <input
+                id="product-stock"
+                type="number"
+                step="1"
+                inputmode="numeric"
+                [formField]="productForm.stock"
+                [class.invalid]="productForm.stock().touched() && productForm.stock().invalid()"
+              />
+              @if (productForm.stock().touched() && productForm.stock().errors().length > 0) {
+                <span class="field-error">{{ productForm.stock().errors()[0].message }}</span>
+              }
+              <span class="field-hint">
+                O estoque mínimo é atualizado automaticamente conforme os pedidos.
+              </span>
+            </label>
+
+            <label class="field" for="product-base-price">
+              <span class="field-label">Preço de venda <em>*</em></span>
+              <input
+                id="product-base-price"
+                type="number"
+                step="0.01"
+                inputmode="decimal"
+                [formField]="productForm.baseSellPrice"
+                [class.invalid]="
+                  productForm.baseSellPrice().touched() && productForm.baseSellPrice().invalid()
+                "
+              />
+              @if (
+                productForm.baseSellPrice().touched() &&
+                productForm.baseSellPrice().errors().length > 0
+              ) {
+                <span class="field-error">
+                  {{ productForm.baseSellPrice().errors()[0].message }}
+                </span>
+              }
+            </label>
+
+            <label class="field" for="product-cost-price">
+              <span class="field-label">Custo <em>*</em></span>
+              <input
+                id="product-cost-price"
+                type="number"
+                step="0.01"
+                inputmode="decimal"
+                [formField]="productForm.costPrice"
+                [class.invalid]="
+                  productForm.costPrice().touched() && productForm.costPrice().invalid()
+                "
+              />
+              @if (
+                productForm.costPrice().touched() &&
+                productForm.costPrice().errors().length > 0
+              ) {
+                <span class="field-error">{{ productForm.costPrice().errors()[0].message }}</span>
+              }
+            </label>
+          </div>
+        </section>
+
+        <section class="form-card">
+          <header class="card-head">
+            <span class="step">03</span>
+            <div>
+              <h2>Categorias</h2>
+              <p>Separe as categorias de produto e de estado.</p>
+            </div>
+            <span class="selection-count">{{ selectedCategoryCount() }} selecionada(s)</span>
+          </header>
+
+          @if (categoriesLoading()) {
+            <p class="field-hint">Carregando categorias…</p>
+          } @else if (categoriesError()) {
+            <div class="category-error" role="alert">
+              <span>{{ categoriesError() }}</span>
+              <button class="link-btn" type="button" (click)="retryCategories()">
+                Tentar novamente
+              </button>
+            </div>
+          } @else if (activeCategories().length === 0) {
+            <p class="field-hint">Nenhuma categoria ativa cadastrada.</p>
+          } @else {
+            <div class="category-group">
+              <div class="category-group-head">
+                <h3>Categorias de produto</h3>
+                <span>{{ selectedProductCategoryCount() }} selecionada(s)</span>
+              </div>
+
+              @if (activeProductCategories().length > 0) {
+                <div class="category-chips">
+                  @for (category of activeProductCategories(); track category.publicId) {
+                    <button
+                      class="category-chip selectable"
+                      type="button"
+                      [class.selected]="isCategorySelected(category.publicId)"
+                      [attr.aria-pressed]="isCategorySelected(category.publicId)"
+                      (click)="toggleCategory(category.publicId)"
+                    >
+                      <span>{{ category.name }}</span>
+                      @if (isCategorySelected(category.publicId)) {
+                        <span class="chip-check" aria-hidden="true">✓</span>
+                      }
+                    </button>
+                  }
+                </div>
+              } @else {
+                <p class="field-hint">Nenhuma categoria de produto ativa.</p>
+              }
+
+              @if (inactiveProductCategories().length > 0) {
+                <div class="inactive-categories">
+                  <span class="inactive-label">Inativas vinculadas:</span>
+                  @for (category of inactiveProductCategories(); track category.publicId) {
+                    <span class="category-chip inactive">{{ category.name }}</span>
+                  }
+                </div>
+              }
+            </div>
+
+            <div class="category-group">
+              <div class="category-group-head">
+                <h3>Categorias de estado</h3>
+                <span>{{ selectedStateCategoryCount() }} selecionada(s)</span>
+              </div>
+
+              @if (activeStateCategories().length > 0) {
+                <div class="category-chips">
+                  @for (category of activeStateCategories(); track category.publicId) {
+                    <button
+                      class="category-chip selectable state"
+                      type="button"
+                      [class.selected]="isCategorySelected(category.publicId)"
+                      [attr.aria-pressed]="isCategorySelected(category.publicId)"
+                      (click)="toggleCategory(category.publicId)"
+                    >
+                      <span>{{ category.name }}</span>
+                      @if (isCategorySelected(category.publicId)) {
+                        <span class="chip-check" aria-hidden="true">✓</span>
+                      }
+                    </button>
+                  }
+                </div>
+              } @else {
+                <p class="field-hint">Nenhuma categoria de estado ativa.</p>
+              }
+
+              @if (inactiveStateCategories().length > 0) {
+                <div class="inactive-categories">
+                  <span class="inactive-label">Inativas vinculadas:</span>
+                  @for (category of inactiveStateCategories(); track category.publicId) {
+                    <span class="category-chip inactive state">{{ category.name }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+
+          @if (isEdit() && !categoriesTouched()) {
+            <p class="field-hint">
+              As categorias atuais serão preservadas, incluindo as inativas, enquanto você não
+              alterar a seleção.
+            </p>
+          } @else if (isEdit() && categoriesTouched() && inactiveCategories().length > 0) {
+            <p class="field-warning">
+              Ao salvar, as categorias inativas vinculadas serão removidas. O backend recusa
+              categorias inativas em atualizações.
+            </p>
+          }
+
+          @if (categoryServerError()) {
+            <p class="field-error">{{ categoryServerError() }}</p>
+          }
+
+          <div class="category-actions">
+            <button
+              class="link-btn"
+              type="button"
+              [disabled]="!canResetCategories()"
+              (click)="clearCategorySelection()"
+            >
+              {{ isEdit() ? 'Resetar categorias' : 'Limpar seleção' }}
+            </button>
+          </div>
+        </section>
+
+        <footer class="form-actions">
+          <button class="btn" type="button" [disabled]="submitting()" (click)="onCancel()">
+            Cancelar
+          </button>
+          <button class="btn btn-primary" type="submit" [disabled]="submitting()">
+            @if (submitting()) {
+              <span class="button-spinner" aria-hidden="true"></span>
+            }
+            {{ submitLabel() }}
+          </button>
+        </footer>
+      </div>
+    </form>
+  }
+</div>
+
+@if (discardOpen()) {
+  <app-confirm-dialog
+    title="Descartar alterações?"
+    message="Você tem alterações não salvas neste produto."
+    warning="Se sair agora, as alterações serão perdidas."
+    confirmLabel="Descartar"
+    (confirmed)="confirmDiscard()"
+    (cancelled)="discardOpen.set(false)"
+  />
+}

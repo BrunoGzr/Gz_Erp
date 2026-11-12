@@ -1,7 +1,10 @@
-main {
+/* Raiz da aplicação: única camada de fundo do produto.
+   O landmark <main> pertence à tela ativa (login ou shell), nunca à raiz. */
+.app-root {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #12121e;
+  min-height: 100dvh;
+  background-color: var(--gz-bg);
 }

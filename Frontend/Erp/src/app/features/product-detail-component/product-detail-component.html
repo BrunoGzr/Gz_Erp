@@ -1,0 +1,236 @@
+<div class="detail-page">
+  <button class="back-link" type="button" (click)="goBack()">
+    <span aria-hidden="true">←</span>
+    Voltar ao catálogo
+  </button>
+
+  @if (loading()) {
+    <section class="detail-panel detail-skeleton" aria-label="Carregando produto" aria-busy="true">
+      <span class="sk-media"></span>
+      <div class="skeleton-lines">
+        <span class="sk-line w-60"></span>
+        <span class="sk-line w-90"></span>
+        <span class="sk-line w-40"></span>
+        <span class="sk-line w-75"></span>
+      </div>
+    </section>
+  } @else if (notFound()) {
+    <section class="state-panel" role="status">
+      <span class="state-icon" aria-hidden="true">!</span>
+      <h1>Produto não encontrado</h1>
+      <p>O produto foi removido, está desabilitado ou o link não pertence a este catálogo.</p>
+      <button class="btn" type="button" (click)="goBack()">Voltar ao catálogo</button>
+    </section>
+  } @else if (error()) {
+    <section class="state-panel" role="alert">
+      <span class="state-icon danger" aria-hidden="true">!</span>
+      <h1>Não foi possível carregar o produto</h1>
+      <p>{{ error() }}</p>
+      <div class="state-actions">
+        <button class="btn" type="button" (click)="goBack()">Voltar</button>
+        <button class="btn btn-primary" type="button" (click)="retry()">Tentar novamente</button>
+      </div>
+    </section>
+  } @else if (product(); as product) {
+    <header class="detail-head">
+      <div class="head-copy">
+        <span class="eyebrow">Detalhe do produto</span>
+
+        <div class="title-row">
+          <h1>{{ product.name }}</h1>
+          <app-product-status-badge [status]="product.status" [showUnknown]="true" />
+        </div>
+
+        <p class="meta">
+          {{ product.sku || '—' }} ·
+          @if (hasCategories(product)) {
+            {{ categoriesByType(product, 'PRODUCT').length }} de produto ·
+            {{ categoriesByType(product, 'STATE').length }} de estado
+          } @else {
+            sem categoria
+          }
+          · {{ listingTotal(product) }} anúncio(s) ativo(s)
+        </p>
+      </div>
+
+      <div class="head-actions">
+        <a
+          class="btn"
+          [routerLink]="['/produtos/novo']"
+          [queryParams]="{ duplicarDe: product.publicId, returnUrl: currentUrl }"
+        >
+          Duplicar
+        </a>
+        <a class="btn btn-primary" [routerLink]="['/produtos', product.publicId, 'editar']">
+          Editar
+        </a>
+        <button class="btn btn-danger" type="button" (click)="openDelete()">Excluir</button>
+      </div>
+    </header>
+
+    @if (feedback(); as feedback) {
+      <div [class]="'inline-feedback ' + feedback.tone" role="status" aria-live="polite">
+        {{ feedback.message }}
+      </div>
+    }
+
+    <section class="detail-panel" aria-label="Informações do produto">
+      <div class="detail-media" [class.has-image]="hasImage()">
+        @if (hasImage()) {
+          <img
+            [src]="product.imageUrl ?? ''"
+            [alt]="product.name"
+            loading="lazy"
+            (error)="imageFailed.set(true)"
+          />
+        } @else {
+          <span class="media-fallback" aria-hidden="true">◈</span>
+        }
+      </div>
+
+      <div class="detail-content">
+        <section class="detail-section">
+          <div class="section-head">
+            <h2>Informações</h2>
+            <span class="muted">Atualizado {{ relativeUpdated(product.updatedAt) }}</span>
+          </div>
+
+          <dl class="detail-grid">
+            <div>
+              <dt>Estoque</dt>
+              <dd>{{ formatNumber(product.stock) }} un.</dd>
+            </div>
+            <div>
+              <dt>Estoque mínimo</dt>
+              <dd>{{ formatNumber(product.minStock) }} un.</dd>
+            </div>
+            <div>
+              <dt>Preço de venda</dt>
+              <dd>{{ formatCurrency(product.baseSellPrice) }}</dd>
+            </div>
+            <div>
+              <dt>Custo</dt>
+              <dd>{{ formatCurrency(product.costPrice) }}</dd>
+            </div>
+            <div>
+              <dt>Vendas</dt>
+              <dd>{{ formatNumber(product.sales) }}</dd>
+            </div>
+            <div>
+              <dt>Criado em</dt>
+              <dd>{{ formatDate(product.createdAt) }}</dd>
+            </div>
+            <div>
+              <dt>Atualizado em</dt>
+              <dd>{{ formatDate(product.updatedAt) }}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>
+                <app-product-status-badge [status]="product.status" [showUnknown]="true" />
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="detail-section">
+          <div class="section-head">
+            <h2>Categorias de produto</h2>
+          </div>
+
+          @if (hasCategoriesOfType(product, 'PRODUCT')) {
+            <div class="category-badges">
+              @for (category of categoriesByType(product, 'PRODUCT'); track category.publicId) {
+                <span class="category-badge">{{ category.name }}</span>
+              }
+            </div>
+          } @else {
+            <p class="muted">Sem categoria de produto.</p>
+          }
+        </section>
+
+        <section class="detail-section">
+          <div class="section-head">
+            <h2>Categorias de estado</h2>
+          </div>
+
+          @if (hasCategoriesOfType(product, 'STATE')) {
+            <div class="category-badges">
+              @for (category of categoriesByType(product, 'STATE'); track category.publicId) {
+                <span class="category-badge state">{{ category.name }}</span>
+              }
+            </div>
+          } @else {
+            <p class="muted">Sem categoria de estado.</p>
+          }
+        </section>
+
+        <section class="detail-section">
+          <div class="section-head">
+            <h2>Marketplaces</h2>
+            <span class="muted">{{ listingTotal(product) }} anúncio(s) ativo(s)</span>
+          </div>
+
+          @if (hasMarketplaces(product)) {
+            <div class="marketplace-list">
+              @for (entry of marketplaceEntries(product); track entry.key) {
+                <span class="marketplace-item">
+                  <span [class]="'mp-dot ' + entry.key.toLowerCase()" aria-hidden="true"></span>
+                  <strong>{{ entry.count }}</strong>
+                  {{ entry.label }}
+                </span>
+              }
+            </div>
+          } @else {
+            <p class="muted">Nenhum anúncio ativo.</p>
+          }
+        </section>
+
+        <section class="detail-section">
+          <div class="section-head">
+            <h2>Status do produto</h2>
+          </div>
+
+          <div class="status-actions" role="group" aria-label="Alterar status do produto">
+            @for (option of statuses; track option.value) {
+              <button
+                class="status-btn"
+                type="button"
+                [class.current]="isCurrentStatus(product, option.value)"
+                [disabled]="isCurrentStatus(product, option.value) || statusBusy()"
+                (click)="setStatus(option.value)"
+              >
+                @if (isSavingStatus(option.value)) {
+                  <span class="button-spinner" aria-hidden="true"></span>
+                }
+                {{ option.label }}
+              </button>
+            }
+          </div>
+
+          <p class="hint">
+            Pausar ou inativar altera apenas o status de negócio. O produto continua no catálogo;
+            use “Excluir” para removê-lo da listagem.
+          </p>
+        </section>
+      </div>
+    </section>
+
+    <app-product-listings-mock [product]="product" (action)="onListingAction($event)" />
+  }
+</div>
+
+@if (deleteOpen()) {
+  @if (product(); as product) {
+    <app-confirm-dialog
+      title="Excluir produto"
+      [message]="'O produto ' + product.name + ' será removido do catálogo.'"
+      warning="A exclusão é um soft delete: o produto some da listagem, os anúncios são desativados e o nome/SKU continuam reservados."
+      confirmLabel="Excluir produto"
+      [loading]="deleting()"
+      [error]="deleteError()"
+      (confirmed)="confirmDelete()"
+      (cancelled)="closeDelete()"
+    />
+  }
+}

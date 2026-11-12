@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { vi } from 'vitest';
 import { HeaderComponent } from './header-component';
 
 describe('HeaderComponent', () => {
@@ -16,20 +17,42 @@ describe('HeaderComponent', () => {
 
     fixture = TestBed.createComponent(HeaderComponent);
     component = fixture.componentInstance;
-    await fixture.whenStable();
+    fixture.detectChanges();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('should create', () => {
     expect(component).toBeTruthy();
   });
 
-  it('should expand on hover and collapse on leave when not pinned', () => {
+  it('should expand after the hover delay and collapse after the leave delay', () => {
     expect(component.isExpanded()).toBe(false);
 
     component.onSidebarMouseEnter();
+    vi.advanceTimersByTime(299);
+    expect(component.isExpanded()).toBe(false);
+
+    vi.advanceTimersByTime(1);
     expect(component.isExpanded()).toBe(true);
 
     component.onSidebarMouseLeave();
+    vi.advanceTimersByTime(299);
+    expect(component.isExpanded()).toBe(true);
+
+    vi.advanceTimersByTime(1);
+    expect(component.isExpanded()).toBe(false);
+  });
+
+  it('should not open on a quick mouse pass', () => {
+    component.onSidebarMouseEnter();
+    vi.advanceTimersByTime(100);
+    component.onSidebarMouseLeave();
+    vi.advanceTimersByTime(500);
+
     expect(component.isExpanded()).toBe(false);
   });
 
@@ -40,12 +63,14 @@ describe('HeaderComponent', () => {
     expect(component.isExpanded()).toBe(true);
 
     component.onSidebarMouseLeave();
+    vi.advanceTimersByTime(500);
     expect(component.isExpanded()).toBe(true);
 
     component.toggleExpanded();
     expect(component.isExpanded()).toBe(false);
 
     component.onSidebarMouseEnter();
+    vi.advanceTimersByTime(500);
     expect(component.isExpanded()).toBe(false);
 
     component.toggleExpanded();

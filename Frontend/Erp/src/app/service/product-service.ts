@@ -1,34 +1,69 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Service } from '@angular/core';
-import { Router } from '@angular/router';
 import { Observable } from 'rxjs';
 import {
+    CategoryCreateRequest,
     CategoryRef,
+    CategoryType,
     Marketplace,
+    ProductBulkUpdateItem,
     ProductPageResponse,
-    receivedProduct,
-    registerProductRequest,
+    ProductRegisterRequest,
+    ProductResponse,
+    ProductStatusUpdateItem,
+    ProductUpdateRequest,
 } from '../models/productModels';
-
 
 @Service()
 export class ProductService {
 
     private http = inject(HttpClient)
 
-    private router = inject(Router)
+    private apiUrl = '/api/products'
 
-    private urlApi = "/products"
-    private apiUrl = "/api"
-
-
-    registerProduct(productInfo: registerProductRequest): Observable<any> {
-
-        return this.http.post<receivedProduct>(`${this.urlApi}/register`, productInfo)
+    registerProduct(payload: ProductRegisterRequest): Observable<ProductResponse> {
+        return this.http.post<ProductResponse>(`${this.apiUrl}/register`, payload)
     }
 
-    getCategories(): Observable<CategoryRef[]> {
-        return this.http.get<CategoryRef[]>(`${this.apiUrl}/products/categories`)
+    getProduct(publicId: string): Observable<ProductResponse> {
+        return this.http.get<ProductResponse>(`${this.apiUrl}/${encodeURIComponent(publicId)}`)
+    }
+
+    updateProduct(publicId: string, payload: ProductUpdateRequest): Observable<ProductResponse> {
+        return this.http.patch<ProductResponse>(
+            `${this.apiUrl}/${encodeURIComponent(publicId)}`,
+            payload,
+        )
+    }
+
+    deleteProduct(publicId: string): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/${encodeURIComponent(publicId)}`)
+    }
+
+    updateProductsStatus(items: ProductStatusUpdateItem[]): Observable<void> {
+        return this.http.patch<void>(`${this.apiUrl}/status`, items)
+    }
+
+    bulkUpdateProducts(items: ProductBulkUpdateItem[]): Observable<ProductResponse[]> {
+        return this.http.patch<ProductResponse[]>(`${this.apiUrl}/bulk`, items)
+    }
+
+    bulkDeleteProducts(publicIds: string[]): Observable<void> {
+        return this.http.delete<void>(`${this.apiUrl}/bulk/delete`, { body: publicIds })
+    }
+
+    getCategories(type?: CategoryType): Observable<CategoryRef[]> {
+        let params = new HttpParams();
+
+        if (type) {
+            params = params.set('type', type);
+        }
+
+        return this.http.get<CategoryRef[]>(`${this.apiUrl}/categories`, { params })
+    }
+
+    createCategory(payload: CategoryCreateRequest): Observable<CategoryRef> {
+        return this.http.post<CategoryRef>(`${this.apiUrl}/categories`, payload)
     }
 
     getOverallProducts(params: {
@@ -69,7 +104,7 @@ export class ProductService {
             httpParams = httpParams.append('categoryIds', categoryId);
         }
 
-        return this.http.get<ProductPageResponse>(`${this.apiUrl}/products/overall`, { params: httpParams })
+        return this.http.get<ProductPageResponse>(`${this.apiUrl}/overall`, { params: httpParams })
     }
 
 }
