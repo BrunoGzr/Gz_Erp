@@ -513,7 +513,7 @@ public class ProductsService {
         boolean haveNull = dtos.stream().anyMatch(Objects::isNull);
 
         if (haveNull){
-            throw new IllegalArgumentException("Malformed list.");
+            throw new NoArgumentException("Malformed list.");
         }
 
         if (dtos.isEmpty()){
@@ -537,7 +537,7 @@ public class ProductsService {
         List<UUID> missing = publicIdList.stream().filter(List -> !productsMapByPublicId.containsKey(List) ).toList();
 
         if (!missing.isEmpty()){
-            throw new IllegalArgumentException("Items not found: " + missing);
+            throw new NoArgumentException("Items not found: " + missing);
         }
 
         List<Products> updatedProducts = new ArrayList<>();
@@ -559,7 +559,39 @@ public class ProductsService {
 
     }
 
+    @Transactional
+    public void deleteProductsBulk(List<UUID> publicIds){
 
+        Long tenantId = TenantContext.required();
+        if (publicIds.isEmpty()){
+            throw new NoArgumentException("Empty list not accepted");
+        }
+        boolean hasNull = publicIds.stream().anyMatch(Objects::isNull);
+        if (hasNull){
+            throw new IllegalArgumentException("Invalid List");
+        }
+        if (publicIds.size() > 200){
+            throw new IllegalArgumentException("Illegal list size, max = 200, get = "+ publicIds.size());
+        }
+
+        List<Products> products = productsRepo.findAllByTenant_IdAndActiveTrueAndPublicIdIn(tenantId,publicIds);
+
+        List<UUID> notFound = publicIds.stream().filter(id -> products.stream()
+                .noneMatch(p -> p.getPublicId().equals(id))).toList();
+
+        if (!notFound.isEmpty()){
+            throw new NoArgumentException("Products not found: " + notFound);
+        }
+
+        List<UUID> publicIdsOfProducts = products.stream().map(Products::getPublicId).toList();
+
+        int listings = listingRepo.deactivateByProductPublicIdInList(publicIdsOfProducts);
+
+        List<Long> productIds = products.stream().map(Products::getId).toList();
+
+        productsRepo.deactivateByTenant_IdAndActiveTrueAndIdIn(productIds,tenantId);
+    }
+    
     private ProductResponseDto mapResponseDtoToProduct(Products actualProduct){
 
         List<ListingCountProjectionDto> rawCounts = listingRepo.countListingsByProductIds(List.of(actualProduct.getId()));

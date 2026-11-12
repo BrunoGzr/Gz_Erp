@@ -109,6 +109,14 @@ public class ProductsResources {
         return ResponseEntity.ok().body(service.updateProductsBulk(list));
     }
 
+    @DeleteMapping("/bulk/delete")
+    public ResponseEntity<Void> deleteProductsBulk(
+            @RequestBody @Valid List<@NotNull @Valid UUID> list
+    ){
+        service.deleteProductsBulk(list);
+        return ResponseEntity.noContent().build();
+    }
+
 
 
 

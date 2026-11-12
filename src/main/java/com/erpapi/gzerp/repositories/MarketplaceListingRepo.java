@@ -34,4 +34,12 @@ public interface MarketplaceListingRepo extends JpaRepository<MarketplaceListing
                 AND ml.active = true
     """)
     int deactivateByProductPublicid(UUID publicId);
+
+    @Modifying(flushAutomatically = true, clearAutomatically = true)
+    @Query("""
+    UPDATE MarketplaceListing ml
+        SET ml.active = false 
+            WHERE ml.product.publicId IN :list
+                AND ml.active = true""")
+    int deactivateByProductPublicIdInList(List<UUID> list);
 }

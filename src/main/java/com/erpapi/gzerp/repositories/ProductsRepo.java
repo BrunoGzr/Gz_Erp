@@ -5,8 +5,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 
 import java.util.*;
 
@@ -26,6 +26,17 @@ public interface ProductsRepo extends JpaRepository<Products, Long>, JpaSpecific
 
 
     List<Products> findAllByTenant_IdAndActiveTrueAndPublicIdIn(Long tenantId, Collection<UUID> publicIds);
+
+
+
+    @Modifying
+    @Query("""
+    UPDATE Products p 
+        SET p.active = false 
+            WHERE p.id IN :ids
+                AND p.active = true
+                    AND p.tenant.id = :tenantId """)
+    void deactivateByTenant_IdAndActiveTrueAndIdIn(List<Long> ids, Long tenantId);
 
 
 
