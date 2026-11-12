@@ -1,9 +1,9 @@
 package com.erpapi.gzerp.services;
 
 import com.erpapi.gzerp.exceptions.EmployeeAlreadyExistException;
-import com.erpapi.gzerp.dto.PartnersRegisterDto;
-import com.erpapi.gzerp.dto.TenantRegisterDto;
-import com.erpapi.gzerp.dto.TenantResponseDto;
+import com.erpapi.gzerp.dto.Users.Partners.PartnersRegisterDto;
+import com.erpapi.gzerp.dto.Users.Tenants.TenantRegisterDto;
+import com.erpapi.gzerp.dto.Users.Tenants.TenantResponseDto;
 import com.erpapi.gzerp.enums.Plans;
 import com.erpapi.gzerp.enums.Status;
 import com.erpapi.gzerp.models.*;
@@ -79,7 +79,7 @@ public class TenantsService {
                     cat.setName(def.getName());
                     cat.setTenant(savedTenant);
                     cat.setActive(true);
-
+                    cat.setCategoryType(def.getCategoryType());
                     return cat;
                 }).toList();
 

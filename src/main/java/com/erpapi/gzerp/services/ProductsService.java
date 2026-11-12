@@ -1,6 +1,12 @@
 package com.erpapi.gzerp.services;
 
-import com.erpapi.gzerp.dto.*;
+import com.erpapi.gzerp.dto.categories.CategoryByProductProjection;
+import com.erpapi.gzerp.dto.categories.CategoryRequestDto;
+import com.erpapi.gzerp.dto.categories.CategoryResponseDto;
+import com.erpapi.gzerp.dto.categories.CategorySummaryDto;
+import com.erpapi.gzerp.dto.Products.*;
+import com.erpapi.gzerp.dto.Products.MarketplaceListing.ListingCountProjectionDto;
+import com.erpapi.gzerp.enums.CategoryType;
 import com.erpapi.gzerp.enums.Marketplace;
 import com.erpapi.gzerp.enums.ProductStatus;
 import com.erpapi.gzerp.enums.StockFilter;
@@ -175,7 +181,8 @@ public class ProductsService {
                     .computeIfAbsent(row.getProductId(), k -> new ArrayList<>())
                     .add(new CategorySummaryDto(
                             UUID.fromString(row.getPublicId()),
-                            row.getName()
+                            row.getName(),
+                            row.getType()
                     ));
         }
 
@@ -241,10 +248,16 @@ public class ProductsService {
 
     @Transactional
     public CategoryResponseDto createCategory(CategoryRequestDto dto){
-
         Long tenantId = TenantContext.required();
+
+        if (categoryRepo.countAllByTenant_IdAndActiveTrue(tenantId) >= 100 )  {
+            throw new InvalidCategoryException("Quantity Limit Exceeded");
+
+        }
+
+
         if (dto.name().isBlank()) {
-            throw new InvalidCategoryException("Nome não pode ser vazio.");
+            throw new InvalidCategoryException("Name cannot be empty");
         }
         if (categoryRepo.existsByNameAndTenant_Id(dto.name(), tenantId)) {
             throw new InvalidCategoryException("Category already exists.");
@@ -255,23 +268,37 @@ public class ProductsService {
         newCategory.setActive(true);
         newCategory.setName(dto.name());
         newCategory.setPublicId(UUID.randomUUID());
+        newCategory.setCategoryType(dto.type());
         newCategory.setTenant(tenantsRepo.getReferenceById(tenantId));
+
         Categories savedCategory = categoryRepo.save(newCategory);
 
         return new CategoryResponseDto(
                 savedCategory.getName(),
-                savedCategory.getPublicId()
+                savedCategory.getPublicId(),
+                savedCategory.getCategoryType()
         );
     }
 
-    public List<CategoryResponseDto> getCategories(){
+    public List<CategoryResponseDto> getCategories(CategoryType type){
         Long tenantId = TenantContext.required();
+
+        if (type != null){
+            return categoryRepo.findAllByActiveTrueAndTenant_IdAndCategoryTypeOrderByName(tenantId,type).stream().map(
+                    cat -> new CategoryResponseDto(
+                            cat.getName(),
+                            cat.getPublicId(),
+                            cat.getCategoryType()
+                    )
+            ).toList();
+        }
 
 
         return categoryRepo.findAllByActiveTrueAndTenant_IdOrderByNameAsc(tenantId).stream().map(
                 cat -> new CategoryResponseDto(
                         cat.getName(),
-                        cat.getPublicId()
+                        cat.getPublicId(),
+                        cat.getCategoryType()
                 )).toList();
 
     }
@@ -380,7 +407,7 @@ public class ProductsService {
         }
 
         return mapResponseDtoToProduct(newProduct,Map.of(),
-                newProduct.getCategories().stream().map(category -> new CategorySummaryDto(category.getPublicId(), category.getName()))
+                newProduct.getCategories().stream().map(category -> new CategorySummaryDto(category.getPublicId(), category.getName(),category.getCategoryType()))
                 .toList());
     }
 
@@ -591,7 +618,7 @@ public class ProductsService {
 
         productsRepo.deactivateByTenant_IdAndActiveTrueAndIdIn(productIds,tenantId);
     }
-    
+
     private ProductResponseDto mapResponseDtoToProduct(Products actualProduct){
 
         List<ListingCountProjectionDto> rawCounts = listingRepo.countListingsByProductIds(List.of(actualProduct.getId()));
@@ -617,7 +644,7 @@ public class ProductsService {
         response.setListingCount(listingCount);
         response.setMinStock(actualProduct.getMinStock());
         response.setCategories(actualProduct.getCategories().stream().map(category -> {
-            return new CategorySummaryDto(category.getPublicId(),category.getName());
+            return new CategorySummaryDto(category.getPublicId(),category.getName(),category.getCategoryType());
         }).toList());
         response.setStatus(actualProduct.getStatus());
 
@@ -693,7 +720,8 @@ public class ProductsService {
                         CategoryByProductProjection::getProductId,
                         Collectors.mapping(row -> new CategorySummaryDto(
                                 UUID.fromString(row.getPublicId()),
-                                row.getName()
+                                row.getName(),
+                                row.getType()
                         ),
                                 Collectors.toList())
                 ));

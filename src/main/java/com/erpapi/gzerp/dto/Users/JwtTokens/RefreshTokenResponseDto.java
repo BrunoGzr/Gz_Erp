@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Users.JwtTokens;
 
 public class RefreshTokenResponseDto {
 

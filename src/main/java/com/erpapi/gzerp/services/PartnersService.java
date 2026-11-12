@@ -1,7 +1,6 @@
 package com.erpapi.gzerp.services;
 
-import com.erpapi.gzerp.dto.PartnersRegisterDto;
-import com.erpapi.gzerp.dto.PartnersResponseDto;
+import com.erpapi.gzerp.dto.Users.Partners.PartnersRegisterDto;
 import com.erpapi.gzerp.models.Partners;
 import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.models.UsersAccounts;

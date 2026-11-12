@@ -1,11 +1,14 @@
 package com.erpapi.gzerp.resources;
 
-import com.erpapi.gzerp.dto.*;
 
-
+import com.erpapi.gzerp.dto.categories.CategoryRequestDto;
+import com.erpapi.gzerp.dto.categories.CategoryResponseDto;
+import com.erpapi.gzerp.dto.Products.*;
+import com.erpapi.gzerp.enums.CategoryType;
 import com.erpapi.gzerp.exceptions.InvalidPageSizeException;
 
 import com.erpapi.gzerp.services.ProductsService;
+import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 
 import jakarta.validation.constraints.NotNull;
@@ -63,8 +66,10 @@ public class ProductsResources {
 
 
     @GetMapping("/categories")
-    public ResponseEntity<List<CategoryResponseDto>> getCategories(){
-        return ResponseEntity.ok().body(service.getCategories());
+    public ResponseEntity<List<CategoryResponseDto>> getCategories(
+            @RequestParam @Nullable CategoryType type
+            ){
+        return ResponseEntity.ok().body(service.getCategories(type));
     }
 
     @PatchMapping("/{publicId}")
@@ -115,6 +120,14 @@ public class ProductsResources {
     ){
         service.deleteProductsBulk(list);
         return ResponseEntity.noContent().build();
+    }
+
+
+    @PostMapping("/categories")
+    public ResponseEntity<CategoryResponseDto> createCategory(
+        @RequestBody @Valid CategoryRequestDto dto
+    ){
+        return ResponseEntity.ok().body(service.createCategory(dto));
     }
 
 

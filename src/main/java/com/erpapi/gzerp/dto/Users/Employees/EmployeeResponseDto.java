@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Users.Employees;
 
 import com.erpapi.gzerp.models.Employees;
 

@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Users.UsersAccounts;
 
 import com.erpapi.gzerp.models.Tenants;
 import com.erpapi.gzerp.models.UsersAccounts;

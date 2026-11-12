@@ -1,12 +1,6 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Products;
 
-import com.erpapi.gzerp.enums.StockFilter;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public record ProductPageResponseDto(
         List<ProductResponseDto> items,

@@ -1,19 +1,14 @@
 package com.erpapi.gzerp.models;
 
-import com.erpapi.gzerp.dto.EmployeeRegisterDto;
-import com.erpapi.gzerp.enums.UserType;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.erpapi.gzerp.dto.Users.Employees.EmployeeRegisterDto;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import org.springframework.boot.context.properties.bind.Name;
 
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.Objects;
 
 @Entity
 public class Employees {

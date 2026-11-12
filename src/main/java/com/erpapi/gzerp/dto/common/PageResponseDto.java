@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.common;
 
 import java.util.List;
 

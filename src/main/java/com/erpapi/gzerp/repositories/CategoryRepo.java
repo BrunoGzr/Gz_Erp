@@ -1,6 +1,7 @@
 package com.erpapi.gzerp.repositories;
 
-import com.erpapi.gzerp.dto.CategoryByProductProjection;
+import com.erpapi.gzerp.dto.categories.CategoryByProductProjection;
+import com.erpapi.gzerp.enums.CategoryType;
 import com.erpapi.gzerp.models.Categories;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -26,15 +27,15 @@ public interface CategoryRepo extends JpaRepository<Categories, Long> {
             @Param("tenantId") Long tenantId);
 
 
-
     @Query("""
-        SELECT p.id         AS productId,
-               c.publicId   AS publicId,
-               c.name       AS name
-        FROM Products p
-        JOIN p.categories c
-        WHERE p.id IN :productIds
-    """)
+                SELECT p.id         AS productId,
+                       c.publicId   AS publicId,
+                       c.name       AS name,
+                       c.categoryType AS type
+                FROM Products p
+                JOIN p.categories c
+                WHERE p.id IN :productIds
+            """)
     List<CategoryByProductProjection> findCategoriesByProductIds(
             @Param("productIds") List<Long> productIds);
 
@@ -42,5 +43,9 @@ public interface CategoryRepo extends JpaRepository<Categories, Long> {
     List<Categories> findAllByActiveTrueAndTenant_IdOrderByNameAsc(Long tenantId);
 
     List<Categories> findAllByActiveTrueAndTenant_IdAndPublicIdIn(Long tenantId,List<UUID> publicId);
+
+    List<Categories> findAllByActiveTrueAndTenant_IdAndCategoryTypeOrderByName(Long tenantId, CategoryType categoryType);
+
+    int countAllByTenant_IdAndActiveTrue(Long tenantId);
 
 }

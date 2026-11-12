@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Users.UsersAccounts;
 
 import jakarta.annotation.Nullable;
 import jakarta.validation.constraints.Email;

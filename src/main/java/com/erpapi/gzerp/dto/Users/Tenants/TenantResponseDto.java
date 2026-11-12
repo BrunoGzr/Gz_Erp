@@ -1,10 +1,10 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Users.Tenants;
 
+import com.erpapi.gzerp.dto.Users.Partners.PartnersResponseDto;
 import com.erpapi.gzerp.models.Partners;
 import com.erpapi.gzerp.models.Tenants;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class TenantResponseDto {
 

@@ -1,15 +1,12 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Users.Tenants;
 
-import com.erpapi.gzerp.enums.Plans;
-import com.erpapi.gzerp.models.Partners;
+import com.erpapi.gzerp.dto.Users.Partners.PartnersRegisterDto;
 import jakarta.annotation.Nullable;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 
 public class TenantRegisterDto {

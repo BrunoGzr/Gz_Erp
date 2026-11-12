@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Products;
 
 import com.erpapi.gzerp.enums.Marketplace;
 import com.erpapi.gzerp.enums.StockFilter;

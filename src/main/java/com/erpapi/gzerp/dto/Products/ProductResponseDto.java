@@ -1,5 +1,6 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Products;
 
+import com.erpapi.gzerp.dto.categories.CategorySummaryDto;
 import com.erpapi.gzerp.enums.ProductStatus;
 import com.erpapi.gzerp.models.Products;
 

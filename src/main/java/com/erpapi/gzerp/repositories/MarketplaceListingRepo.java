@@ -1,6 +1,6 @@
 package com.erpapi.gzerp.repositories;
 
-import com.erpapi.gzerp.dto.ListingCountProjectionDto;
+import com.erpapi.gzerp.dto.Products.MarketplaceListing.ListingCountProjectionDto;
 import com.erpapi.gzerp.models.MarketplaceListing;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 public interface MarketplaceListingRepo extends JpaRepository<MarketplaceListing, Long> {

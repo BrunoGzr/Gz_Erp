@@ -1,5 +1,6 @@
 package com.erpapi.gzerp.models;
 
+import com.erpapi.gzerp.enums.CategoryType;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -26,6 +27,10 @@ public class DefaultCategory {
     @Column(name = "updated_at")
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "categoryType")
+    private CategoryType categoryType;
 
     public DefaultCategory() {
     }
@@ -68,5 +73,13 @@ public class DefaultCategory {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public CategoryType getCategoryType() {
+        return categoryType;
+    }
+
+    public void setCategoryType(CategoryType categoryType) {
+        this.categoryType = categoryType;
     }
 }

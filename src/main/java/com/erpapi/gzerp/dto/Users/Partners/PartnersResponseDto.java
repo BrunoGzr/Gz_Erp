@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Users.Partners;
 
 import com.erpapi.gzerp.models.Partners;
 import jakarta.annotation.Nullable;

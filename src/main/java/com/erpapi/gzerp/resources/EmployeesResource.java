@@ -1,11 +1,7 @@
 package com.erpapi.gzerp.resources;
 
-import com.erpapi.gzerp.dto.EmployeeRegisterDto;
-import com.erpapi.gzerp.dto.EmployeeResponseDto;
 import com.erpapi.gzerp.models.Employees;
 import com.erpapi.gzerp.services.EmployeesService;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

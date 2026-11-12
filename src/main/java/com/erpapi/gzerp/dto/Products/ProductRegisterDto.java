@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Products;
 
 
 import jakarta.annotation.Nullable;

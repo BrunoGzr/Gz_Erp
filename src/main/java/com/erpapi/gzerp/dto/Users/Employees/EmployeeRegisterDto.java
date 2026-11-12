@@ -1,5 +1,6 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Users.Employees;
 
+import com.erpapi.gzerp.dto.Users.UsersAccounts.UsersAccountRegisterDto;
 import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;

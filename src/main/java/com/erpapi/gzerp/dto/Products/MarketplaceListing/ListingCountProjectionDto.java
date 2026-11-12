@@ -1,4 +1,4 @@
-package com.erpapi.gzerp.dto;
+package com.erpapi.gzerp.dto.Products.MarketplaceListing;
 
 public interface ListingCountProjectionDto {
     Long getProductId();

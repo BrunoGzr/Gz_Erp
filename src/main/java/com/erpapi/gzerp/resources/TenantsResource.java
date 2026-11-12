@@ -1,7 +1,7 @@
 package com.erpapi.gzerp.resources;
 
-import com.erpapi.gzerp.dto.TenantRegisterDto;
-import com.erpapi.gzerp.dto.TenantResponseDto;
+import com.erpapi.gzerp.dto.Users.Tenants.TenantRegisterDto;
+import com.erpapi.gzerp.dto.Users.Tenants.TenantResponseDto;
 import com.erpapi.gzerp.services.TenantsService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

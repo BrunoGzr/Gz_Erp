@@ -1,7 +1,7 @@
 package com.erpapi.gzerp.services;
 
 
-import com.erpapi.gzerp.dto.PartnersRegisterDto;
+import com.erpapi.gzerp.dto.Users.Partners.PartnersRegisterDto;
 import com.erpapi.gzerp.enums.AccountStatus;
 import com.erpapi.gzerp.enums.UserType;
 import com.erpapi.gzerp.exceptions.InvalidCharactersException;
